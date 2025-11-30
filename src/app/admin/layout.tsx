@@ -6,13 +6,10 @@ export default function DashboardLayout({
     children: React.ReactNode
 }) {
     return (
-        <html lang="en">
-            <body>
-                <div>
-                    <SideBar />
-                    {children}
-                </div>
-            </body>
-        </html>
+        <div className="flex">
+            <SideBar />
+            {children}
+        </div>
+
     )
 }
