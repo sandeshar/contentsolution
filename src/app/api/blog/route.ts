@@ -173,7 +173,7 @@ export async function DELETE(request: NextRequest) {
 
         if (!id) {
             return NextResponse.json(
-                { error: 'Post ID is required' },
+                { error: 'Invalid' },
                 { status: 400 }
             );
         }

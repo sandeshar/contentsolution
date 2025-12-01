@@ -1,9 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { User } from "@/types/user";
 
 export default function AddUserPage() {
+    const id = useParams().id;
     const router = useRouter();
     const [formData, setFormData] = useState({
         name: "",
@@ -11,22 +13,48 @@ export default function AddUserPage() {
         password: "",
         role: "admin",
     });
+    const [user, setUser] = useState<User | null>(null);
+    const getUserData = async () => {
+        try {
+            const response = await fetch(`/api/users?id=${id}`);
+            const data = await response.json();
+            setUser(data);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    };
+
+    useEffect(() => {
+        getUserData();
+    }, []);
+
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                name: user.name,
+                email: user.email,
+                password: "",
+                role: user.role,
+            });
+        }
+    }, [user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("Add user:", formData);
-        const response = await fetch('/api/users', {
-            method: 'POST',
+        console.log("Update user:", formData);
+        const response = await fetch(`/api/users`, {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(formData),
+            body: JSON.stringify({ id: parseInt(id as string), ...formData }),
         });
         if (response.ok) {
-            alert('User added successfully!');
+            alert('User updated successfully!');
             router.push('/admin/users');
         } else {
-            alert('Failed to add user.');
+            const data = await response.json();
+            alert(data.error || 'Failed to update user.');
         }
     };
 
@@ -35,8 +63,8 @@ export default function AddUserPage() {
             <div className="flex-1 p-8 overflow-y-auto">
                 <div className="max-w-3xl mx-auto">
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-slate-900">Add New User</h1>
-                        <p className="text-slate-500 mt-1">Create a new user account with role and permissions.</p>
+                        <h1 className="text-3xl font-bold text-slate-900">Edit User</h1>
+                        <p className="text-slate-500 mt-1">Update the user account details and permissions.</p>
                     </div>
 
                     <div className="bg-white rounded-lg shadow-sm border border-slate-200">
@@ -82,9 +110,9 @@ export default function AddUserPage() {
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                         className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-primary"
-                                        placeholder="Enter password"
-                                        required
+                                        placeholder="Leave blank to keep current password"
                                     />
+                                    <p className="text-xs text-slate-500 mt-1">Leave empty to keep current password</p>
                                 </div>
 
                                 <div>
@@ -118,7 +146,7 @@ export default function AddUserPage() {
                                     className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-white"
                                 >
                                     <span className="material-symbols-outlined text-lg">person_add</span>
-                                    Add User
+                                    Update User
                                 </button>
                             </div>
                         </form>

@@ -1,0 +1,73 @@
+import { Metadata } from "next";
+import { db } from "@/db";
+import { storeSettings } from "@/db/schema";
+
+export async function generateMetadata(): Promise<Metadata> {
+    try {
+        const rows = await db.select().from(storeSettings).limit(1);
+        const s = rows[0];
+        if (!s) {
+            return {
+                title: "Content Store",
+                description: "Powered by ContentSolution",
+                viewport: "width=device-width, initial-scale=1",
+                robots: "index, follow",
+            };
+        }
+
+        const title = s.meta_title || s.store_name || "Content Store";
+        const description = s.meta_description || s.store_description || "";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+        return {
+            title,
+            description,
+            keywords: s.meta_keywords || "",
+            viewport: "width=device-width, initial-scale=1",
+            robots: "index, follow",
+            icons: s.favicon ? { icon: s.favicon } : undefined,
+            openGraph: {
+                type: "website",
+                locale: "en_US",
+                url: baseUrl,
+                siteName: s.store_name,
+                title,
+                description,
+                images: s.store_logo ? [{ url: s.store_logo, alt: s.store_name }] : [],
+            },
+            twitter: {
+                card: "summary_large_image",
+                title,
+                description,
+                images: s.store_logo ? [s.store_logo] : [],
+            },
+            alternates: {
+                canonical: baseUrl,
+            },
+        };
+    } catch {
+        return {
+            title: "Content Store",
+            description: "",
+            viewport: "width=device-width, initial-scale=1",
+        };
+    }
+}
+
+export default async function FrontendLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const rows = await db.select().from(storeSettings).limit(1);
+    const s = rows[0];
+
+    return (
+        <>
+            {children}
+            <footer className="mt-16 border-t border-slate-200 py-8 text-center text-sm text-slate-500">
+                {s?.footer_text || ""}
+            </footer>
+        </>
+    );
+}

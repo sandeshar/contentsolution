@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/mysql2';
+import { createPool } from 'mysql2/promise';
 import 'dotenv/config';
 
-const connectionString = process.env.DATABASE_URL!;
-export const db = drizzle(connectionString);
+const pool = createPool(process.env.DATABASE_URL!);
+export const db = drizzle(pool);

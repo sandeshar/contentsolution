@@ -3,12 +3,18 @@ import { useState } from 'react';
 
 const SideBar = () => {
     const [isUIOpen, setIsUIOpen] = useState(true);
+    const [isSEOOpen, setIsSEOOpen] = useState(false);
 
     const mainItems = [
         { name: 'Dashboard', icon: 'dashboard', href: '/admin' },
         { name: 'Users', icon: 'group', href: '/admin/users' },
         { name: 'Blog', icon: 'article', href: '/admin/blog' },
         { name: 'Store Setting', icon: 'settings', href: '/admin/store-setting' },
+    ];
+
+    const seoItems = [
+        { name: 'Robots.txt', icon: 'smart_toy', href: '/admin/seo/robots' },
+        { name: 'Sitemap', icon: 'map', href: '/admin/seo/sitemap' },
     ];
 
     const uiSubItems = [
@@ -39,6 +45,31 @@ const SideBar = () => {
                             <p className="text-sm font-medium leading-normal">{item.name}</p>
                         </a>
                     ))}
+
+                    {/* SEO Tools with sub-navigation */}
+                    <div className="flex flex-col">
+                        <button
+                            onClick={() => setIsSEOOpen(!isSEOOpen)}
+                            className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-white/10 w-full"
+                        >
+                            <span className="material-symbols-outlined text-lg">search</span>
+                            <p className="text-sm font-medium leading-normal flex-1 text-left">SEO Tools</p>
+                            <span className={`material-symbols-outlined text-lg transition-transform ${isSEOOpen ? 'rotate-180' : ''}`}>
+                                expand_more
+                            </span>
+                        </button>
+
+                        {isSEOOpen && (
+                            <div className="flex flex-col gap-1 pl-6 mt-1">
+                                {seoItems.map((item) => (
+                                    <a key={item.name} className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-white/10 text-sm" href={item.href}>
+                                        <span className="material-symbols-outlined text-base">{item.icon}</span>
+                                        <p className="text-xs font-medium leading-normal">{item.name}</p>
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
                     {/* UI Elements with sub-navigation */}
                     <div className="flex flex-col">

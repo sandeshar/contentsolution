@@ -2,19 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
-type BlogPost = {
-    id: number;
-    title: string;
-    slug: string;
-    content: string;
-    tags: string | null;
-    thumbnail: string | null;
-    authorId: number;
-    status: number;
-    createdAt: string;
-    updatedAt: string;
-};
+import { getBlogStatusLabel, getBlogStatusClasses } from "@/utils/statusHelpers";
+import { BlogPost } from "@/types/blog";
 
 export default function BlogPage() {
     const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -57,24 +46,6 @@ export default function BlogPage() {
         } catch (error) {
             console.error('Error deleting post:', error);
             alert('Failed to delete post. Please try again.');
-        }
-    };
-
-    const getStatusLabel = (statusId: number) => {
-        switch (statusId) {
-            case 1: return "Draft";
-            case 2: return "Published";
-            case 3: return "In Review";
-            default: return "Unknown";
-        }
-    };
-
-    const getStatusClasses = (statusId: number) => {
-        switch (statusId) {
-            case 1: return "bg-yellow-100 text-yellow-800";
-            case 2: return "bg-green-100 text-green-800";
-            case 3: return "bg-blue-100 text-blue-800";
-            default: return "bg-slate-100 text-slate-800";
         }
     };
 
@@ -153,8 +124,8 @@ export default function BlogPage() {
                                             <td className="px-6 py-4 font-semibold text-slate-900">{post.title}</td>
                                             <td className="px-6 py-4 text-slate-700">Admin User</td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(post.status)}`}>
-                                                    {getStatusLabel(post.status)}
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBlogStatusClasses(post.status)}`}>
+                                                    {getBlogStatusLabel(post.status)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-slate-700">
