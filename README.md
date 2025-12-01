@@ -46,6 +46,25 @@ Create a file named `.env.local` in the project root and populate it with requir
 DATABASE_URL="mysql://<user>:<password>@<host>:<port>/<database>"
 NEXT_PUBLIC_API_BASE_URL="http://localhost:3000"
 NEXT_PUBLIC_ANALYTICS_KEY=""
+
+Uploads configuration:
+
+- `UPLOAD_DIR`: Filesystem path (absolute or relative to project root) where uploads are saved. Defaults to `public/uploads`.
+- `UPLOAD_BASE_URL`: Public base URL used to build the returned file URL. If not set and `UPLOAD_DIR` is inside `public`, the URL will be served from the public path (e.g., `/uploads/...`). If `UPLOAD_DIR` is outside `public` and `UPLOAD_BASE_URL` is not set, the API will return a `file://` path.
+
+Example:
+
+```
+UPLOAD_DIR=public/uploads
+UPLOAD_BASE_URL=${NEXT_PUBLIC_BASE_URL}/uploads
+```
+
+API endpoint for uploads: `POST /api/upload`
+
+Multipart form fields:
+
+- `file`: The file to upload (required)
+- `folder`: Optional subfolder within `UPLOAD_DIR` (alphanumeric, dash, underscore)
 ```
 `DATABASE_URL` is used by Drizzle and `mysql2` (see `drizzle.config.ts`).
 

@@ -158,11 +158,21 @@ export default function StoreSettingPage() {
                                                     type="file"
                                                     id="logo"
                                                     accept="image/*"
-                                                    onChange={(e) => {
+                                                    onChange={async (e) => {
                                                         const file = e.target.files?.[0];
                                                         if (file) {
-                                                            const url = URL.createObjectURL(file);
-                                                            setFormData({ ...formData, logo: url });
+                                                            try {
+                                                                const fd = new FormData();
+                                                                fd.append('file', file);
+                                                                fd.append('folder', 'logos');
+                                                                const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                                const json = await res.json();
+                                                                if (!res.ok || !json?.url) throw new Error(json?.error || 'Upload failed');
+                                                                setFormData({ ...formData, logo: json.url });
+                                                            } catch (err: any) {
+                                                                console.error('Logo upload failed', err);
+                                                                alert(err.message || 'Logo upload failed');
+                                                            }
                                                         }
                                                     }}
                                                     className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-indigo-700"
@@ -184,11 +194,21 @@ export default function StoreSettingPage() {
                                                     type="file"
                                                     id="favicon"
                                                     accept="image/*"
-                                                    onChange={(e) => {
+                                                    onChange={async (e) => {
                                                         const file = e.target.files?.[0];
                                                         if (file) {
-                                                            const url = URL.createObjectURL(file);
-                                                            setFormData({ ...formData, favicon: url });
+                                                            try {
+                                                                const fd = new FormData();
+                                                                fd.append('file', file);
+                                                                fd.append('folder', 'favicons');
+                                                                const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                                const json = await res.json();
+                                                                if (!res.ok || !json?.url) throw new Error(json?.error || 'Upload failed');
+                                                                setFormData({ ...formData, favicon: json.url });
+                                                            } catch (err: any) {
+                                                                console.error('Favicon upload failed', err);
+                                                                alert(err.message || 'Favicon upload failed');
+                                                            }
                                                         }
                                                     }}
                                                     className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-indigo-700"
