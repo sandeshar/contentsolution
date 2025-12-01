@@ -1,6 +1,11 @@
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
 import { db } from "@/db";
 import { storeSettings } from "@/db/schema";
+
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+};
 
 export async function generateMetadata(): Promise<Metadata> {
     try {
@@ -10,7 +15,6 @@ export async function generateMetadata(): Promise<Metadata> {
             return {
                 title: "Content Store",
                 description: "Powered by ContentSolution",
-                viewport: "width=device-width, initial-scale=1",
                 robots: "index, follow",
             };
         }
@@ -23,7 +27,6 @@ export async function generateMetadata(): Promise<Metadata> {
             title,
             description,
             keywords: s.meta_keywords || "",
-            viewport: "width=device-width, initial-scale=1",
             robots: "index, follow",
             icons: s.favicon ? { icon: s.favicon } : undefined,
             openGraph: {
@@ -49,7 +52,6 @@ export async function generateMetadata(): Promise<Metadata> {
         return {
             title: "Content Store",
             description: "",
-            viewport: "width=device-width, initial-scale=1",
         };
     }
 }
