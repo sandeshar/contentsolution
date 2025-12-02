@@ -96,14 +96,24 @@ export default function AddBlogPage() {
         const content = editor?.getHTML() || "";
 
         try {
-            // Convert thumbnail to base64 if exists
-            let thumbnailData = null;
+            // Upload thumbnail if exists
+            let thumbnailUrl = null;
             if (thumbnail) {
-                const reader = new FileReader();
-                thumbnailData = await new Promise<string>((resolve) => {
-                    reader.onloadend = () => resolve(reader.result as string);
-                    reader.readAsDataURL(thumbnail);
+                const formData = new FormData();
+                formData.append('file', thumbnail);
+                formData.append('folder', 'blog/thumbnails');
+
+                const uploadResponse = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
                 });
+
+                if (!uploadResponse.ok) {
+                    throw new Error('Failed to upload thumbnail');
+                }
+
+                const uploadData = await uploadResponse.json();
+                thumbnailUrl = uploadData.url;
             }
 
             const response = await fetch('/api/blog', {
@@ -116,7 +126,7 @@ export default function AddBlogPage() {
                     slug: formData.slug,
                     content,
                     tags: formData.tags,
-                    thumbnail: thumbnailData,
+                    thumbnail: thumbnailUrl,
                     status: isDraft ? 'draft' : 'published'
                 }),
             });
@@ -171,15 +181,46 @@ export default function AddBlogPage() {
         }
     };
 
-    const addImageFromFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const addImageFromFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const url = reader.result as string;
-                editor?.chain().focus().setImage({ src: url }).run();
-            };
-            reader.readAsDataURL(file);
+            try {
+                // Show loading state
+                const loadingImg = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="10" y="50">Uploading...</text></svg>';
+                editor?.chain().focus().setImage({ src: loadingImg }).run();
+
+                // Upload the image
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('folder', 'blog/content');
+
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to upload image');
+                }
+
+                const data = await response.json();
+
+                // Replace loading image with actual image
+                // Remove the loading image first
+                editor?.commands.deleteSelection();
+                // Insert the uploaded image
+                editor?.chain().focus().setImage({ src: data.url }).run();
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Failed to upload image. Please try again.');
+                // Remove loading image on error
+                editor?.commands.deleteSelection();
+            }
+        }
+
+        // Reset the input
+        if (imageInputRef.current) {
+            imageInputRef.current.value = '';
         }
     };
 

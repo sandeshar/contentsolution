@@ -1,12 +1,17 @@
+import AboutHero from "@/components/AboutPage/AboutHero";
+import AboutJourney from "@/components/AboutPage/AboutJourney";
+import AboutPhilosophy from "@/components/AboutPage/AboutPhilosophy";
+import TeamSection from "@/components/AboutPage/TeamSection";
+import AboutCTA from "@/components/AboutPage/AboutCTA";
+
 export default function AboutPage() {
     return (
-        <main className="mx-auto max-w-4xl px-6 py-12">
-            <h1 className="text-4xl font-bold text-slate-900 mb-6">About Us</h1>
-            <div className="prose prose-slate max-w-none">
-                <p className="text-lg text-slate-600">
-                    Learn more about our company, mission, and values.
-                </p>
-            </div>
+        <main className="flex-grow page-bg">
+            <AboutHero />
+            <AboutJourney />
+            <AboutPhilosophy />
+            <TeamSection />
+            <AboutCTA />
         </main>
     );
 }

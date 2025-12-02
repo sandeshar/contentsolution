@@ -1,23 +1,17 @@
-import { db } from "@/db";
-import { storeSettings } from "@/db/schema";
+import Contact from "@/components/Homepage/Contact";
+import Expertise from "@/components/Homepage/Expertise";
+import Hero from "@/components/Homepage/Hero";
+import Trust from "@/components/Homepage/Trust";
 
 export default async function Home() {
-    const rows = await db.select().from(storeSettings).limit(1);
-    const s = rows[0];
     return (
-        <main className="mx-auto max-w-4xl px-6 py-12">
-            {s?.store_logo ? (
-                <div className="mb-6 flex justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={s.store_logo} alt="Store logo" className="h-16 w-auto" />
-                </div>
-            ) : null}
-            <h1 className="text-3xl font-bold text-slate-900 text-center">
-                {s?.store_name || "Welcome"}
-            </h1>
-            <p className="mt-3 text-center text-slate-600">
-                {s?.store_description || ""}
-            </p>
+        <main className="flex flex-col items-center page-bg">
+            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+                <Hero />
+                <Trust />
+                <Expertise />
+                <Contact />
+            </div>
         </main>
     );
 }

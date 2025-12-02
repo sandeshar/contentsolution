@@ -2,7 +2,7 @@
 
 @theme {
     --color-primary: #135bec;
-    --color-background-light: #f6f6f8;
+    --color-background-light: #f6f7f8;
     --color-background-dark: #101622;
     --color-card-light: #ffffff;
     --color-card-dark: #182134;
@@ -13,6 +13,17 @@
     --color-border-light: #e5e7eb;
     --color-border-dark: #374151;
     --font-family-display: Inter, sans-serif;
+}
+
+/* Page background */
+.page-bg {
+    background-color: #f6f7f8;
+}
+
+/* Contact page pattern background utility */
+.contact-pattern {
+    background-image: radial-gradient(circle at 20% 20%, rgba(19, 91, 236, 0.06), transparent 60%),
+        radial-gradient(circle at 80% 30%, rgba(19, 91, 236, 0.04), transparent 65%);
 }
 
 .material-symbols-outlined {
@@ -273,4 +284,9 @@
 
 .tiptap [style*="text-align: right"] {
     text-align: right;
+}
+
+html,
+body {
+    font-family: Inter, sans-serif;
 }

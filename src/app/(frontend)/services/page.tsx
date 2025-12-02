@@ -1,12 +1,15 @@
+import HeroSection from "@/components/ServicesPage/HeroSection";
+import ServiceDetails from "@/components/ServicesPage/ServiceDetails";
+import ProcessSection from "@/components/ServicesPage/ProcessSection";
+import CTASection from "@/components/ServicesPage/CTASection";
+
 export default function ServicesPage() {
     return (
-        <main className="mx-auto max-w-4xl px-6 py-12">
-            <h1 className="text-4xl font-bold text-slate-900 mb-6">Our Services</h1>
-            <div className="prose prose-slate max-w-none">
-                <p className="text-lg text-slate-600">
-                    Discover the services we offer to help you succeed.
-                </p>
-            </div>
+        <main className="page-bg flex-grow">
+            <HeroSection />
+            <ServiceDetails />
+            <ProcessSection />
+            <CTASection />
         </main>
     );
 }

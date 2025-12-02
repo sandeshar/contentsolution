@@ -40,6 +40,8 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       keywords: s.meta_keywords || "",
       robots: "index, follow",
+      creator: s.store_name,
+      publisher: s.store_name,
       icons: s.favicon ? { icon: s.favicon } : undefined,
       openGraph: {
         type: "website",

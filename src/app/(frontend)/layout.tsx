@@ -1,6 +1,8 @@
 import { Metadata, Viewport } from "next";
 import { db } from "@/db";
 import { storeSettings } from "@/db/schema";
+import NavBar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export const viewport: Viewport = {
     width: "device-width",
@@ -28,6 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
             description,
             keywords: s.meta_keywords || "",
             robots: "index, follow",
+            creator: s.store_name,
+            publisher: s.store_name,
             icons: s.favicon ? { icon: s.favicon } : undefined,
             openGraph: {
                 type: "website",
@@ -61,15 +65,11 @@ export default async function FrontendLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const rows = await db.select().from(storeSettings).limit(1);
-    const s = rows[0];
-
     return (
         <>
+            <NavBar />
             {children}
-            <footer className="mt-16 border-t border-slate-200 py-8 text-center text-sm text-slate-500">
-                {s?.footer_text || ""}
-            </footer>
+            <Footer />
         </>
     );
 }
