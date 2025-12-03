@@ -46,4 +46,4 @@ export const storeSettings = mysqlTable("store_settings", {
     meta_keywords: varchar("meta_keywords", { length: 512 }).notNull(),
     footer_text: varchar("footer_text", { length: 512 }).notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-});
+}); 

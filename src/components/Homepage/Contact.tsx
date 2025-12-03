@@ -1,3 +1,5 @@
+import CTAButton from '../shared/CTAButton';
+
 const Contact = () => {
     return (
         <section className="py-16 sm:py-24">
@@ -22,9 +24,7 @@ const Contact = () => {
                     <textarea
                         className="w-full px-4 py-3 rounded-lg bg-background-light border border-slate-300 focus:ring-primary focus:border-primary"
                         placeholder="Message" rows={4}></textarea>
-                    <button
-                        className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors"
-                        type="submit">Submit</button>
+                    <CTAButton text="Submit" variant="primary" className="w-full" />
                 </form>
             </div>
         </section>

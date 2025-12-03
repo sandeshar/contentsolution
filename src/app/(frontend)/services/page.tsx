@@ -5,7 +5,7 @@ import CTASection from "@/components/ServicesPage/CTASection";
 
 export default function ServicesPage() {
     return (
-        <main className="page-bg flex-grow">
+        <main className="page-bg grow">
             <HeroSection />
             <ServiceDetails />
             <ProcessSection />

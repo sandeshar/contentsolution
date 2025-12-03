@@ -1,3 +1,5 @@
+import CTAButton from '../shared/CTAButton';
+
 const Hero = () => {
     return (
         <section className="@container py-16 sm:py-24">
@@ -13,10 +15,7 @@ const Hero = () => {
                             into loyal customers.
                         </h2>
                     </div>
-                    <button
-                        className="flex min-w-[84px] w-fit cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
-                        <span className="truncate">Schedule a Free Consultation</span>
-                    </button>
+                    <CTAButton text="Schedule a Free Consultation" variant="primary" className="w-fit" />
                 </div>
                 <div className="w-full @[960px]:w-1/2 bg-center bg-no-repeat aspect-video bg-cover rounded-xl"
                     data-alt="Abstract gradient of blue and purple shapes representing creativity and strategy"

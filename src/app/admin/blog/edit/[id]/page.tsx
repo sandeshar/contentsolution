@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ImageUploader from "@/components/shared/ImageUploader";
 import { useParams } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -26,8 +27,7 @@ export default function EditBlogPage() {
         slug: "",
         tags: "",
     });
-    const [thumbnail, setThumbnail] = useState<File | null>(null);
-    const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+    const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
     const [wordCount, setWordCount] = useState(0);
     const [charCount, setCharCount] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
@@ -121,9 +121,9 @@ export default function EditBlogPage() {
                     tags: post.tags || "",
                 });
 
-                // Set thumbnail preview
+                // Set thumbnail url
                 if (post.thumbnail) {
-                    setThumbnailPreview(post.thumbnail);
+                    setThumbnailUrl(post.thumbnail);
                 }
 
                 // Store content to set when editor is ready
@@ -160,26 +160,6 @@ export default function EditBlogPage() {
         const content = editor?.getHTML() || "";
 
         try {
-            // Upload new thumbnail if a file was selected
-            let thumbnailUrl = thumbnailPreview;
-            if (thumbnail) {
-                const formData = new FormData();
-                formData.append('file', thumbnail);
-                formData.append('folder', 'blog/thumbnails');
-
-                const uploadResponse = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!uploadResponse.ok) {
-                    throw new Error('Failed to upload thumbnail');
-                }
-
-                const uploadData = await uploadResponse.json();
-                thumbnailUrl = uploadData.url;
-            }
-
             const response = await fetch('/api/blog', {
                 method: 'PUT',
                 headers: {
@@ -191,7 +171,7 @@ export default function EditBlogPage() {
                     newSlug: formData.slug,
                     content,
                     tags: formData.tags,
-                    thumbnail: thumbnailUrl,
+                    thumbnail: thumbnailUrl || null,
                     status: isDraft ? 'draft' : 'published'
                 }),
             });
@@ -212,25 +192,7 @@ export default function EditBlogPage() {
         }
     };
 
-    const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setThumbnail(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setThumbnailPreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const removeThumbnail = () => {
-        setThumbnail(null);
-        setThumbnailPreview("");
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-    };
+    // Thumbnail upload handled by shared ImageUploader
 
     const setLink = () => {
         const url = prompt("Enter link URL:");
@@ -625,54 +587,14 @@ export default function EditBlogPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Thumbnail Image</label>
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleThumbnailUpload}
-                                        className="hidden"
+                                    <ImageUploader
+                                        label="Thumbnail Image"
+                                        value={thumbnailUrl}
+                                        onChange={setThumbnailUrl}
+                                        folder="blog/thumbnails"
+                                        buttonText="Upload thumbnail"
                                     />
-                                    {!thumbnailPreview ? (
-                                        <div
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
-                                        >
-                                            <span className="material-symbols-outlined text-slate-400 text-5xl mb-2">image</span>
-                                            <p className="text-sm text-slate-600">
-                                                <span className="text-primary font-medium">Click to upload</span> thumbnail
-                                            </p>
-                                            <p className="text-xs text-slate-500 mt-1">PNG, JPG, GIF up to 5MB (recommended: 1200x630px)</p>
-                                        </div>
-                                    ) : (
-                                        <div className="relative group">
-                                            <img
-                                                src={thumbnailPreview}
-                                                alt="Thumbnail preview"
-                                                className="w-full h-64 object-cover rounded-lg border border-slate-200"
-                                            />
-                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-lg flex items-center justify-center">
-                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                        className="bg-white text-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg hover:bg-slate-50"
-                                                    >
-                                                        <span className="material-symbols-outlined text-lg">edit</span>
-                                                        Change
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={removeThumbnail}
-                                                        className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg hover:bg-red-600"
-                                                    >
-                                                        <span className="material-symbols-outlined text-lg">delete</span>
-                                                        Remove
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+                                    <p className="text-xs text-slate-500 mt-1">PNG, JPG, GIF up to 5MB (recommended: 1200x630px)</p>
                                 </div>
                             </div>
 

@@ -16,7 +16,7 @@ const ContactHighlights = () => {
                         <h3 className="text-sm font-semibold text-slate-900 tracking-tight">{h.title}</h3>
                         <p className="text-xs text-slate-600 leading-relaxed">{h.text}</p>
                     </div>
-                    <span className="absolute inset-x-6 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition" />
+                    <span className="absolute inset-x-6 bottom-0 h-px bg-linear-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition" />
                 </div>
             ))}
         </div>

@@ -6,7 +6,7 @@ import AboutCTA from "@/components/AboutPage/AboutCTA";
 
 export default function AboutPage() {
     return (
-        <main className="flex-grow page-bg">
+        <main className="grow page-bg">
             <AboutHero />
             <AboutJourney />
             <AboutPhilosophy />

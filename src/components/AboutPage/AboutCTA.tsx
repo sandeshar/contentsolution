@@ -1,3 +1,5 @@
+import CTAButton from '../shared/CTAButton';
+
 const AboutCTA = () => {
     return (
         <section className="w-full py-20 lg:py-32">
@@ -12,12 +14,8 @@ const AboutCTA = () => {
                             Whether you need a single landing page or a full-scale content ecosystem, we're ready to collaborate. Let's turn your vision into results-driven narratives.
                         </p>
                         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                            <button className="flex h-12 items-center justify-center rounded-lg bg-white px-8 text-base font-bold text-primary tracking-[0.015em] transition-all hover:bg-white/90 hover:shadow-xl">
-                                <span className="truncate">Start a Project</span>
-                            </button>
-                            <button className="flex h-12 items-center justify-center rounded-lg border-2 border-white px-8 text-base font-bold text-white tracking-[0.015em] transition-all hover:bg-white hover:text-primary">
-                                <span className="truncate">View Our Work</span>
-                            </button>
+                            <CTAButton text="Start a Project" variant="primary" className="bg-white text-primary hover:bg-white/90 shadow-xl" />
+                            <CTAButton text="View Our Work" variant="outline" className="border-white text-white hover:bg-white hover:text-primary" />
                         </div>
                     </div>
                 </div>

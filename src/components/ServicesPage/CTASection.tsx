@@ -1,3 +1,5 @@
+import CTAButton from '../shared/CTAButton';
+
 const CTASection = () => {
     return (
         <section className="py-20 sm:py-32">
@@ -8,9 +10,7 @@ const CTASection = () => {
                     <div className="relative flex flex-col items-center gap-4">
                         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Ready to Elevate Your Content?</h2>
                         <p className="max-w-2xl text-base text-slate-300 sm:text-lg">Let&apos;s talk about how our content solutions can help you achieve your business goals. Get in touch for a free consultation.</p>
-                        <button className="mt-4 flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold shadow-sm transition-all hover:bg-primary/90">
-                            <span className="truncate">Schedule a Free Call</span>
-                        </button>
+                        <CTAButton text="Schedule a Free Call" variant="primary" className="mt-4 shadow-sm" />
                     </div>
                 </div>
             </div>

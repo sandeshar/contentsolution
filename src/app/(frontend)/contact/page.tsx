@@ -4,7 +4,7 @@ import ContactForm from "@/components/ContactPage/ContactForm";
 
 export default function ContactPage() {
     return (
-        <main className="flex-grow">
+        <main className="grow">
             <section className="w-full py-16 sm:py-24 lg:py-32">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
@@ -17,7 +17,7 @@ export default function ContactPage() {
                 </div>
             </section>
             <section className="w-full">
-                <div className="aspect-[16/6] w-full">
+                <div className="aspect-16/6 w-full">
                     <img
                         alt="A map showing the location of the office in a city."
                         className="h-full w-full object-cover"

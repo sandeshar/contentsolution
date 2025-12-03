@@ -1,4 +1,5 @@
 import React from 'react';
+import CTAButton from '../shared/CTAButton';
 
 const formFields = [
     {
@@ -65,12 +66,7 @@ const ContactForm = () => {
                     ))}
                 </div>
                 <div>
-                    <button
-                        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
-                        type="submit"
-                    >
-                        Send Message
-                    </button>
+                    <CTAButton text="Send Message" variant="primary" className="w-full" />
                 </div>
             </form>
         </div>

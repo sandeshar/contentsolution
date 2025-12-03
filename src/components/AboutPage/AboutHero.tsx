@@ -1,3 +1,5 @@
+import CTAButton from '../shared/CTAButton';
+
 const AboutHero = () => {
     return (
         <section className="w-full py-20 lg:py-32">
@@ -11,12 +13,8 @@ const AboutHero = () => {
                             Welcome to Content Solution Nepal. We're a team of storytellers, strategists, and digital artisans dedicated to crafting narratives that resonate, engage, and drive growth. Your brand has a story. Let's tell it together.
                         </p>
                         <div className="flex flex-wrap items-center gap-4">
-                            <button className="flex h-12 items-center justify-center rounded-lg bg-primary px-6 text-base font-bold text-white tracking-[0.015em] transition-colors hover:bg-primary/90">
-                                <span className="truncate">Meet the Team</span>
-                            </button>
-                            <button className="flex h-12 items-center justify-center rounded-lg bg-slate-200 px-6 text-base font-bold text-slate-900 tracking-[0.015em] transition-colors hover:bg-slate-300">
-                                <span className="truncate">Our Story</span>
-                            </button>
+                            <CTAButton text="Meet the Team" variant="primary" />
+                            <CTAButton text="Our Story" variant="secondary" />
                         </div>
                     </div>
                     <div className="relative h-80 w-full overflow-hidden rounded-xl lg:h-[420px]">
