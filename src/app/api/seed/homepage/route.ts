@@ -11,6 +11,14 @@ import {
 
 export async function POST() {
     try {
+        // Clear existing data
+        await db.delete(homepageHero);
+        await db.delete(homepageTrustSection);
+        await db.delete(homepageTrustLogos);
+        await db.delete(homepageExpertiseSection);
+        await db.delete(homepageExpertiseItems);
+        await db.delete(homepageContactSection);
+
         // Seed Hero Section
         await db.insert(homepageHero).values({
             title: 'Drive Real Business Growth Through Powerful Content',

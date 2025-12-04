@@ -10,6 +10,13 @@ import {
 
 export async function POST() {
     try {
+        // Clear existing data
+        await db.delete(servicesPageHero);
+        await db.delete(servicesPageDetails);
+        await db.delete(servicesPageProcessSection);
+        await db.delete(servicesPageProcessSteps);
+        await db.delete(servicesPageCTA);
+
         // Seed Hero Section
         await db.insert(servicesPageHero).values({
             tagline: 'OUR SERVICES',

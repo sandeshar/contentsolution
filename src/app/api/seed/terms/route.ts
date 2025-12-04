@@ -7,6 +7,10 @@ import {
 
 export async function POST() {
     try {
+        // Clear existing data
+        await db.delete(termsPageHeader);
+        await db.delete(termsPageSections);
+
         // Seed Header
         await db.insert(termsPageHeader).values({
             title: 'Terms & Conditions',

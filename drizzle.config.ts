@@ -11,6 +11,7 @@ export default defineConfig({
         './src/db/contactPageSchema.ts',
         './src/db/faqPageSchema.ts',
         './src/db/termsPageSchema.ts',
+        './src/db/blogPageSchema.ts',
     ],
     dialect: 'mysql',
     dbCredentials: {

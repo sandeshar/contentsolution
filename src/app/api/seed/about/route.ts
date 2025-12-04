@@ -14,6 +14,17 @@ import {
 
 export async function POST() {
     try {
+        // Clear existing data
+        await db.delete(aboutPageHero);
+        await db.delete(aboutPageJourney);
+        await db.delete(aboutPageStats);
+        await db.delete(aboutPageFeatures);
+        await db.delete(aboutPagePhilosophy);
+        await db.delete(aboutPagePrinciples);
+        await db.delete(aboutPageTeamMembers);
+        await db.delete(aboutPageTeamSection);
+        await db.delete(aboutPageCTA);
+
         // Seed Hero Section
         await db.insert(aboutPageHero).values({
             title: "We Don't Just Write. We Build Worlds with Words.",

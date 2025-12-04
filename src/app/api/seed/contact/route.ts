@@ -8,6 +8,11 @@ import {
 
 export async function POST() {
     try {
+        // Clear existing data
+        await db.delete(contactPageHero);
+        await db.delete(contactPageInfo);
+        await db.delete(contactPageFormConfig);
+
         // Seed Hero Section
         await db.insert(contactPageHero).values({
             tagline: 'CONTACT US',

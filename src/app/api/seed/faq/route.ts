@@ -9,6 +9,12 @@ import {
 
 export async function POST() {
     try {
+        // Clear existing data
+        await db.delete(faqItems);
+        await db.delete(faqCategories);
+        await db.delete(faqPageHeader);
+        await db.delete(faqPageCTA);
+
         // Seed Header Section
         await db.insert(faqPageHeader).values({
             title: 'Frequently Asked Questions',
