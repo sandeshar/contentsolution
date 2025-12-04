@@ -1,90 +1,160 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import ImageUploader from "@/components/shared/ImageUploader";
 
 export default function AboutPageUI() {
     const [activeTab, setActiveTab] = useState("hero");
     const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    // --- Hero Section State ---
-    const [heroData, setHeroData] = useState({
-        title: "About Us",
-        description: "We are a team of passionate creators...",
-        button1Text: "Meet the Team",
-        button1Link: "#team",
-        button2Text: "Our Story",
-        button2Link: "#story",
-        heroImage: "",
-        heroImageAlt: "",
-        isActive: true
-    });
+    // --- State Definitions ---
+    const [heroData, setHeroData] = useState<any>({});
+    const [journeyData, setJourneyData] = useState<any>({});
+    const [stats, setStats] = useState<any[]>([]);
+    const [features, setFeatures] = useState<any[]>([]);
+    const [philosophyData, setPhilosophyData] = useState<any>({});
+    const [principles, setPrinciples] = useState<any[]>([]);
+    const [teamSectionData, setTeamSectionData] = useState<any>({});
+    const [teamMembers, setTeamMembers] = useState<any[]>([]);
+    const [ctaData, setCtaData] = useState<any>({});
 
-    // --- Journey Section State ---
-    const [journeyData, setJourneyData] = useState({
-        title: "Our Journey",
-        paragraph1: "From humble beginnings to industry leaders...",
-        paragraph2: "We continue to evolve and innovate...",
-        thinkingBoxTitle: "Our Vision",
-        thinkingBoxContent: "To transform the way businesses communicate...",
-        stats: [
-            { id: 1, label: "Years Experience", value: "10+", displayOrder: 1, isActive: true },
-            { id: 2, label: "Projects Delivered", value: "500+", displayOrder: 2, isActive: true }
-        ],
-        features: [
-            { id: 1, title: "Client-Focused", description: "Your success is our priority", displayOrder: 1, isActive: true }
-        ]
-    });
+    // Track deleted items to remove from DB on save
+    const [deletedStats, setDeletedStats] = useState<number[]>([]);
+    const [deletedFeatures, setDeletedFeatures] = useState<number[]>([]);
+    const [deletedPrinciples, setDeletedPrinciples] = useState<number[]>([]);
+    const [deletedTeamMembers, setDeletedTeamMembers] = useState<number[]>([]);
 
-    // --- Philosophy Section State ---
-    const [philosophyData, setPhilosophyData] = useState({
-        title: "Our Philosophy",
-        description: "We believe in quality over quantity...",
-        principles: [
-            { id: 1, title: "Innovation", description: "Always pushing boundaries", displayOrder: 1, isActive: true }
-        ]
-    });
+    // --- Fetch Data ---
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [
+                    heroRes,
+                    journeyRes,
+                    statsRes,
+                    featuresRes,
+                    philosophyRes,
+                    principlesRes,
+                    teamSectionRes,
+                    teamMembersRes,
+                    ctaRes
+                ] = await Promise.all([
+                    fetch('/api/pages/about/hero'),
+                    fetch('/api/pages/about/journey'),
+                    fetch('/api/pages/about/stats'),
+                    fetch('/api/pages/about/features'),
+                    fetch('/api/pages/about/philosophy'),
+                    fetch('/api/pages/about/principles'),
+                    fetch('/api/pages/about/team-section'),
+                    fetch('/api/pages/about/team-members'),
+                    fetch('/api/pages/about/cta'),
+                ]);
 
-    // --- Team Section State ---
-    const [teamMembers, setTeamMembers] = useState([
-        { id: 1, name: "John Doe", role: "CEO", image: "", imageAlt: "", bio: "Visionary leader...", displayOrder: 1, isActive: true }
-    ]);
+                if (heroRes.ok) setHeroData(await heroRes.json());
+                if (journeyRes.ok) setJourneyData(await journeyRes.json());
+                if (statsRes.ok) setStats(await statsRes.json());
+                if (featuresRes.ok) setFeatures(await featuresRes.json());
+                if (philosophyRes.ok) setPhilosophyData(await philosophyRes.json());
+                if (principlesRes.ok) setPrinciples(await principlesRes.json());
+                if (teamSectionRes.ok) setTeamSectionData(await teamSectionRes.json());
+                if (teamMembersRes.ok) setTeamMembers(await teamMembersRes.json());
+                if (ctaRes.ok) setCtaData(await ctaRes.json());
 
-    // --- CTA Section State ---
-    const [ctaData, setCtaData] = useState({
-        title: "Join Our Team",
-        description: "We are always looking for talent...",
-        primaryButtonText: "Start a Project",
-        primaryButtonLink: "/contact",
-        secondaryButtonText: "View Our Work",
-        secondaryButtonLink: "/portfolio",
-        isActive: true
-    });
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     // --- Handlers ---
+
     const handleSave = async () => {
         setSaving(true);
-        setTimeout(() => {
-            setSaving(false);
+        try {
+            // Helper to save a single section (create or update)
+            const saveSection = async (url: string, data: any) => {
+                const method = data.id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                if (!res.ok) throw new Error(`Failed to save ${url}`);
+                return res.json();
+            };
+
+            // Helper to save a list of items
+            const saveList = async (url: string, items: any[], deletedIds: number[]) => {
+                // Delete removed items
+                for (const id of deletedIds) {
+                    await fetch(`${url}?id=${id}`, { method: 'DELETE' });
+                }
+                // Save/Update current items
+                for (const item of items) {
+                    await saveSection(url, item);
+                }
+            };
+
+            await Promise.all([
+                saveSection('/api/pages/about/hero', heroData),
+                saveSection('/api/pages/about/journey', journeyData),
+                saveList('/api/pages/about/stats', stats, deletedStats),
+                saveList('/api/pages/about/features', features, deletedFeatures),
+                saveSection('/api/pages/about/philosophy', philosophyData),
+                saveList('/api/pages/about/principles', principles, deletedPrinciples),
+                saveSection('/api/pages/about/team-section', teamSectionData),
+                saveList('/api/pages/about/team-members', teamMembers, deletedTeamMembers),
+                saveSection('/api/pages/about/cta', ctaData),
+            ]);
+
+            // Clear deleted lists after successful save
+            setDeletedStats([]);
+            setDeletedFeatures([]);
+            setDeletedPrinciples([]);
+            setDeletedTeamMembers([]);
+
             alert("Settings saved successfully!");
-        }, 1000);
+            // Optionally refetch data to get new IDs for created items
+            window.location.reload(); 
+
+        } catch (error) {
+            console.error("Error saving settings:", error);
+            alert("Failed to save settings. Please try again.");
+        } finally {
+            setSaving(false);
+        }
     };
 
-    // Team Handlers
-    const addTeamMember = () => {
-        setTeamMembers([...teamMembers, {
-            id: Date.now(),
-            name: "",
-            role: "",
-            image: "",
-            imageAlt: "",
-            bio: "",
-            displayOrder: teamMembers.length + 1,
-            isActive: true
-        }]);
+    // Generic List Handlers
+    const addItem = (list: any[], setList: any, defaultItem: any) => {
+        setList([...list, { ...defaultItem, display_order: list.length + 1, is_active: 1 }]);
     };
-    const removeTeamMember = (id: number) => setTeamMembers(teamMembers.filter(m => m.id !== id));
-    const updateTeamMember = (id: number, field: string, value: any) => {
-        setTeamMembers(teamMembers.map(m => m.id === id ? { ...m, [field]: value } : m));
+
+    const removeItem = (id: number | undefined, list: any[], setList: any, deletedList: number[], setDeletedList: any) => {
+        if (id) {
+            setDeletedList([...deletedList, id]);
+        }
+        // If it doesn't have an ID, it's a new item not yet saved, so just remove from state
+        // We filter by index if id is missing, or by id if present. 
+        // Actually, let's assign a temp ID for new items to make this easier? 
+        // Or just filter by object reference?
+        // Let's assume we pass the index for removal if ID is missing.
+        // But wait, the UI maps by index or ID.
+        
+        // Better approach:
+        // If item has a real ID (from DB), add to deletedList.
+        // Remove from list state.
+    };
+
+    const updateItem = (index: number, field: string, value: any, list: any[], setList: any) => {
+        const newList = [...list];
+        newList[index] = { ...newList[index], [field]: value };
+        setList(newList);
     };
 
     const tabs = [
@@ -94,6 +164,8 @@ export default function AboutPageUI() {
         { id: "team", label: "Team" },
         { id: "cta", label: "CTA" },
     ];
+
+    if (loading) return <div className="p-10 text-center">Loading...</div>;
 
     return (
         <div className="w-full min-h-screen bg-white pb-20">
@@ -147,24 +219,24 @@ export default function AboutPageUI() {
                                     Hero Configuration
                                 </h2>
                                 <div className="space-y-5">
-                                    <InputGroup label="Title" value={heroData.title} onChange={(v) => setHeroData({ ...heroData, title: v })} />
-                                    <TextAreaGroup label="Description" value={heroData.description} onChange={(v) => setHeroData({ ...heroData, description: v })} />
+                                    <InputGroup label="Title" value={heroData.title || ''} onChange={(v) => setHeroData({ ...heroData, title: v })} />
+                                    <TextAreaGroup label="Description" value={heroData.description || ''} onChange={(v) => setHeroData({ ...heroData, description: v })} />
 
                                     <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="Primary Button Text" value={heroData.button1Text} onChange={(v) => setHeroData({ ...heroData, button1Text: v })} />
-                                        <InputGroup label="Primary Button Link" value={heroData.button1Link} onChange={(v) => setHeroData({ ...heroData, button1Link: v })} />
+                                        <InputGroup label="Primary Button Text" value={heroData.button1_text || ''} onChange={(v) => setHeroData({ ...heroData, button1_text: v })} />
+                                        <InputGroup label="Primary Button Link" value={heroData.button1_link || ''} onChange={(v) => setHeroData({ ...heroData, button1_link: v })} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="Secondary Button Text" value={heroData.button2Text} onChange={(v) => setHeroData({ ...heroData, button2Text: v })} />
-                                        <InputGroup label="Secondary Button Link" value={heroData.button2Link} onChange={(v) => setHeroData({ ...heroData, button2Link: v })} />
+                                        <InputGroup label="Secondary Button Text" value={heroData.button2_text || ''} onChange={(v) => setHeroData({ ...heroData, button2_text: v })} />
+                                        <InputGroup label="Secondary Button Link" value={heroData.button2_link || ''} onChange={(v) => setHeroData({ ...heroData, button2_link: v })} />
                                     </div>
 
-                                    <ImageUploader label="Hero Image" value={heroData.heroImage} onChange={(v) => setHeroData({ ...heroData, heroImage: v })} folder="about" />
-                                    <InputGroup label="Hero Image Alt Text" value={heroData.heroImageAlt} onChange={(v) => setHeroData({ ...heroData, heroImageAlt: v })} />
+                                    <ImageUploader label="Hero Image" value={heroData.hero_image || ''} onChange={(v) => setHeroData({ ...heroData, hero_image: v })} folder="about" />
+                                    <InputGroup label="Hero Image Alt Text" value={heroData.hero_image_alt || ''} onChange={(v) => setHeroData({ ...heroData, hero_image_alt: v })} />
 
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
-                                        <Toggle checked={heroData.isActive} onChange={(c) => setHeroData({ ...heroData, isActive: c })} />
+                                        <Toggle checked={heroData.is_active === 1} onChange={(c) => setHeroData({ ...heroData, is_active: c ? 1 : 0 })} />
                                     </div>
                                 </div>
                             </div>
@@ -180,37 +252,43 @@ export default function AboutPageUI() {
                                     Journey Section
                                 </h2>
                                 <div className="space-y-5">
-                                    <InputGroup label="Title" value={journeyData.title} onChange={(v) => setJourneyData({ ...journeyData, title: v })} />
-                                    <TextAreaGroup label="Paragraph 1" value={journeyData.paragraph1} onChange={(v) => setJourneyData({ ...journeyData, paragraph1: v })} />
-                                    <TextAreaGroup label="Paragraph 2" value={journeyData.paragraph2} onChange={(v) => setJourneyData({ ...journeyData, paragraph2: v })} />
-                                    <InputGroup label="Thinking Box Title" value={journeyData.thinkingBoxTitle} onChange={(v) => setJourneyData({ ...journeyData, thinkingBoxTitle: v })} />
-                                    <TextAreaGroup label="Thinking Box Content" value={journeyData.thinkingBoxContent} onChange={(v) => setJourneyData({ ...journeyData, thinkingBoxContent: v })} />
+                                    <InputGroup label="Title" value={journeyData.title || ''} onChange={(v) => setJourneyData({ ...journeyData, title: v })} />
+                                    <TextAreaGroup label="Paragraph 1" value={journeyData.paragraph1 || ''} onChange={(v) => setJourneyData({ ...journeyData, paragraph1: v })} />
+                                    <TextAreaGroup label="Paragraph 2" value={journeyData.paragraph2 || ''} onChange={(v) => setJourneyData({ ...journeyData, paragraph2: v })} />
+                                    <InputGroup label="Thinking Box Title" value={journeyData.thinking_box_title || ''} onChange={(v) => setJourneyData({ ...journeyData, thinking_box_title: v })} />
+                                    <TextAreaGroup label="Thinking Box Content" value={journeyData.thinking_box_content || ''} onChange={(v) => setJourneyData({ ...journeyData, thinking_box_content: v })} />
                                 </div>
 
                                 {/* Stats List */}
                                 <div className="mt-8 space-y-4">
                                     <div className="flex items-center justify-between px-2">
                                         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Stats</h3>
-                                        <button onClick={() => setJourneyData({ ...journeyData, stats: [...journeyData.stats, { id: Date.now(), label: "", value: "", displayOrder: (journeyData.stats?.length || 0) + 1, isActive: true }] })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                                        <button onClick={() => addItem(stats, setStats, { label: "", value: "" })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[18px]">add_circle</span> Add Stat
                                         </button>
                                     </div>
-                                    {(journeyData.stats || []).map((stat: any, idx: number) => (
-                                        <div key={stat.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
+                                    {stats.map((stat, idx) => (
+                                        <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button onClick={() => setJourneyData({ ...journeyData, stats: (journeyData.stats || []).filter((s: any) => s.id !== stat.id) })} className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                                                <button 
+                                                    onClick={() => {
+                                                        if (stat.id) setDeletedStats([...deletedStats, stat.id]);
+                                                        setStats(stats.filter((_, i) => i !== idx));
+                                                    }} 
+                                                    className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                >
                                                     <span className="material-symbols-outlined">delete</span>
                                                 </button>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
-                                                <InputGroup label="Label" value={stat.label} onChange={(v) => setJourneyData({ ...journeyData, stats: (journeyData.stats || []).map((s: any) => s.id === stat.id ? { ...s, label: v } : s) })} />
-                                                <InputGroup label="Value" value={stat.value} onChange={(v) => setJourneyData({ ...journeyData, stats: (journeyData.stats || []).map((s: any) => s.id === stat.id ? { ...s, value: v } : s) })} />
+                                                <InputGroup label="Label" value={stat.label || ''} onChange={(v) => updateItem(idx, 'label', v, stats, setStats)} />
+                                                <InputGroup label="Value" value={stat.value || ''} onChange={(v) => updateItem(idx, 'value', v, stats, setStats)} />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 mt-4">
-                                                <InputGroup label="Display Order" value={String(stat.displayOrder)} onChange={(v) => setJourneyData({ ...journeyData, stats: (journeyData.stats || []).map((s: any) => s.id === stat.id ? { ...s, displayOrder: Number(v) } : s) })} />
+                                                <InputGroup label="Display Order" value={String(stat.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), stats, setStats)} />
                                                 <div className="flex items-end">
-                                                    <Toggle checked={stat.isActive} onChange={(c) => setJourneyData({ ...journeyData, stats: (journeyData.stats || []).map((s: any) => s.id === stat.id ? { ...s, isActive: c } : s) })} />
+                                                    <Toggle checked={stat.is_active === 1} onChange={(c) => updateItem(idx, 'is_active', c ? 1 : 0, stats, setStats)} />
                                                 </div>
                                             </div>
                                         </div>
@@ -221,25 +299,31 @@ export default function AboutPageUI() {
                                 <div className="mt-8 space-y-4">
                                     <div className="flex items-center justify-between px-2">
                                         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Features</h3>
-                                        <button onClick={() => setJourneyData({ ...journeyData, features: [...(journeyData.features || []), { id: Date.now(), title: "", description: "", displayOrder: (journeyData.features?.length || 0) + 1, isActive: true }] })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                                        <button onClick={() => addItem(features, setFeatures, { title: "", description: "" })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[18px]">add_circle</span> Add Feature
                                         </button>
                                     </div>
-                                    {(journeyData.features || []).map((feature: any, idx: number) => (
-                                        <div key={feature.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
+                                    {features.map((feature, idx) => (
+                                        <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button onClick={() => setJourneyData({ ...journeyData, features: (journeyData.features || []).filter((f: any) => f.id !== feature.id) })} className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                                                <button 
+                                                    onClick={() => {
+                                                        if (feature.id) setDeletedFeatures([...deletedFeatures, feature.id]);
+                                                        setFeatures(features.filter((_, i) => i !== idx));
+                                                    }}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                >
                                                     <span className="material-symbols-outlined">delete</span>
                                                 </button>
                                             </div>
                                             <div className="space-y-4">
-                                                <InputGroup label="Title" value={feature.title} onChange={(v) => setJourneyData({ ...journeyData, features: (journeyData.features || []).map((f: any) => f.id === feature.id ? { ...f, title: v } : f) })} />
-                                                <TextAreaGroup label="Description" value={feature.description} onChange={(v) => setJourneyData({ ...journeyData, features: (journeyData.features || []).map((f: any) => f.id === feature.id ? { ...f, description: v } : f) })} />
+                                                <InputGroup label="Title" value={feature.title || ''} onChange={(v) => updateItem(idx, 'title', v, features, setFeatures)} />
+                                                <TextAreaGroup label="Description" value={feature.description || ''} onChange={(v) => updateItem(idx, 'description', v, features, setFeatures)} />
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <InputGroup label="Display Order" value={String(feature.displayOrder)} onChange={(v) => setJourneyData({ ...journeyData, features: (journeyData.features || []).map((f: any) => f.id === feature.id ? { ...f, displayOrder: Number(v) } : f) })} />
+                                                    <InputGroup label="Display Order" value={String(feature.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), features, setFeatures)} />
                                                     <div className="flex items-end">
-                                                        <Toggle checked={feature.isActive} onChange={(c) => setJourneyData({ ...journeyData, features: (journeyData.features || []).map((f: any) => f.id === feature.id ? { ...f, isActive: c } : f) })} />
+                                                        <Toggle checked={feature.is_active === 1} onChange={(c) => updateItem(idx, 'is_active', c ? 1 : 0, features, setFeatures)} />
                                                     </div>
                                                 </div>
                                             </div>
@@ -259,33 +343,39 @@ export default function AboutPageUI() {
                                     Philosophy
                                 </h2>
                                 <div className="space-y-5">
-                                    <InputGroup label="Title" value={philosophyData.title} onChange={(v) => setPhilosophyData({ ...philosophyData, title: v })} />
-                                    <TextAreaGroup label="Description" value={philosophyData.description} onChange={(v) => setPhilosophyData({ ...philosophyData, description: v })} />
+                                    <InputGroup label="Title" value={philosophyData.title || ''} onChange={(v) => setPhilosophyData({ ...philosophyData, title: v })} />
+                                    <TextAreaGroup label="Description" value={philosophyData.description || ''} onChange={(v) => setPhilosophyData({ ...philosophyData, description: v })} />
                                 </div>
 
                                 {/* Principles List */}
                                 <div className="mt-8 space-y-4">
                                     <div className="flex items-center justify-between px-2">
                                         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Principles</h3>
-                                        <button onClick={() => setPhilosophyData({ ...philosophyData, principles: [...(philosophyData.principles || []), { id: Date.now(), title: "", description: "", displayOrder: (philosophyData.principles?.length || 0) + 1, isActive: true }] })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                                        <button onClick={() => addItem(principles, setPrinciples, { title: "", description: "" })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[18px]">add_circle</span> Add Principle
                                         </button>
                                     </div>
-                                    {(philosophyData.principles || []).map((p: any, idx: number) => (
-                                        <div key={p.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
+                                    {principles.map((p, idx) => (
+                                        <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button onClick={() => setPhilosophyData({ ...philosophyData, principles: (philosophyData.principles || []).filter((x: any) => x.id !== p.id) })} className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                                                <button 
+                                                    onClick={() => {
+                                                        if (p.id) setDeletedPrinciples([...deletedPrinciples, p.id]);
+                                                        setPrinciples(principles.filter((_, i) => i !== idx));
+                                                    }}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                >
                                                     <span className="material-symbols-outlined">delete</span>
                                                 </button>
                                             </div>
                                             <div className="space-y-4">
-                                                <InputGroup label="Title" value={p.title} onChange={(v) => setPhilosophyData({ ...philosophyData, principles: (philosophyData.principles || []).map((x: any) => x.id === p.id ? { ...x, title: v } : x) })} />
-                                                <TextAreaGroup label="Description" value={p.description} onChange={(v) => setPhilosophyData({ ...philosophyData, principles: (philosophyData.principles || []).map((x: any) => x.id === p.id ? { ...x, description: v } : x) })} />
+                                                <InputGroup label="Title" value={p.title || ''} onChange={(v) => updateItem(idx, 'title', v, principles, setPrinciples)} />
+                                                <TextAreaGroup label="Description" value={p.description || ''} onChange={(v) => updateItem(idx, 'description', v, principles, setPrinciples)} />
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <InputGroup label="Display Order" value={String(p.displayOrder)} onChange={(v) => setPhilosophyData({ ...philosophyData, principles: (philosophyData.principles || []).map((x: any) => x.id === p.id ? { ...x, displayOrder: Number(v) } : x) })} />
+                                                    <InputGroup label="Display Order" value={String(p.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), principles, setPrinciples)} />
                                                     <div className="flex items-end">
-                                                        <Toggle checked={p.isActive} onChange={(c) => setPhilosophyData({ ...philosophyData, principles: (philosophyData.principles || []).map((x: any) => x.id === p.id ? { ...x, isActive: c } : x) })} />
+                                                        <Toggle checked={p.is_active === 1} onChange={(c) => updateItem(idx, 'is_active', c ? 1 : 0, principles, setPrinciples)} />
                                                     </div>
                                                 </div>
                                             </div>
@@ -302,33 +392,49 @@ export default function AboutPageUI() {
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
                                     <span className="material-symbols-outlined text-indigo-500">groups</span>
-                                    Team Members
+                                    Team Section Header
                                 </h2>
-                                <div className="flex items-center justify-between mb-6">
-                                    <p className="text-sm text-gray-500">Manage your team profiles</p>
-                                    <button onClick={addTeamMember} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                                <div className="space-y-5 mb-8">
+                                    <InputGroup label="Title" value={teamSectionData.title || ''} onChange={(v) => setTeamSectionData({ ...teamSectionData, title: v })} />
+                                    <TextAreaGroup label="Description" value={teamSectionData.description || ''} onChange={(v) => setTeamSectionData({ ...teamSectionData, description: v })} />
+                                </div>
+
+                                <div className="flex items-center justify-between mb-6 border-t pt-6">
+                                    <h3 className="text-lg font-semibold text-gray-900">Team Members</h3>
+                                    <button onClick={() => addItem(teamMembers, setTeamMembers, { name: "", role: "", image: "", image_alt: "", bio: "" })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
                                         <span className="material-symbols-outlined text-[18px]">add_circle</span> Add Member
                                     </button>
                                 </div>
 
                                 <div className="space-y-4">
                                     {teamMembers.map((member, idx) => (
-                                        <div key={member.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
+                                        <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button onClick={() => removeTeamMember(member.id)} className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                                                <button 
+                                                    onClick={() => {
+                                                        if (member.id) setDeletedTeamMembers([...deletedTeamMembers, member.id]);
+                                                        setTeamMembers(teamMembers.filter((_, i) => i !== idx));
+                                                    }}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                >
                                                     <span className="material-symbols-outlined">delete</span>
                                                 </button>
                                             </div>
                                             <div className="space-y-4">
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <InputGroup label="Name" value={member.name} onChange={(v) => updateTeamMember(member.id, 'name', v)} />
-                                                    <InputGroup label="Role" value={member.role} onChange={(v) => updateTeamMember(member.id, 'role', v)} />
+                                                    <InputGroup label="Name" value={member.name || ''} onChange={(v) => updateItem(idx, 'name', v, teamMembers, setTeamMembers)} />
+                                                    <InputGroup label="Role" value={member.role || ''} onChange={(v) => updateItem(idx, 'role', v, teamMembers, setTeamMembers)} />
                                                 </div>
-                                                <ImageUploader label="Image" value={member.image} onChange={(v) => updateTeamMember(member.id, 'image', v)} folder="about/team" />
-                                                <InputGroup label="Image Alt Text" value={member.imageAlt} onChange={(v) => updateTeamMember(member.id, 'imageAlt', v)} />
-                                                <TextAreaGroup label="Bio" value={member.bio} onChange={(v) => updateTeamMember(member.id, 'bio', v)} />
-                                                <Checkbox label="Active" checked={member.isActive} onChange={(c) => updateTeamMember(member.id, 'isActive', c)} />
+                                                <ImageUploader label="Image" value={member.image || ''} onChange={(v) => updateItem(idx, 'image', v, teamMembers, setTeamMembers)} folder="about/team" />
+                                                <InputGroup label="Image Alt Text" value={member.image_alt || ''} onChange={(v) => updateItem(idx, 'image_alt', v, teamMembers, setTeamMembers)} />
+                                                <TextAreaGroup label="Bio" value={member.bio || ''} onChange={(v) => updateItem(idx, 'bio', v, teamMembers, setTeamMembers)} />
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <InputGroup label="Display Order" value={String(member.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), teamMembers, setTeamMembers)} />
+                                                    <div className="flex items-end">
+                                                        <Toggle checked={member.is_active === 1} onChange={(c) => updateItem(idx, 'is_active', c ? 1 : 0, teamMembers, setTeamMembers)} />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -346,20 +452,20 @@ export default function AboutPageUI() {
                                     CTA Section
                                 </h2>
                                 <div className="space-y-5">
-                                    <InputGroup label="Title" value={ctaData.title} onChange={(v) => setCtaData({ ...ctaData, title: v })} />
-                                    <TextAreaGroup label="Description" value={ctaData.description} onChange={(v) => setCtaData({ ...ctaData, description: v })} />
+                                    <InputGroup label="Title" value={ctaData.title || ''} onChange={(v) => setCtaData({ ...ctaData, title: v })} />
+                                    <TextAreaGroup label="Description" value={ctaData.description || ''} onChange={(v) => setCtaData({ ...ctaData, description: v })} />
                                     <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="Primary Button Text" value={ctaData.primaryButtonText} onChange={(v) => setCtaData({ ...ctaData, primaryButtonText: v })} />
-                                        <InputGroup label="Primary Button Link" value={ctaData.primaryButtonLink} onChange={(v) => setCtaData({ ...ctaData, primaryButtonLink: v })} />
+                                        <InputGroup label="Primary Button Text" value={ctaData.primary_button_text || ''} onChange={(v) => setCtaData({ ...ctaData, primary_button_text: v })} />
+                                        <InputGroup label="Primary Button Link" value={ctaData.primary_button_link || ''} onChange={(v) => setCtaData({ ...ctaData, primary_button_link: v })} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="Secondary Button Text" value={ctaData.secondaryButtonText} onChange={(v) => setCtaData({ ...ctaData, secondaryButtonText: v })} />
-                                        <InputGroup label="Secondary Button Link" value={ctaData.secondaryButtonLink} onChange={(v) => setCtaData({ ...ctaData, secondaryButtonLink: v })} />
+                                        <InputGroup label="Secondary Button Text" value={ctaData.secondary_button_text || ''} onChange={(v) => setCtaData({ ...ctaData, secondary_button_text: v })} />
+                                        <InputGroup label="Secondary Button Link" value={ctaData.secondary_button_link || ''} onChange={(v) => setCtaData({ ...ctaData, secondary_button_link: v })} />
                                     </div>
 
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
-                                        <Toggle checked={ctaData.isActive} onChange={(c) => setCtaData({ ...ctaData, isActive: c })} />
+                                        <Toggle checked={ctaData.is_active === 1} onChange={(c) => setCtaData({ ...ctaData, is_active: c ? 1 : 0 })} />
                                     </div>
                                 </div>
                             </div>
@@ -417,19 +523,3 @@ function Toggle({ checked, onChange }: { checked: boolean, onChange: (c: boolean
         </button>
     );
 }
-
-function Checkbox({ label, checked, onChange }: { label: string, checked: boolean, onChange: (c: boolean) => void }) {
-    return (
-        <label className="flex items-center gap-2 cursor-pointer">
-            <input
-                type="checkbox"
-                checked={checked}
-                onChange={(e) => onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="text-sm text-gray-700">{label}</span>
-        </label>
-    );
-}
-
-import ImageUploader from "@/components/shared/ImageUploader";

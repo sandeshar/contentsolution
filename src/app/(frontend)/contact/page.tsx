@@ -27,7 +27,7 @@ interface ContactFormConfigData {
 
 async function getContactData() {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    
+
     try {
         const [heroRes, infoRes, formConfigRes] = await Promise.all([
             fetch(`${baseUrl}/api/pages/contact/hero`, { cache: 'no-store' }),

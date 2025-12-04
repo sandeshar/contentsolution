@@ -31,7 +31,7 @@ const FAQSection = ({ categories, items, searchPlaceholder }: FAQSectionProps) =
         const matchesCategory = selectedCategoryId ? item.category_id === selectedCategoryId : true;
         const matchesSearch = searchTerm
             ? item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              item.answer.toLowerCase().includes(searchTerm.toLowerCase())
+            item.answer.toLowerCase().includes(searchTerm.toLowerCase())
             : true;
         return matchesCategory && matchesSearch;
     });
@@ -39,8 +39,8 @@ const FAQSection = ({ categories, items, searchPlaceholder }: FAQSectionProps) =
     return (
         <>
             <div className="px-4 py-6 max-w-2xl mx-auto w-full">
-                <SearchBar 
-                    placeholder={searchPlaceholder} 
+                <SearchBar
+                    placeholder={searchPlaceholder}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -51,16 +51,14 @@ const FAQSection = ({ categories, items, searchPlaceholder }: FAQSectionProps) =
                     <button
                         key={category.id}
                         onClick={() => setSelectedCategoryId(category.id)}
-                        className={`flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 ${
-                            selectedCategoryId === category.id
+                        className={`flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 ${selectedCategoryId === category.id
                                 ? 'bg-primary'
                                 : 'bg-white hover:bg-slate-100 transition-colors shadow-sm'
-                        }`}
+                            }`}
                     >
                         <p
-                            className={`text-sm font-medium leading-normal ${
-                                selectedCategoryId === category.id ? 'text-white' : 'text-slate-700'
-                            }`}
+                            className={`text-sm font-medium leading-normal ${selectedCategoryId === category.id ? 'text-white' : 'text-slate-700'
+                                }`}
                         >
                             {category.name}
                         </p>

@@ -29,7 +29,7 @@ interface FAQCTAData {
 
 async function getFAQData() {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    
+
     try {
         const [headerRes, categoriesRes, itemsRes, ctaRes] = await Promise.all([
             fetch(`${baseUrl}/api/pages/faq/header`, { cache: 'no-store' }),
@@ -79,9 +79,9 @@ export default async function FAQPage() {
                     </p>
                 </div>
 
-                <FAQSection 
-                    categories={data.categories} 
-                    items={data.items} 
+                <FAQSection
+                    categories={data.categories}
+                    items={data.items}
                     searchPlaceholder={data.header.search_placeholder}
                 />
 

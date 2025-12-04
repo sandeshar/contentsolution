@@ -1,82 +1,112 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function HomePageUI() {
     const [activeTab, setActiveTab] = useState("hero");
     const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    // --- State Management (Same as before) ---
-    const [heroData, setHeroData] = useState({
-        title: "",
-        subtitle: "",
-        ctaText: "",
-        ctaLink: "",
-        backgroundImage: "",
-        isActive: true
-    });
+    // --- State Management ---
+    const [heroData, setHeroData] = useState<any>({});
+    
+    const [trustSection, setTrustSection] = useState<any>({});
+    const [trustLogos, setTrustLogos] = useState<any[]>([]);
+    
+    const [expertiseSection, setExpertiseSection] = useState<any>({});
+    const [expertiseItems, setExpertiseItems] = useState<any[]>([]);
+    
+    const [contactData, setContactData] = useState<any>({});
 
-    const [trustHeading, setTrustHeading] = useState("TRUSTED BY INDUSTRY LEADERS");
-    const [trustLogos, setTrustLogos] = useState([
-        { id: 1, altText: "", logoUrl: "", darkInvert: false, displayOrder: 1, isActive: true }
-    ]);
+    // Track deleted items
+    const [deletedTrustLogos, setDeletedTrustLogos] = useState<number[]>([]);
+    const [deletedExpertiseItems, setDeletedExpertiseItems] = useState<number[]>([]);
 
-    const [expertiseData, setExpertiseData] = useState({
-        title: "Our Expertise",
-        description: "From strategy to execution, we provide end-to-end content solutions designed to meet your business objectives."
-    });
-    const [expertiseItems, setExpertiseItems] = useState([
-        { id: 1, icon: "explore", title: "Content Strategy", description: "", displayOrder: 1, isActive: true }
-    ]);
+    // --- Fetch Data ---
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [heroRes, trustSecRes, trustLogosRes, expSecRes, expItemsRes, contactRes] = await Promise.all([
+                    fetch('/api/pages/homepage/hero'),
+                    fetch('/api/pages/homepage/trust-section'),
+                    fetch('/api/pages/homepage/trust-logos'),
+                    fetch('/api/pages/homepage/expertise-section'),
+                    fetch('/api/pages/homepage/expertise-items'),
+                    fetch('/api/pages/homepage/contact-section'),
+                ]);
 
-    const [contactData, setContactData] = useState({
-        title: "Ready to Grow Your Business?",
-        description: "Let's talk about how our content solutions can help you achieve your goals. Fill out the form, and we'll get back to you within 24 hours.",
-        namePlaceholder: "Name",
-        emailPlaceholder: "Email",
-        companyPlaceholder: "Company",
-        messagePlaceholder: "Message",
-        submitButtonText: "Submit",
-        isActive: true
-    });
+                if (heroRes.ok) setHeroData(await heroRes.json());
+                if (trustSecRes.ok) setTrustSection(await trustSecRes.json());
+                if (trustLogosRes.ok) setTrustLogos(await trustLogosRes.json());
+                if (expSecRes.ok) setExpertiseSection(await expSecRes.json());
+                if (expItemsRes.ok) setExpertiseItems(await expItemsRes.json());
+                if (contactRes.ok) setContactData(await contactRes.json());
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     // --- Handlers ---
     const handleSave = async () => {
         setSaving(true);
-        setTimeout(() => {
-            setSaving(false);
+        try {
+            const saveSection = async (url: string, data: any) => {
+                const method = data.id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                if (!res.ok) throw new Error(`Failed to save ${url}`);
+                return res.json();
+            };
+
+            const saveList = async (url: string, items: any[], deletedIds: number[]) => {
+                for (const id of deletedIds) {
+                    await fetch(`${url}?id=${id}`, { method: 'DELETE' });
+                }
+                for (const item of items) {
+                    await saveSection(url, item);
+                }
+            };
+
+            await Promise.all([
+                saveSection('/api/pages/homepage/hero', heroData),
+                saveSection('/api/pages/homepage/trust-section', trustSection),
+                saveList('/api/pages/homepage/trust-logos', trustLogos, deletedTrustLogos),
+                saveSection('/api/pages/homepage/expertise-section', expertiseSection),
+                saveList('/api/pages/homepage/expertise-items', expertiseItems, deletedExpertiseItems),
+                saveSection('/api/pages/homepage/contact-section', contactData),
+            ]);
+
+            setDeletedTrustLogos([]);
+            setDeletedExpertiseItems([]);
+
             alert("Settings saved successfully!");
-        }, 1000);
+            window.location.reload();
+        } catch (error) {
+            console.error("Error saving settings:", error);
+            alert("Failed to save settings. Please try again.");
+        } finally {
+            setSaving(false);
+        }
     };
 
-    const addTrustLogo = () => {
-        setTrustLogos([...trustLogos, {
-            id: Date.now(),
-            altText: "",
-            logoUrl: "",
-            darkInvert: false,
-            displayOrder: trustLogos.length + 1,
-            isActive: true
-        }]);
-    };
-    const removeTrustLogo = (id: number) => setTrustLogos(trustLogos.filter(l => l.id !== id));
-    const updateTrustLogo = (id: number, field: string, value: any) => {
-        setTrustLogos(trustLogos.map(l => l.id === id ? { ...l, [field]: value } : l));
+    // Generic List Handlers
+    const addItem = (list: any[], setList: any, defaultItem: any) => {
+        setList([...list, { ...defaultItem, display_order: list.length + 1, is_active: 1 }]);
     };
 
-    const addExpertiseItem = () => {
-        setExpertiseItems([...expertiseItems, {
-            id: Date.now(),
-            icon: "",
-            title: "",
-            description: "",
-            displayOrder: expertiseItems.length + 1,
-            isActive: true
-        }]);
-    };
-    const removeExpertiseItem = (id: number) => setExpertiseItems(expertiseItems.filter(i => i.id !== id));
-    const updateExpertiseItem = (id: number, field: string, value: any) => {
-        setExpertiseItems(expertiseItems.map(i => i.id === id ? { ...i, [field]: value } : i));
+    const updateItem = (index: number, field: string, value: any, list: any[], setList: any) => {
+        const newList = [...list];
+        newList[index] = { ...newList[index], [field]: value };
+        setList(newList);
     };
 
     const tabs = [
@@ -85,6 +115,8 @@ export default function HomePageUI() {
         { id: "expertise", label: "Expertise" },
         { id: "contact", label: "Contact" },
     ];
+
+    if (loading) return <div className="p-10 text-center">Loading...</div>;
 
     return (
         <div className="w-full min-h-screen bg-white pb-20">
@@ -128,26 +160,27 @@ export default function HomePageUI() {
 
                 {/* Content */}
                 <div className="max-w-4xl mx-auto">
+
                     {/* HERO SECTION */}
                     {activeTab === "hero" && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-indigo-500">panorama</span>
+                                    <span className="material-symbols-outlined text-indigo-500">web_asset</span>
                                     Hero Configuration
                                 </h2>
                                 <div className="space-y-5">
-                                    <InputGroup label="Title" value={heroData.title} onChange={(v) => setHeroData({ ...heroData, title: v })} placeholder="Enter main headline..." />
-                                    <TextAreaGroup label="Subtitle" value={heroData.subtitle} onChange={(v) => setHeroData({ ...heroData, subtitle: v })} placeholder="Enter supporting text..." />
+                                    <InputGroup label="Title" value={heroData.title || ''} onChange={(v) => setHeroData({ ...heroData, title: v })} />
+                                    <TextAreaGroup label="Subtitle" value={heroData.subtitle || ''} onChange={(v) => setHeroData({ ...heroData, subtitle: v })} />
                                     <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="CTA Text" value={heroData.ctaText} onChange={(v) => setHeroData({ ...heroData, ctaText: v })} placeholder="e.g. Get Started" />
-                                        <InputGroup label="CTA Link" value={heroData.ctaLink} onChange={(v) => setHeroData({ ...heroData, ctaLink: v })} placeholder="e.g. /contact" />
+                                        <InputGroup label="CTA Text" value={heroData.cta_text || ''} onChange={(v) => setHeroData({ ...heroData, cta_text: v })} />
+                                        <InputGroup label="CTA Link" value={heroData.cta_link || ''} onChange={(v) => setHeroData({ ...heroData, cta_link: v })} />
                                     </div>
-                                    <ImageUploader label="Background Image" value={heroData.backgroundImage} onChange={(v) => setHeroData({ ...heroData, backgroundImage: v })} folder="home/hero" />
-
+                                    <InputGroup label="Background Image URL" value={heroData.background_image || ''} onChange={(v) => setHeroData({ ...heroData, background_image: v })} />
+                                    
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
-                                        <Toggle checked={heroData.isActive} onChange={(c) => setHeroData({ ...heroData, isActive: c })} />
+                                        <Toggle checked={heroData.is_active === 1} onChange={(c) => setHeroData({ ...heroData, is_active: c ? 1 : 0 })} />
                                     </div>
                                 </div>
                             </div>
@@ -159,41 +192,60 @@ export default function HomePageUI() {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-purple-500">verified</span>
-                                    Trust Indicators
+                                    <span className="material-symbols-outlined text-blue-500">verified</span>
+                                    Trust Section
                                 </h2>
-                                <InputGroup label="Section Heading" value={trustHeading} onChange={setTrustHeading} />
-                            </div>
+                                <div className="space-y-5 mb-8">
+                                    <InputGroup label="Section Heading" value={trustSection.heading || ''} onChange={(v) => setTrustSection({ ...trustSection, heading: v })} />
+                                    <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
+                                        <span className="text-sm font-medium text-gray-700">Enable Section</span>
+                                        <Toggle checked={trustSection.is_active === 1} onChange={(c) => setTrustSection({ ...trustSection, is_active: c ? 1 : 0 })} />
+                                    </div>
+                                </div>
 
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between px-2">
-                                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Partner Logos</h3>
-                                    <button onClick={addTrustLogo} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                                <div className="flex items-center justify-between mb-6 pt-6 border-t border-gray-100">
+                                    <p className="text-sm text-gray-500">Manage Logos</p>
+                                    <button onClick={() => addItem(trustLogos, setTrustLogos, { alt_text: "", logo_url: "" })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
                                         <span className="material-symbols-outlined text-[18px]">add_circle</span> Add Logo
                                     </button>
                                 </div>
-                                {trustLogos.map((logo, idx) => (
-                                    <div key={logo.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                            <button onClick={() => removeTrustLogo(logo.id)} className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                                                <span className="material-symbols-outlined">delete</span>
-                                            </button>
+
+                                <div className="space-y-4">
+                                    {trustLogos.map((logo, idx) => (
+                                        <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
+                                                <button 
+                                                    onClick={() => {
+                                                        if (logo.id) setDeletedTrustLogos([...deletedTrustLogos, logo.id]);
+                                                        setTrustLogos(trustLogos.filter((_, i) => i !== idx));
+                                                    }}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                >
+                                                    <span className="material-symbols-outlined">delete</span>
+                                                </button>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <InputGroup label="Alt Text" value={logo.alt_text || ''} onChange={(v) => updateItem(idx, 'alt_text', v, trustLogos, setTrustLogos)} />
+                                                <InputGroup label="Logo URL" value={logo.logo_url || ''} onChange={(v) => updateItem(idx, 'logo_url', v, trustLogos, setTrustLogos)} />
+                                                
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <InputGroup label="Display Order" value={String(logo.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), trustLogos, setTrustLogos)} />
+                                                    <div className="flex items-end justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-600">Dark Invert</span>
+                                                            <Toggle checked={logo.dark_invert === 1} onChange={(c) => updateItem(idx, 'dark_invert', c ? 1 : 0, trustLogos, setTrustLogos)} />
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-600">Active</span>
+                                                            <Toggle checked={logo.is_active === 1} onChange={(c) => updateItem(idx, 'is_active', c ? 1 : 0, trustLogos, setTrustLogos)} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <InputGroup label="Alt Text" value={logo.altText} onChange={(v) => updateTrustLogo(logo.id, 'altText', v)} />
-                                            <ImageUploader label="Logo Image" value={logo.logoUrl} onChange={(v) => updateTrustLogo(logo.id, 'logoUrl', v)} folder="home/trust" />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4 mt-4">
-                                            <InputGroup label="Display Order" value={String(logo.displayOrder)} onChange={(v) => updateTrustLogo(logo.id, 'displayOrder', Number(v))} />
-                                            <div />
-                                        </div>
-                                        <div className="mt-4 flex items-center gap-6">
-                                            <Checkbox label="Invert in Dark Mode" checked={logo.darkInvert} onChange={(c) => updateTrustLogo(logo.id, 'darkInvert', c)} />
-                                            <Checkbox label="Active" checked={logo.isActive} onChange={(c) => updateTrustLogo(logo.id, 'isActive', c)} />
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -203,45 +255,61 @@ export default function HomePageUI() {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-amber-500">lightbulb</span>
+                                    <span className="material-symbols-outlined text-green-500">psychology</span>
                                     Expertise Section
                                 </h2>
-                                <div className="space-y-5">
-                                    <InputGroup label="Title" value={expertiseData.title} onChange={(v) => setExpertiseData({ ...expertiseData, title: v })} />
-                                    <TextAreaGroup label="Description" value={expertiseData.description} onChange={(v) => setExpertiseData({ ...expertiseData, description: v })} />
+                                <div className="space-y-5 mb-8">
+                                    <InputGroup label="Title" value={expertiseSection.title || ''} onChange={(v) => setExpertiseSection({ ...expertiseSection, title: v })} />
+                                    <TextAreaGroup label="Description" value={expertiseSection.description || ''} onChange={(v) => setExpertiseSection({ ...expertiseSection, description: v })} />
+                                    <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
+                                        <span className="text-sm font-medium text-gray-700">Enable Section</span>
+                                        <Toggle checked={expertiseSection.is_active === 1} onChange={(c) => setExpertiseSection({ ...expertiseSection, is_active: c ? 1 : 0 })} />
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between px-2">
-                                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Expertise Items</h3>
-                                    <button onClick={addExpertiseItem} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                                <div className="flex items-center justify-between mb-6 pt-6 border-t border-gray-100">
+                                    <p className="text-sm text-gray-500">Manage Expertise Items</p>
+                                    <button onClick={() => addItem(expertiseItems, setExpertiseItems, { icon: "star", title: "", description: "" })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
                                         <span className="material-symbols-outlined text-[18px]">add_circle</span> Add Item
                                     </button>
                                 </div>
-                                {expertiseItems.map((item, idx) => (
-                                    <div key={item.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                            <button onClick={() => removeExpertiseItem(item.id)} className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                                                <span className="material-symbols-outlined">delete</span>
-                                            </button>
-                                        </div>
-                                        <div className="space-y-4">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <InputGroup label="Icon Name" value={item.icon} onChange={(v) => updateExpertiseItem(item.id, 'icon', v)} placeholder="e.g. explore" />
-                                                <InputGroup label="Title" value={item.title} onChange={(v) => updateExpertiseItem(item.id, 'title', v)} />
+
+                                <div className="space-y-4">
+                                    {expertiseItems.map((item, idx) => (
+                                        <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
+                                                <button 
+                                                    onClick={() => {
+                                                        if (item.id) setDeletedExpertiseItems([...deletedExpertiseItems, item.id]);
+                                                        setExpertiseItems(expertiseItems.filter((_, i) => i !== idx));
+                                                    }}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                >
+                                                    <span className="material-symbols-outlined">delete</span>
+                                                </button>
                                             </div>
-                                            <TextAreaGroup label="Description" value={item.description} onChange={(v) => updateExpertiseItem(item.id, 'description', v)} />
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <InputGroup label="Display Order" value={String(item.displayOrder)} onChange={(v) => updateExpertiseItem(item.id, 'displayOrder', Number(v))} />
-                                                <div className="flex items-end">
-                                                    <Checkbox label="Active" checked={item.isActive} onChange={(c) => updateExpertiseItem(item.id, 'isActive', c)} />
+                                            <div className="space-y-4">
+                                                <div className="grid grid-cols-3 gap-4">
+                                                    <div className="col-span-1">
+                                                        <InputGroup label="Icon (Material Symbol)" value={item.icon || ''} onChange={(v) => updateItem(idx, 'icon', v, expertiseItems, setExpertiseItems)} />
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <InputGroup label="Title" value={item.title || ''} onChange={(v) => updateItem(idx, 'title', v, expertiseItems, setExpertiseItems)} />
+                                                    </div>
+                                                </div>
+                                                <TextAreaGroup label="Description" value={item.description || ''} onChange={(v) => updateItem(idx, 'description', v, expertiseItems, setExpertiseItems)} />
+                                                
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <InputGroup label="Display Order" value={String(item.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), expertiseItems, setExpertiseItems)} />
+                                                    <div className="flex items-end">
+                                                        <Toggle checked={item.is_active === 1} onChange={(c) => updateItem(idx, 'is_active', c ? 1 : 0, expertiseItems, setExpertiseItems)} />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -251,26 +319,24 @@ export default function HomePageUI() {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-green-500">contact_mail</span>
-                                    Contact CTA
+                                    <span className="material-symbols-outlined text-purple-500">contact_mail</span>
+                                    Contact Section
                                 </h2>
                                 <div className="space-y-5">
-                                    <InputGroup label="Title" value={contactData.title} onChange={(v) => setContactData({ ...contactData, title: v })} />
-                                    <TextAreaGroup label="Description" value={contactData.description} onChange={(v) => setContactData({ ...contactData, description: v })} />
-
+                                    <InputGroup label="Title" value={contactData.title || ''} onChange={(v) => setContactData({ ...contactData, title: v })} />
+                                    <TextAreaGroup label="Description" value={contactData.description || ''} onChange={(v) => setContactData({ ...contactData, description: v })} />
+                                    
                                     <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="Name Placeholder" value={contactData.namePlaceholder} onChange={(v) => setContactData({ ...contactData, namePlaceholder: v })} />
-                                        <InputGroup label="Email Placeholder" value={contactData.emailPlaceholder} onChange={(v) => setContactData({ ...contactData, emailPlaceholder: v })} />
+                                        <InputGroup label="Name Placeholder" value={contactData.name_placeholder || ''} onChange={(v) => setContactData({ ...contactData, name_placeholder: v })} />
+                                        <InputGroup label="Email Placeholder" value={contactData.email_placeholder || ''} onChange={(v) => setContactData({ ...contactData, email_placeholder: v })} />
+                                        <InputGroup label="Company Placeholder" value={contactData.company_placeholder || ''} onChange={(v) => setContactData({ ...contactData, company_placeholder: v })} />
+                                        <InputGroup label="Message Placeholder" value={contactData.message_placeholder || ''} onChange={(v) => setContactData({ ...contactData, message_placeholder: v })} />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="Company Placeholder" value={contactData.companyPlaceholder} onChange={(v) => setContactData({ ...contactData, companyPlaceholder: v })} />
-                                        <InputGroup label="Message Placeholder" value={contactData.messagePlaceholder} onChange={(v) => setContactData({ ...contactData, messagePlaceholder: v })} />
-                                    </div>
-                                    <InputGroup label="Submit Button Text" value={contactData.submitButtonText} onChange={(v) => setContactData({ ...contactData, submitButtonText: v })} />
+                                    <InputGroup label="Submit Button Text" value={contactData.submit_button_text || ''} onChange={(v) => setContactData({ ...contactData, submit_button_text: v })} />
 
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
-                                        <Toggle checked={contactData.isActive} onChange={(c) => setContactData({ ...contactData, isActive: c })} />
+                                        <Toggle checked={contactData.is_active === 1} onChange={(c) => setContactData({ ...contactData, is_active: c ? 1 : 0 })} />
                                     </div>
                                 </div>
                             </div>
@@ -328,19 +394,3 @@ function Toggle({ checked, onChange }: { checked: boolean, onChange: (c: boolean
         </button>
     );
 }
-
-function Checkbox({ label, checked, onChange }: { label: string, checked: boolean, onChange: (c: boolean) => void }) {
-    return (
-        <label className="flex items-center gap-2 cursor-pointer">
-            <input
-                type="checkbox"
-                checked={checked}
-                onChange={(e) => onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="text-sm text-gray-700">{label}</span>
-        </label>
-    );
-}
-
-import ImageUploader from "@/components/shared/ImageUploader";

@@ -1,57 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import ImageUploader from "@/components/shared/ImageUploader";
 
 export default function ContactPageUI() {
     const [activeTab, setActiveTab] = useState("hero");
     const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    // --- Hero Section State ---
-    const [heroData, setHeroData] = useState({
-        tagline: "Contact Us",
-        title: "Let's Start a Conversation",
-        description: "We'd love to hear from you and discuss how we can help.",
-        isActive: true
-    });
+    // --- State Definitions ---
+    const [heroData, setHeroData] = useState<any>({});
+    const [contactInfo, setContactInfo] = useState<any>({});
+    const [formConfig, setFormConfig] = useState<any>({});
 
-    // --- Contact Info State ---
-    const [contactInfo, setContactInfo] = useState({
-        officeLocation: "123 Business St, Tech City",
-        phone: "+1 (555) 123-4567",
-        email: "hello@example.com",
-        mapImage: "",
-        mapImageAlt: "",
-        isActive: true,
-    });
+    // --- Fetch Data ---
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [heroRes, infoRes, formRes] = await Promise.all([
+                    fetch('/api/pages/contact/hero'),
+                    fetch('/api/pages/contact/info'),
+                    fetch('/api/pages/contact/form-config'),
+                ]);
 
-    // --- Form Configuration State ---
-    const [formConfig, setFormConfig] = useState({
-        namePlaceholder: "Your Name",
-        emailPlaceholder: "your@email.com",
-        subjectPlaceholder: "Subject",
-        messagePlaceholder: "How can we help you?",
-        submitButtonText: "Send Message",
-        successMessage: "Thank you! We'll be in touch soon.",
-        isActive: true,
-    });
+                if (heroRes.ok) setHeroData(await heroRes.json());
+                if (infoRes.ok) setContactInfo(await infoRes.json());
+                if (formRes.ok) setFormConfig(await formRes.json());
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     // --- Handlers ---
     const handleSave = async () => {
         setSaving(true);
-        setTimeout(() => {
-            setSaving(false);
-            alert("Settings saved successfully!");
-        }, 1000);
-    };
+        try {
+            const saveSection = async (url: string, data: any) => {
+                const method = data.id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                if (!res.ok) throw new Error(`Failed to save ${url}`);
+                return res.json();
+            };
 
-    // (Removed) Highlights state — not used on frontend
+            await Promise.all([
+                saveSection('/api/pages/contact/hero', heroData),
+                saveSection('/api/pages/contact/info', contactInfo),
+                saveSection('/api/pages/contact/form-config', formConfig),
+            ]);
+
+            alert("Settings saved successfully!");
+            window.location.reload();
+        } catch (error) {
+            console.error("Error saving settings:", error);
+            alert("Failed to save settings. Please try again.");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const tabs = [
         { id: "hero", label: "Hero" },
         { id: "info", label: "Contact Info" },
-
         { id: "form", label: "Form Config" },
     ];
+
+    if (loading) return <div className="p-10 text-center">Loading...</div>;
 
     return (
         <div className="w-full min-h-screen bg-white pb-20">
@@ -101,17 +124,17 @@ export default function ContactPageUI() {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-indigo-500">contact_page</span>
+                                    <span className="material-symbols-outlined text-indigo-500">flag</span>
                                     Hero Configuration
                                 </h2>
                                 <div className="space-y-5">
-                                    <InputGroup label="Tagline" value={heroData.tagline} onChange={(v) => setHeroData({ ...heroData, tagline: v })} placeholder="e.g. Contact Us" />
-                                    <InputGroup label="Title" value={heroData.title} onChange={(v) => setHeroData({ ...heroData, title: v })} />
-                                    <TextAreaGroup label="Description" value={heroData.description} onChange={(v) => setHeroData({ ...heroData, description: v })} />
-
+                                    <InputGroup label="Tagline" value={heroData.tagline || ''} onChange={(v) => setHeroData({ ...heroData, tagline: v })} />
+                                    <InputGroup label="Title" value={heroData.title || ''} onChange={(v) => setHeroData({ ...heroData, title: v })} />
+                                    <TextAreaGroup label="Description" value={heroData.description || ''} onChange={(v) => setHeroData({ ...heroData, description: v })} />
+                                    
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
-                                        <Toggle checked={heroData.isActive} onChange={(c) => setHeroData({ ...heroData, isActive: c })} />
+                                        <Toggle checked={heroData.is_active === 1} onChange={(c) => setHeroData({ ...heroData, is_active: c ? 1 : 0 })} />
                                     </div>
                                 </div>
                             </div>
@@ -123,50 +146,49 @@ export default function ContactPageUI() {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-purple-500">info</span>
+                                    <span className="material-symbols-outlined text-blue-500">contact_phone</span>
                                     Contact Information
                                 </h2>
                                 <div className="space-y-5">
-                                    <InputGroup label="Office Location" value={contactInfo.officeLocation} onChange={(v) => setContactInfo({ ...contactInfo, officeLocation: v })} />
-                                    <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="Phone" value={contactInfo.phone} onChange={(v) => setContactInfo({ ...contactInfo, phone: v })} />
-                                        <InputGroup label="Email" value={contactInfo.email} onChange={(v) => setContactInfo({ ...contactInfo, email: v })} />
-                                    </div>
-                                    <ImageUploader label="Map Image" value={contactInfo.mapImage} onChange={(v) => setContactInfo({ ...contactInfo, mapImage: v })} folder="contact" />
-                                    <InputGroup label="Map Image Alt Text" value={contactInfo.mapImageAlt} onChange={(v) => setContactInfo({ ...contactInfo, mapImageAlt: v })} />
+                                    <InputGroup label="Office Location" value={contactInfo.office_location || ''} onChange={(v) => setContactInfo({ ...contactInfo, office_location: v })} />
+                                    <InputGroup label="Phone Number" value={contactInfo.phone || ''} onChange={(v) => setContactInfo({ ...contactInfo, phone: v })} />
+                                    <InputGroup label="Email Address" value={contactInfo.email || ''} onChange={(v) => setContactInfo({ ...contactInfo, email: v })} />
+                                    
+                                    <ImageUploader label="Map Image" value={contactInfo.map_image || ''} onChange={(v) => setContactInfo({ ...contactInfo, map_image: v })} folder="contact" />
+                                    <InputGroup label="Map Image Alt Text" value={contactInfo.map_image_alt || ''} onChange={(v) => setContactInfo({ ...contactInfo, map_image_alt: v })} />
+
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
-                                        <Toggle checked={contactInfo.isActive} onChange={(c) => setContactInfo({ ...contactInfo, isActive: c })} />
+                                        <Toggle checked={contactInfo.is_active === 1} onChange={(c) => setContactInfo({ ...contactInfo, is_active: c ? 1 : 0 })} />
                                     </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* (Removed) HIGHLIGHTS SECTION */}
-
                     {/* FORM CONFIG SECTION */}
                     {activeTab === "form" && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-amber-500">edit_note</span>
+                                    <span className="material-symbols-outlined text-purple-500">edit_note</span>
                                     Form Configuration
                                 </h2>
                                 <div className="space-y-5">
                                     <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="Name Placeholder" value={formConfig.namePlaceholder} onChange={(v) => setFormConfig({ ...formConfig, namePlaceholder: v })} />
-                                        <InputGroup label="Email Placeholder" value={formConfig.emailPlaceholder} onChange={(v) => setFormConfig({ ...formConfig, emailPlaceholder: v })} />
+                                        <InputGroup label="Name Placeholder" value={formConfig.name_placeholder || ''} onChange={(v) => setFormConfig({ ...formConfig, name_placeholder: v })} />
+                                        <InputGroup label="Email Placeholder" value={formConfig.email_placeholder || ''} onChange={(v) => setFormConfig({ ...formConfig, email_placeholder: v })} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="Subject Placeholder" value={formConfig.subjectPlaceholder} onChange={(v) => setFormConfig({ ...formConfig, subjectPlaceholder: v })} />
-                                        <InputGroup label="Message Placeholder" value={formConfig.messagePlaceholder} onChange={(v) => setFormConfig({ ...formConfig, messagePlaceholder: v })} />
+                                        <InputGroup label="Subject Placeholder" value={formConfig.subject_placeholder || ''} onChange={(v) => setFormConfig({ ...formConfig, subject_placeholder: v })} />
+                                        <InputGroup label="Message Placeholder" value={formConfig.message_placeholder || ''} onChange={(v) => setFormConfig({ ...formConfig, message_placeholder: v })} />
                                     </div>
-                                    <InputGroup label="Submit Button Text" value={formConfig.submitButtonText} onChange={(v) => setFormConfig({ ...formConfig, submitButtonText: v })} />
-                                    <InputGroup label="Success Message" value={formConfig.successMessage} onChange={(v) => setFormConfig({ ...formConfig, successMessage: v })} />
+                                    <InputGroup label="Submit Button Text" value={formConfig.submit_button_text || ''} onChange={(v) => setFormConfig({ ...formConfig, submit_button_text: v })} />
+                                    <InputGroup label="Success Message" value={formConfig.success_message || ''} onChange={(v) => setFormConfig({ ...formConfig, success_message: v })} />
+
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Form</span>
-                                        <Toggle checked={formConfig.isActive} onChange={(c) => setFormConfig({ ...formConfig, isActive: c })} />
+                                        <Toggle checked={formConfig.is_active === 1} onChange={(c) => setFormConfig({ ...formConfig, is_active: c ? 1 : 0 })} />
                                     </div>
                                 </div>
                             </div>
@@ -224,19 +246,3 @@ function Toggle({ checked, onChange }: { checked: boolean, onChange: (c: boolean
         </button>
     );
 }
-
-function Checkbox({ label, checked, onChange }: { label: string, checked: boolean, onChange: (c: boolean) => void }) {
-    return (
-        <label className="flex items-center gap-2 cursor-pointer">
-            <input
-                type="checkbox"
-                checked={checked}
-                onChange={(e) => onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="text-sm text-gray-700">{label}</span>
-        </label>
-    );
-}
-
-import ImageUploader from "@/components/shared/ImageUploader";

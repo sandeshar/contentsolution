@@ -50,7 +50,7 @@ export default async function BlogPage({
         getBlogHeroData(),
         getBlogCTAData()
     ]);
-    
+
     const currentPage = Math.max(1, parseInt(params.page || '1'));
     const searchQuery = params.search?.trim() || '';
     const categoryFilter = params.category?.trim() || '';

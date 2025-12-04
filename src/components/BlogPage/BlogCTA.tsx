@@ -11,8 +11,8 @@ interface BlogCTAProps {
 
 const BlogCTA = ({ data }: BlogCTAProps) => {
     return (
-        <NewsletterCTA 
-            className="mt-20 mb-10" 
+        <NewsletterCTA
+            className="mt-20 mb-10"
             title={data.title}
             description={data.description}
             buttonText={data.button_text}

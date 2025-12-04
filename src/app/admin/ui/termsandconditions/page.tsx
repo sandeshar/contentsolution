@@ -1,53 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function TermsPageUI() {
     const [activeTab, setActiveTab] = useState("header");
     const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    // --- Header Section State ---
-    const [headerData, setHeaderData] = useState({
-        title: "Terms & Conditions",
-        lastUpdated: "2024-01-01",
-        isActive: true,
-    });
+    // --- State Management ---
+    const [headerData, setHeaderData] = useState<any>({});
+    const [sections, setSections] = useState<any[]>([]);
 
-    // --- Sections State ---
-    const [sections, setSections] = useState([
-        { id: 1, title: "1. Introduction", content: "Welcome to our website...", hasEmail: false, hasLink: false, displayOrder: 1, isActive: true }
-    ]);
+    // Track deleted items
+    const [deletedSections, setDeletedSections] = useState<number[]>([]);
+
+    // --- Fetch Data ---
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [headerRes, sectionsRes] = await Promise.all([
+                    fetch('/api/pages/terms/header'),
+                    fetch('/api/pages/terms/sections'),
+                ]);
+
+                if (headerRes.ok) setHeaderData(await headerRes.json());
+                if (sectionsRes.ok) setSections(await sectionsRes.json());
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     // --- Handlers ---
     const handleSave = async () => {
         setSaving(true);
-        setTimeout(() => {
-            setSaving(false);
+        try {
+            const saveSection = async (url: string, data: any) => {
+                const method = data.id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                if (!res.ok) throw new Error(`Failed to save ${url}`);
+                return res.json();
+            };
+
+            const saveList = async (url: string, items: any[], deletedIds: number[]) => {
+                for (const id of deletedIds) {
+                    await fetch(`${url}?id=${id}`, { method: 'DELETE' });
+                }
+                for (const item of items) {
+                    await saveSection(url, item);
+                }
+            };
+
+            await Promise.all([
+                saveSection('/api/pages/terms/header', headerData),
+                saveList('/api/pages/terms/sections', sections, deletedSections),
+            ]);
+
+            setDeletedSections([]);
+
             alert("Settings saved successfully!");
-        }, 1000);
+            window.location.reload();
+        } catch (error) {
+            console.error("Error saving settings:", error);
+            alert("Failed to save settings. Please try again.");
+        } finally {
+            setSaving(false);
+        }
     };
 
-    // Section Handlers
-    const addSection = () => {
-        setSections([...sections, {
-            id: Date.now(),
-            title: "",
-            content: "",
-            hasEmail: false,
-            hasLink: false,
-            displayOrder: sections.length + 1,
-            isActive: true,
-        }]);
+    // Generic List Handlers
+    const addItem = (list: any[], setList: any, defaultItem: any) => {
+        setList([...list, { ...defaultItem, display_order: list.length + 1, is_active: 1 }]);
     };
-    const removeSection = (id: number) => setSections(sections.filter(s => s.id !== id));
-    const updateSection = (id: number, field: string, value: any) => {
-        setSections(sections.map(s => s.id === id ? { ...s, [field]: value } : s));
+
+    const updateItem = (index: number, field: string, value: any, list: any[], setList: any) => {
+        const newList = [...list];
+        newList[index] = { ...newList[index], [field]: value };
+        setList(newList);
     };
 
     const tabs = [
         { id: "header", label: "Header" },
         { id: "sections", label: "Content Sections" },
     ];
+
+    if (loading) return <div className="p-10 text-center">Loading...</div>;
 
     return (
         <div className="w-full min-h-screen bg-white pb-20">
@@ -101,11 +147,12 @@ export default function TermsPageUI() {
                                     Header Configuration
                                 </h2>
                                 <div className="space-y-5">
-                                    <InputGroup label="Title" value={headerData.title} onChange={(v) => setHeaderData({ ...headerData, title: v })} />
-                                    <InputGroup label="Last Updated Date" value={headerData.lastUpdated} onChange={(v) => setHeaderData({ ...headerData, lastUpdated: v })} placeholder="YYYY-MM-DD" />
+                                    <InputGroup label="Title" value={headerData.title || ''} onChange={(v) => setHeaderData({ ...headerData, title: v })} />
+                                    <InputGroup label="Last Updated Text" value={headerData.last_updated || ''} onChange={(v) => setHeaderData({ ...headerData, last_updated: v })} />
+                                    
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
-                                        <span className="text-sm font-medium text-gray-700">Enable Page</span>
-                                        <Toggle checked={headerData.isActive} onChange={(c) => setHeaderData({ ...headerData, isActive: c })} />
+                                        <span className="text-sm font-medium text-gray-700">Enable Section</span>
+                                        <Toggle checked={headerData.is_active === 1} onChange={(c) => setHeaderData({ ...headerData, is_active: c ? 1 : 0 })} />
                                     </div>
                                 </div>
                             </div>
@@ -117,40 +164,50 @@ export default function TermsPageUI() {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-purple-500">description</span>
+                                    <span className="material-symbols-outlined text-blue-500">segment</span>
                                     Content Sections
                                 </h2>
                                 <div className="flex items-center justify-between mb-6">
-                                    <p className="text-sm text-gray-500">Manage individual clauses and sections</p>
-                                    <button onClick={addSection} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                                    <p className="text-sm text-gray-500">Manage terms sections</p>
+                                    <button onClick={() => addItem(sections, setSections, { title: "", content: "", has_email: 0, has_link: 0 })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
                                         <span className="material-symbols-outlined text-[18px]">add_circle</span> Add Section
                                     </button>
                                 </div>
 
                                 <div className="space-y-4">
                                     {sections.map((section, idx) => (
-                                        <div key={section.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
+                                        <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
-                                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">Section {idx + 1}</span>
-                                                <button onClick={() => removeSection(section.id)} className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
+                                                <button 
+                                                    onClick={() => {
+                                                        if (section.id) setDeletedSections([...deletedSections, section.id]);
+                                                        setSections(sections.filter((_, i) => i !== idx));
+                                                    }}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                >
                                                     <span className="material-symbols-outlined">delete</span>
                                                 </button>
                                             </div>
                                             <div className="space-y-4">
-                                                <InputGroup label="Section Title" value={section.title} onChange={(v) => updateSection(section.id, 'title', v)} placeholder="e.g. 1. Introduction" />
-                                                <TextAreaGroup label="Content" value={section.content} onChange={(v) => updateSection(section.id, 'content', v)} />
+                                                <InputGroup label="Title" value={section.title || ''} onChange={(v) => updateItem(idx, 'title', v, sections, setSections)} />
+                                                <TextAreaGroup label="Content" value={section.content || ''} onChange={(v) => updateItem(idx, 'content', v, sections, setSections)} />
+                                                
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div className="flex items-end">
-                                                        <Checkbox label="Contains Email Address" checked={section.hasEmail} onChange={(c) => updateSection(section.id, 'hasEmail', c)} />
-                                                    </div>
-                                                    <div className="flex items-end">
-                                                        <Checkbox label="Contains Links" checked={section.hasLink} onChange={(c) => updateSection(section.id, 'hasLink', c)} />
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <InputGroup label="Display Order" value={String(section.displayOrder)} onChange={(v) => updateSection(section.id, 'displayOrder', Number(v))} />
-                                                    <div className="flex items-end">
-                                                        <Checkbox label="Active" checked={section.isActive} onChange={(c) => updateSection(section.id, 'isActive', c)} />
+                                                    <InputGroup label="Display Order" value={String(section.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), sections, setSections)} />
+                                                    <div className="flex items-end justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-600">Has Email</span>
+                                                            <Toggle checked={section.has_email === 1} onChange={(c) => updateItem(idx, 'has_email', c ? 1 : 0, sections, setSections)} />
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-600">Has Link</span>
+                                                            <Toggle checked={section.has_link === 1} onChange={(c) => updateItem(idx, 'has_link', c ? 1 : 0, sections, setSections)} />
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-600">Active</span>
+                                                            <Toggle checked={section.is_active === 1} onChange={(c) => updateItem(idx, 'is_active', c ? 1 : 0, sections, setSections)} />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -180,20 +237,6 @@ function InputGroup({ label, value, onChange, placeholder }: { label: string, va
                 className="block w-full rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-all duration-200 py-2.5 px-4"
             />
         </div>
-    );
-}
-
-function Checkbox({ label, checked, onChange }: { label: string, checked: boolean, onChange: (c: boolean) => void }) {
-    return (
-        <label className="flex items-center gap-2 cursor-pointer">
-            <input
-                type="checkbox"
-                checked={checked}
-                onChange={(e) => onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="text-sm text-gray-700">{label}</span>
-        </label>
     );
 }
 

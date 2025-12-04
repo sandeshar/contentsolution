@@ -12,7 +12,7 @@ export async function POST() {
         // Seed Header Section
         await db.insert(faqPageHeader).values({
             title: 'Frequently Asked Questions',
-            description: 'Answers to common questions about our content marketing services. Find what you're looking for or get in touch with our team.',
+            description: "Answers to common questions about our content marketing services. Find what you're looking for or get in touch with our team.",
             search_placeholder: 'Search for a question...',
             is_active: 1,
         });

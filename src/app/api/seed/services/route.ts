@@ -14,7 +14,7 @@ export async function POST() {
         await db.insert(servicesPageHero).values({
             tagline: 'OUR SERVICES',
             title: 'Content Solutions That Drive Results',
-            description: 'From strategy to execution, we offer comprehensive content services designed to help your business grow. Whether you need blog posts, website copy, or social media content, we've got you covered.',
+            description: "From strategy to execution, we offer comprehensive content services designed to help your business grow. Whether you need blog posts, website copy, or social media content, we've got you covered.",
             is_active: 1,
         });
 
@@ -102,9 +102,16 @@ export async function POST() {
             },
             {
                 step_number: 4,
-                title: 'Optimization',
-                description: 'We refine and optimize content based on feedback and performance data to maximize impact.',
+                title: 'Review',
+                description: 'We work with you to refine the content, ensuring it meets your standards and expectations.',
                 display_order: 4,
+                is_active: 1,
+            },
+            {
+                step_number: 5,
+                title: 'Delivery',
+                description: 'We deliver the final content in your preferred format, ready for publication.',
+                display_order: 5,
                 is_active: 1,
             },
         ];
@@ -115,9 +122,9 @@ export async function POST() {
 
         // Seed CTA Section
         await db.insert(servicesPageCTA).values({
-            title: 'Ready to Transform Your Content?',
-            description: 'Let's create a content strategy that drives real results for your business.',
-            button_text: 'Get Started Today',
+            title: 'Ready to Elevate Your Content?',
+            description: "Let's discuss how we can help you achieve your content marketing goals.",
+            button_text: 'Get a Quote',
             button_link: '/contact',
             is_active: 1,
         });

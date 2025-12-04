@@ -70,7 +70,7 @@ export async function POST() {
 
         // Seed Principles
         const principles = [
-            { title: 'Authenticity First', description: 'We believe in telling real stories that resonate. No fluff, no filler—just genuine, impactful content that reflects your brand's true voice.', display_order: 1, is_active: 1 },
+            { title: 'Authenticity First', description: "We believe in telling real stories that resonate. No fluff, no filler—just genuine, impactful content that reflects your brand's true voice.", display_order: 1, is_active: 1 },
             { title: 'Data-Informed Creativity', description: 'Great content is both an art and a science. We use data and insights to inform our creative decisions, ensuring every piece serves a purpose.', display_order: 2, is_active: 1 },
             { title: 'Continuous Improvement', description: 'The digital landscape is always evolving, and so are we. We stay ahead of trends and continuously refine our strategies to deliver the best results.', display_order: 3, is_active: 1 },
         ];
@@ -133,7 +133,7 @@ export async function POST() {
         // Seed CTA Section
         await db.insert(aboutPageCTA).values({
             title: 'Ready to Work Together?',
-            description: 'Let's create content that makes an impact. Get in touch with us today.',
+            description: "Let's create content that makes an impact. Get in touch with us today.",
             primary_button_text: 'Get Started',
             primary_button_link: '/contact',
             secondary_button_text: 'View Our Work',

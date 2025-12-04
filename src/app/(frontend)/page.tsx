@@ -5,7 +5,7 @@ import Trust from "@/components/Homepage/Trust";
 
 async function getHomepageData() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    
+
     try {
         const [heroRes, trustSectionRes, trustLogosRes, expertiseSectionRes, expertiseItemsRes, contactSectionRes] = await Promise.all([
             fetch(`${baseUrl}/api/pages/homepage/hero`, { cache: 'no-store' }),

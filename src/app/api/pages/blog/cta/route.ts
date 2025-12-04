@@ -5,9 +5,9 @@ import { NextResponse } from "next/server";
 export async function GET() {
     try {
         const cta = await db.select().from(blogPageCTA).limit(1);
-        
+
         if (!cta.length) {
-             return NextResponse.json({
+            return NextResponse.json({
                 title: "Stay Ahead of the Curve",
                 description: "Get the latest content marketing tips delivered to your inbox.",
                 button_text: "Subscribe"

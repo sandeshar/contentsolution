@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-        
+
         const results = {
             homepage: { success: false, message: '' },
             about: { success: false, message: '' },

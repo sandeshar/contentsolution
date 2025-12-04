@@ -13,7 +13,7 @@ interface TermsSectionData {
 
 async function getTermsData() {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    
+
     try {
         const [headerRes, sectionsRes] = await Promise.all([
             fetch(`${baseUrl}/api/pages/terms/header`, { cache: 'no-store' }),
