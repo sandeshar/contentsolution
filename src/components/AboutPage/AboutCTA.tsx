@@ -1,6 +1,26 @@
 import CTAButton from '../shared/CTAButton';
 
-const AboutCTA = () => {
+interface AboutCTAData {
+    id: number;
+    title: string;
+    description: string;
+    primary_button_text: string;
+    primary_button_link: string;
+    secondary_button_text: string;
+    secondary_button_link: string;
+    is_active: number;
+    updatedAt: Date;
+}
+
+interface AboutCTAProps {
+    data?: AboutCTAData | null;
+}
+
+const AboutCTA = ({ data }: AboutCTAProps) => {
+    if (!data) {
+        return null;
+    }
+
     return (
         <section className="w-full py-20 lg:py-32">
             <div className="mx-auto max-w-6xl px-4">
@@ -8,14 +28,14 @@ const AboutCTA = () => {
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_50%)]"></div>
                     <div className="relative z-10 mx-auto max-w-3xl text-center">
                         <h2 className="text-3xl font-black leading-tight tracking-[-0.02em] text-white md:text-5xl">
-                            Let's Build Something Great Together
+                            {data.title}
                         </h2>
                         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/90">
-                            Whether you need a single landing page or a full-scale content ecosystem, we're ready to collaborate. Let's turn your vision into results-driven narratives.
+                            {data.description}
                         </p>
                         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                            <CTAButton text="Start a Project" variant="primary" className="bg-white text-primary hover:bg-white/90 shadow-xl" />
-                            <CTAButton text="View Our Work" variant="outline" className="border-white text-white hover:bg-white hover:text-primary" />
+                            <CTAButton text={data.primary_button_text} variant="primary" className="bg-white text-primary hover:bg-white/90 shadow-xl" />
+                            <CTAButton text={data.secondary_button_text} variant="outline" className="border-white text-white hover:bg-white hover:text-primary" />
                         </div>
                     </div>
                 </div>

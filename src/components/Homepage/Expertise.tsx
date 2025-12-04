@@ -1,43 +1,47 @@
-const expertiseItems = [
-    {
-        icon: 'explore',
-        title: 'Content Strategy',
-        description: 'Developing a roadmap to create, publish, and govern your content.',
-    },
-    {
-        icon: 'search',
-        title: 'SEO Writing',
-        description: 'Crafting high-quality content that ranks on search engines and drives organic traffic.',
-    },
-    {
-        icon: 'edit',
-        title: 'Copywriting',
-        description: 'Writing persuasive copy that converts for your website, ads, and emails.',
-    },
-    {
-        icon: 'group',
-        title: 'Social Media Marketing',
-        description: 'Engaging your community with compelling content across all social platforms.',
-    },
-];
+interface ExpertiseSectionData {
+    id: number;
+    title: string;
+    description: string;
+    is_active: number;
+    updatedAt: Date;
+}
 
-const Expertise = () => {
+interface ExpertiseItemData {
+    id: number;
+    icon: string;
+    title: string;
+    description: string;
+    display_order: number;
+    is_active: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+interface ExpertiseProps {
+    section?: ExpertiseSectionData | null;
+    items?: ExpertiseItemData[];
+}
+
+const Expertise = ({ section, items = [] }: ExpertiseProps) => {
+    if (!section || items.length === 0) {
+        return null;
+    }
+
     return (
         <section className="flex flex-col gap-10 py-16 sm:py-24 @container">
             <div className="flex flex-col gap-4 text-center items-center">
                 <h1
                     className="text-slate-900 tracking-light text-3xl font-bold leading-tight @[480px]:text-4xl @[480px]:font-black max-w-2xl">
-                    Our Expertise
+                    {section.title}
                 </h1>
                 <p className="text-slate-600 text-base font-normal leading-normal max-w-2xl">
-                    From strategy to execution, we provide end-to-end content solutions designed to meet your business
-                    objectives.
+                    {section.description}
                 </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-0">
-                {expertiseItems.map((item) => (
+                {items.map((item) => (
                     <div
-                        key={item.title}
+                        key={item.id}
                         className="flex flex-1 gap-4 rounded-xl border border-slate-200 bg-white p-6 flex-col"
                     >
                         <span className="material-symbols-outlined text-primary text-3xl">{item.icon}</span>

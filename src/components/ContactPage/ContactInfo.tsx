@@ -1,7 +1,15 @@
 import React from 'react';
 import InfoCard from './InfoCard';
 
-const ContactInfo = () => {
+interface ContactInfoProps {
+    data: {
+        office_location: string;
+        phone: string;
+        email: string;
+    };
+}
+
+const ContactInfo = ({ data }: ContactInfoProps) => {
     const contactItems = [
         {
             icon: (
@@ -11,7 +19,7 @@ const ContactInfo = () => {
                 </svg>
             ),
             heading: 'Our Office',
-            text: 'Kathmandu, Nepal',
+            text: data.office_location,
         },
         {
             icon: (
@@ -20,7 +28,7 @@ const ContactInfo = () => {
                 </svg>
             ),
             heading: 'Phone',
-            text: '+977-1-XXXXXXX',
+            text: data.phone,
         },
         {
             icon: (
@@ -29,7 +37,7 @@ const ContactInfo = () => {
                 </svg>
             ),
             heading: 'Email',
-            text: 'contact@contentsolution.com.np',
+            text: data.email,
         },
     ];
 

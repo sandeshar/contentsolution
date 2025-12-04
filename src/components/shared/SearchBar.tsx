@@ -3,11 +3,15 @@ import React from 'react';
 interface SearchBarProps {
     placeholder?: string;
     className?: string;
+    value?: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
     placeholder = "Search...",
-    className = ""
+    className = "",
+    value,
+    onChange
 }) => {
     return (
         <label className={`flex flex-col min-w-40 h-14 w-full ${className}`}>
@@ -20,6 +24,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 <input
                     className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-xl text-slate-900 focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-white h-full placeholder:text-slate-500 px-4 pl-2 text-base font-normal leading-normal"
                     placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
                 />
             </div>
         </label>

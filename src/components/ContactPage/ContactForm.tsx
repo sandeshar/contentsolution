@@ -1,39 +1,50 @@
 import React from 'react';
 import CTAButton from '../shared/CTAButton';
 
-const formFields = [
-    {
-        id: 'name',
-        label: 'Full Name',
-        type: 'text',
-        placeholder: 'John Doe',
-        gridCol: 'col-span-1',
-    },
-    {
-        id: 'email',
-        label: 'Work Email',
-        type: 'email',
-        placeholder: 'you@example.com',
-        gridCol: 'col-span-1',
-    },
-    {
-        id: 'subject',
-        label: 'Subject',
-        type: 'text',
-        placeholder: 'Content Strategy Inquiry',
-        gridCol: 'col-span-2',
-    },
-    {
-        id: 'message',
-        label: 'Your Message',
-        type: 'textarea',
-        placeholder: "Hi, I'd like to inquire about...",
-        rows: 5,
-        gridCol: 'col-span-2',
-    },
-];
+interface ContactFormProps {
+    data: {
+        name_placeholder: string;
+        email_placeholder: string;
+        subject_placeholder: string;
+        message_placeholder: string;
+        submit_button_text: string;
+        success_message: string;
+    };
+}
 
-const ContactForm = () => {
+const ContactForm = ({ data }: ContactFormProps) => {
+    const formFields = [
+        {
+            id: 'name',
+            label: 'Full Name',
+            type: 'text',
+            placeholder: data.name_placeholder,
+            gridCol: 'col-span-1',
+        },
+        {
+            id: 'email',
+            label: 'Work Email',
+            type: 'email',
+            placeholder: data.email_placeholder,
+            gridCol: 'col-span-1',
+        },
+        {
+            id: 'subject',
+            label: 'Subject',
+            type: 'text',
+            placeholder: data.subject_placeholder,
+            gridCol: 'col-span-2',
+        },
+        {
+            id: 'message',
+            label: 'Your Message',
+            type: 'textarea',
+            placeholder: data.message_placeholder,
+            rows: 5,
+            gridCol: 'col-span-2',
+        },
+    ];
+
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-lg">
             <form action="#" className="space-y-6">
@@ -66,7 +77,7 @@ const ContactForm = () => {
                     ))}
                 </div>
                 <div>
-                    <CTAButton text="Send Message" variant="primary" className="w-full" />
+                    <CTAButton text={data.submit_button_text} variant="primary" className="w-full" />
                 </div>
             </form>
         </div>

@@ -3,14 +3,57 @@ import Expertise from "@/components/Homepage/Expertise";
 import Hero from "@/components/Homepage/Hero";
 import Trust from "@/components/Homepage/Trust";
 
+async function getHomepageData() {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    
+    try {
+        const [heroRes, trustSectionRes, trustLogosRes, expertiseSectionRes, expertiseItemsRes, contactSectionRes] = await Promise.all([
+            fetch(`${baseUrl}/api/pages/homepage/hero`, { cache: 'no-store' }),
+            fetch(`${baseUrl}/api/pages/homepage/trust-section`, { cache: 'no-store' }),
+            fetch(`${baseUrl}/api/pages/homepage/trust-logos`, { cache: 'no-store' }),
+            fetch(`${baseUrl}/api/pages/homepage/expertise-section`, { cache: 'no-store' }),
+            fetch(`${baseUrl}/api/pages/homepage/expertise-items`, { cache: 'no-store' }),
+            fetch(`${baseUrl}/api/pages/homepage/contact-section`, { cache: 'no-store' }),
+        ]);
+
+        const hero = heroRes.ok ? await heroRes.json() : null;
+        const trustSection = trustSectionRes.ok ? await trustSectionRes.json() : null;
+        const trustLogos = trustLogosRes.ok ? await trustLogosRes.json() : [];
+        const expertiseSection = expertiseSectionRes.ok ? await expertiseSectionRes.json() : null;
+        const expertiseItems = expertiseItemsRes.ok ? await expertiseItemsRes.json() : [];
+        const contactSection = contactSectionRes.ok ? await contactSectionRes.json() : null;
+
+        return {
+            hero,
+            trustSection,
+            trustLogos,
+            expertiseSection,
+            expertiseItems,
+            contactSection,
+        };
+    } catch (error) {
+        console.error('Error fetching homepage data:', error);
+        return {
+            hero: null,
+            trustSection: null,
+            trustLogos: [],
+            expertiseSection: null,
+            expertiseItems: [],
+            contactSection: null,
+        };
+    }
+}
+
 export default async function Home() {
+    const data = await getHomepageData();
+
     return (
         <main className="flex flex-col items-center page-bg">
             <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
-                <Hero />
-                <Trust />
-                <Expertise />
-                <Contact />
+                <Hero data={data.hero} />
+                <Trust section={data.trustSection} logos={data.trustLogos} />
+                <Expertise section={data.expertiseSection} items={data.expertiseItems} />
+                <Contact data={data.contactSection} />
             </div>
         </main>
     );

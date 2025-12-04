@@ -1,3 +1,7 @@
+interface FooterProps {
+    storeName: string;
+}
+
 const footerLinks = [
     {
         title: 'Solutions',
@@ -27,7 +31,7 @@ const footerLinks = [
     },
 ];
 
-const Footer = () => {
+const Footer = ({ storeName }: FooterProps) => {
     return (
         <footer className="bg-white border-t border-slate-200">
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -35,7 +39,7 @@ const Footer = () => {
                     <div className="col-span-2 md:col-span-1">
                         <div className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-primary text-2xl">hub</span>
-                            <h2 className="text-base font-bold text-slate-900">Content Solution Nepal</h2>
+                            <h2 className="text-base font-bold text-slate-900">{storeName}</h2>
                         </div>
                         <p className="mt-4 text-sm text-slate-500">Crafting content that converts.</p>
                     </div>
@@ -61,7 +65,7 @@ const Footer = () => {
                 </div>
                 <div
                     className="mt-8 border-t border-slate-200 pt-8 text-sm text-slate-500 text-center">
-                    <p>© 2024 Content Solution Nepal. All rights reserved.</p>
+                    <p>© {new Date().getFullYear()} {storeName}. All rights reserved.</p>
                 </div>
             </div>
         </footer>

@@ -65,11 +65,14 @@ export default async function FrontendLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const rows = await db.select().from(storeSettings).limit(1);
+    const storeName = rows[0]?.store_name || "Content Solution Nepal";
+
     return (
         <>
-            <NavBar />
+            <NavBar storeName={storeName} />
             {children}
-            <Footer />
+            <Footer storeName={storeName} />
         </>
     );
 }
