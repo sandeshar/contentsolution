@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { hashPassword } from "@/utils/authHelper";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -42,7 +43,8 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
-        const newUser = await db.insert(users).values({ name, email, password, role });
+        const hashedPassword = await hashPassword(password);
+        const newUser = await db.insert(users).values({ name, email, password: hashedPassword, role });
         return NextResponse.json(newUser);
     } catch (error) {
         return NextResponse.json(
@@ -63,7 +65,7 @@ export async function PUT(request: NextRequest) {
         }
         const updateData: any = { name, email, role };
         if (password && password.trim() !== '') {
-            updateData.password = password;
+            updateData.password = await hashPassword(password);
         }
         const updatedUser = await db.update(users).set(updateData).where(eq(users.id, parseInt(id)));
         return NextResponse.json({ message: 'User updated successfully', user: updatedUser });

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { users } from '@/db/schema';
+import { hashPassword } from '@/utils/authHelper';
 
 export async function POST() {
     try {
@@ -11,7 +12,7 @@ export async function POST() {
         await db.insert(users).values({
             name: 'Super Admin',
             email: 'admin@contentsolution.np',
-            password: 'password123', // In a real app, this should be hashed!
+            password: await hashPassword('password123'),
             role: 'superadmin',
         });
 

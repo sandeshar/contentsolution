@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
 // POST - Create CTA section
 export async function POST(request: NextRequest) {
     try {
+
         const body = await request.json();
         const { title, description, primary_button_text, primary_button_link, secondary_button_text, secondary_button_link, is_active = 1 } = body;
 
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update CTA section
 export async function PUT(request: NextRequest) {
     try {
+
         const body = await request.json();
         const { id, title, description, primary_button_text, primary_button_link, secondary_button_text, secondary_button_link, is_active } = body;
 
@@ -93,6 +95,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete CTA section
 export async function DELETE(request: NextRequest) {
     try {
+
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 

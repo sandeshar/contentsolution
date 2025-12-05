@@ -5,6 +5,7 @@ import { blogPosts } from '@/db/schema';
 
 export async function POST(request: NextRequest) {
     try {
+
         const body = await request.json();
         const { title, slug, content, tags, thumbnail, status = 'draft' } = body;
 
@@ -114,6 +115,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     try {
+
         const body = await request.json();
         const { slug, title, newSlug, content, tags, thumbnail, status = 'draft' } = body;
 
@@ -168,6 +170,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
     try {
+
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
