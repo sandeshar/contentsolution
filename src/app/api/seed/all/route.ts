@@ -12,7 +12,23 @@ export async function POST(request: Request) {
             faq: { success: false, message: '' },
             terms: { success: false, message: '' },
             blog: { success: false, message: '' },
+            users: { success: false, message: '' },
         };
+
+        // Seed Users
+        try {
+            const usersRes = await fetch(`${baseUrl}/api/seed/users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const usersData = await usersRes.json();
+            results.users = {
+                success: usersRes.ok,
+                message: usersData.message || usersData.error || 'Unknown error',
+            };
+        } catch (error) {
+            results.users.message = error instanceof Error ? error.message : 'Failed to seed';
+        }
 
         // Seed Homepage
         try {
@@ -122,13 +138,14 @@ export async function POST(request: Request) {
         // Check if all succeeded
         const allSucceeded = Object.values(results).every(r => r.success);
         const successCount = Object.values(results).filter(r => r.success).length;
+        const totalCount = Object.keys(results).length;
 
         return NextResponse.json(
             {
                 success: allSucceeded,
                 message: allSucceeded
                     ? 'All pages seeded successfully'
-                    : `${successCount} of 7 pages seeded successfully`,
+                    : `${successCount} of ${totalCount} pages seeded successfully`,
                 results,
             },
             { status: allSucceeded ? 201 : 207 }
