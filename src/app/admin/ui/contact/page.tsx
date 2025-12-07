@@ -131,7 +131,7 @@ export default function ContactPageUI() {
                                     <InputGroup label="Tagline" value={heroData.tagline || ''} onChange={(v) => setHeroData({ ...heroData, tagline: v })} />
                                     <InputGroup label="Title" value={heroData.title || ''} onChange={(v) => setHeroData({ ...heroData, title: v })} />
                                     <TextAreaGroup label="Description" value={heroData.description || ''} onChange={(v) => setHeroData({ ...heroData, description: v })} />
-                                    
+
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
                                         <Toggle checked={heroData.is_active === 1} onChange={(c) => setHeroData({ ...heroData, is_active: c ? 1 : 0 })} />
@@ -153,7 +153,7 @@ export default function ContactPageUI() {
                                     <InputGroup label="Office Location" value={contactInfo.office_location || ''} onChange={(v) => setContactInfo({ ...contactInfo, office_location: v })} />
                                     <InputGroup label="Phone Number" value={contactInfo.phone || ''} onChange={(v) => setContactInfo({ ...contactInfo, phone: v })} />
                                     <InputGroup label="Email Address" value={contactInfo.email || ''} onChange={(v) => setContactInfo({ ...contactInfo, email: v })} />
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Google Maps Embed URL</label>
                                         <textarea
