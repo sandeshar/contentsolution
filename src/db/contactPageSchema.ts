@@ -16,8 +16,7 @@ export const contactPageInfo = mysqlTable("contact_page_info", {
     office_location: varchar("office_location", { length: 256 }).notNull(),
     phone: varchar("phone", { length: 50 }).notNull(),
     email: varchar("email", { length: 256 }).notNull(),
-    map_image: varchar("map_image", { length: 512 }).notNull(),
-    map_image_alt: varchar("map_image_alt", { length: 256 }).notNull(),
+    map_url: varchar("map_url", { length: 1024 }).notNull(), // Google Maps embed URL
     is_active: int("is_active").default(1).notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });

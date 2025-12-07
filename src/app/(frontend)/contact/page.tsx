@@ -12,8 +12,7 @@ interface ContactInfoData {
     office_location: string;
     phone: string;
     email: string;
-    map_image: string;
-    map_image_alt: string;
+    map_url: string;
 }
 
 interface ContactFormConfigData {
@@ -75,11 +74,16 @@ export default async function ContactPage() {
                 </div>
             </section>
             <section className="w-full">
-                <div className="aspect-16/6 w-full">
-                    <img
-                        alt={data.info.map_image_alt}
-                        className="h-full w-full object-cover"
-                        src={data.info.map_image}
+                <div className="w-full h-[450px]">
+                    <iframe
+                        src={data.info.map_url}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Google Maps Location"
                     />
                 </div>
             </section>

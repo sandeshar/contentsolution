@@ -1,9 +1,27 @@
 'use client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const SideBar = () => {
     const [isUIOpen, setIsUIOpen] = useState(true);
     const [isSEOOpen, setIsSEOOpen] = useState(false);
+    const [siteName, setSiteName] = useState('Admin Panel');
+
+    useEffect(() => {
+        const fetchSiteName = async () => {
+            try {
+                const response = await fetch('/api/store-settings');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.store_name) {
+                        setSiteName(data.store_name);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch site name:', error);
+            }
+        };
+        fetchSiteName();
+    }, []);
 
     const mainItems = [
         { name: 'Dashboard', icon: 'dashboard', href: '/admin' },
@@ -34,8 +52,8 @@ const SideBar = () => {
                         <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1, 'wght' 600" }}>database</span>
                     </div>
                     <div className="flex flex-col">
-                        <h1 className="text-white text-base font-bold leading-normal">Admin Panel</h1>
-                        <p className="text-gray-400 text-sm font-normal leading-normal">WebApp</p>
+                        <h1 className="text-white text-base font-bold leading-normal">{siteName}</h1>
+                        <p className="text-gray-400 text-sm font-normal leading-normal">Admin Panel</p>
                     </div>
                 </div>
                 <nav className="flex flex-col gap-2">
@@ -98,7 +116,7 @@ const SideBar = () => {
                 </nav>
             </div>
             <div className="flex flex-col gap-1 border-t border-gray-700 pt-4">
-                <button 
+                <button
                     onClick={async () => {
                         try {
                             const response = await fetch('/api/logout', { method: 'POST' });

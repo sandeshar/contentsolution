@@ -154,8 +154,17 @@ export default function ContactPageUI() {
                                     <InputGroup label="Phone Number" value={contactInfo.phone || ''} onChange={(v) => setContactInfo({ ...contactInfo, phone: v })} />
                                     <InputGroup label="Email Address" value={contactInfo.email || ''} onChange={(v) => setContactInfo({ ...contactInfo, email: v })} />
                                     
-                                    <ImageUploader label="Map Image" value={contactInfo.map_image || ''} onChange={(v) => setContactInfo({ ...contactInfo, map_image: v })} folder="contact" />
-                                    <InputGroup label="Map Image Alt Text" value={contactInfo.map_image_alt || ''} onChange={(v) => setContactInfo({ ...contactInfo, map_image_alt: v })} />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Google Maps Embed URL</label>
+                                        <textarea
+                                            value={contactInfo.map_url || ''}
+                                            onChange={(e) => setContactInfo({ ...contactInfo, map_url: e.target.value })}
+                                            placeholder="Paste your Google Maps embed URL here (e.g., https://www.google.com/maps/embed?pb=...)"
+                                            rows={3}
+                                            className="block w-full rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-all duration-200 py-2.5 px-4 resize-none font-mono text-xs"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-2">To get the embed URL: Open Google Maps → Click Share → Embed a map → Copy the src URL</p>
+                                    </div>
 
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
