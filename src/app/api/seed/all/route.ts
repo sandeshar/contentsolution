@@ -5,6 +5,7 @@ export async function POST(request: Request) {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
         const results = {
+            status: { success: false, message: '' },
             homepage: { success: false, message: '' },
             about: { success: false, message: '' },
             services: { success: false, message: '' },
@@ -14,6 +15,21 @@ export async function POST(request: Request) {
             blog: { success: false, message: '' },
             users: { success: false, message: '' },
         };
+
+        // Seed Status (must be first for blog foreign key)
+        try {
+            const statusRes = await fetch(`${baseUrl}/api/seed/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const statusData = await statusRes.json();
+            results.status = {
+                success: statusRes.ok,
+                message: statusData.message || statusData.error || 'Unknown error',
+            };
+        } catch (error) {
+            results.status.message = error instanceof Error ? error.message : 'Failed to seed';
+        }
 
         // Seed Users
         try {

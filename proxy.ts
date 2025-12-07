@@ -1,23 +1,60 @@
-import { verifyJWT } from "@/utils/authHelper";
+import { returnRole, verifyJWT } from "@/utils/authHelper";
 import { NextRequest, NextResponse } from "next/server";
 
 export function proxy(request: NextRequest) {
-    const cookie = request.cookies.get('admin_auth')?.value || '';
+    const pathname = request.nextUrl.pathname;
 
-    if (!cookie) {
-        return NextResponse.redirect(new URL('/login', request.url));
+    // Allow public access to login page and login API
+    if (pathname === '/login' || pathname.startsWith('/api/login')) {
+        return NextResponse.next();
     }
 
-    const verified = verifyJWT(cookie);
-
-    if (!verified) {
-        return NextResponse.redirect(new URL('/login', request.url));
+    // Allow public GET requests to public API endpoints
+    if (request.method === 'GET' && pathname.startsWith('/api/pages')) {
+        return NextResponse.next();
     }
 
-    // Allow the request to proceed if authenticated
+    // Require authentication for admin routes
+    if (pathname.startsWith('/admin')) {
+        const cookie = request.cookies.get('admin_auth')?.value || '';
+        if (!cookie) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+        const verified = verifyJWT(cookie);
+        if (!verified) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+    }
+
+    // Require authentication and superadmin role for protected endpoints
+    if ((pathname.startsWith('/api/users') || pathname.startsWith('/api/store-setting') || pathname.startsWith('/api/seed')) && request.method !== 'GET') {
+        const cookie = request.cookies.get('admin_auth')?.value || '';
+        if (!cookie) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+        const verified = verifyJWT(cookie);
+        if (!verified) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        const role = returnRole(cookie);
+        if (role !== 'superadmin') {
+            return NextResponse.json(
+                { error: 'Forbidden: Insufficient permissions' },
+                { status: 403 }
+            );
+        }
+    }
+
     return NextResponse.next();
 }
 
 export const config = {
-    matcher: ['/admin/:path*', '/admin'],
+    matcher: ['/admin/:path*', '/admin', '/api/:path*', '/api', '/login'],
 };

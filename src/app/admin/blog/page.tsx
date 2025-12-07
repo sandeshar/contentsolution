@@ -9,6 +9,7 @@ export default function BlogPage() {
     const [posts, setPosts] = useState<BlogPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState<number | null>(null);
 
     useEffect(() => {
         fetchPosts();
@@ -23,6 +24,30 @@ export default function BlogPage() {
             console.error('Error fetching posts:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleStatusChange = async (slug: string, newStatus: number, title: string) => {
+        try {
+            const response = await fetch('/api/blog', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    slug,
+                    status: newStatus === 1 ? 'draft' : newStatus === 2 ? 'published' : 'in-review'
+                }),
+            });
+
+            if (response.ok) {
+                alert(`Status updated for "${title}"!`);
+                fetchPosts();
+            } else {
+                const data = await response.json();
+                alert(data.error || 'Failed to update status');
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('Failed to update status. Please try again.');
         }
     };
 
@@ -51,11 +76,13 @@ export default function BlogPage() {
 
     const filteredPosts = posts.filter(post => {
         const query = searchQuery.toLowerCase();
-        return (
+        const matchesSearch = (
             post.title?.toLowerCase().includes(query) ||
             post.slug?.toLowerCase().includes(query) ||
             (post.tags && post.tags.toLowerCase().includes(query))
         );
+        const matchesStatus = statusFilter === null || post.status === statusFilter;
+        return matchesSearch && matchesStatus;
     });
 
     if (loading) {
@@ -76,8 +103,8 @@ export default function BlogPage() {
                     <p className="text-slate-500 mt-1">Manage your blog posts here. Add, edit, or remove posts.</p>
                 </div>
                 <div className="bg-white rounded-lg shadow-sm">
-                    <div className="p-6 flex justify-between items-center border-b border-slate-200">
-                        <div className="relative w-full max-w-sm">
+                    <div className="p-6 flex flex-wrap gap-4 items-center border-b border-slate-200">
+                        <div className="relative flex-1 min-w-[250px]">
                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
                             <input
                                 className="pl-10 pr-4 py-2 w-full border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-primary"
@@ -87,6 +114,16 @@ export default function BlogPage() {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
+                        <select
+                            className="px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-primary"
+                            value={statusFilter ?? ''}
+                            onChange={(e) => setStatusFilter(e.target.value ? Number(e.target.value) : null)}
+                        >
+                            <option value="">All Status</option>
+                            <option value="1">Draft</option>
+                            <option value="2">Published</option>
+                            <option value="3">In Review</option>
+                        </select>
                         <Link href="/admin/blog/add" className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-white">
                             <span className="material-symbols-outlined text-lg">add</span>
                             New Post
@@ -124,9 +161,15 @@ export default function BlogPage() {
                                             <td className="px-6 py-4 font-semibold text-slate-900">{post.title}</td>
                                             <td className="px-6 py-4 text-slate-700">Admin User</td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBlogStatusClasses(post.status)}`}>
-                                                    {getBlogStatusLabel(post.status)}
-                                                </span>
+                                                <select
+                                                    value={post.status}
+                                                    onChange={(e) => handleStatusChange(post.slug, Number(e.target.value), post.title)}
+                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-0 cursor-pointer focus:ring-2 focus:ring-primary ${getBlogStatusClasses(post.status)}`}
+                                                >
+                                                    <option value="1">Draft</option>
+                                                    <option value="2">Published</option>
+                                                    <option value="3">In Review</option>
+                                                </select>
                                             </td>
                                             <td className="px-6 py-4 text-slate-700">
                                                 {new Date(post.createdAt).toLocaleDateString('en-US', {

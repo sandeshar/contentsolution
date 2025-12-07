@@ -2,9 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { blogPosts } from '@/db/schema';
+import { getUserIdFromToken } from '@/utils/authHelper';
 
 export async function POST(request: NextRequest) {
     try {
+        // Get user ID from JWT token
+        const token = request.cookies.get('admin_auth')?.value;
+        if (!token) {
+            return NextResponse.json(
+                { error: 'Unauthorized - No token provided' },
+                { status: 401 }
+            );
+        }
+
+        const authorId = getUserIdFromToken(token);
+        if (!authorId) {
+            return NextResponse.json(
+                { error: 'Unauthorized - Invalid token' },
+                { status: 401 }
+            );
+        }
 
         const body = await request.json();
         const { title, slug, content, tags, thumbnail, status = 'draft' } = body;
@@ -16,9 +33,6 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
-
-        // For now, using a default authorId (1) - in production, get from session
-        const authorId = 1;
 
         // Status mapping: draft = 1, published = 2, in-review = 3
         const statusId = status === 'published' ? 2 : 1;
@@ -115,32 +129,52 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     try {
+        // Get user ID from JWT token
+        const token = request.cookies.get('admin_auth')?.value;
+        if (!token) {
+            return NextResponse.json(
+                { error: 'Unauthorized - No token provided' },
+                { status: 401 }
+            );
+        }
+
+        const userId = getUserIdFromToken(token);
+        if (!userId) {
+            return NextResponse.json(
+                { error: 'Unauthorized - Invalid token' },
+                { status: 401 }
+            );
+        }
 
         const body = await request.json();
         const { slug, title, newSlug, content, tags, thumbnail, status = 'draft' } = body;
 
         // Validate required fields
-        if (!slug || !title || !newSlug || !content) {
+        if (!slug) {
             return NextResponse.json(
-                { error: 'Slug, title, newSlug, and content are required' },
+                { error: 'Slug is required' },
                 { status: 400 }
             );
         }
 
         // Status mapping: draft = 1, published = 2, in-review = 3
-        const statusId = status === 'published' ? 2 : 1;
+        const statusId = status === 'published' ? 2 : status === 'in-review' ? 3 : 1;
+
+        // Build update object dynamically
+        const updateData: any = {
+            updatedAt: new Date(),
+        };
+
+        if (title) updateData.title = title;
+        if (newSlug) updateData.slug = newSlug;
+        if (content) updateData.content = content;
+        if (tags !== undefined) updateData.tags = tags || null;
+        if (thumbnail !== undefined) updateData.thumbnail = thumbnail || null;
+        if (status) updateData.status = statusId;
 
         // Update blog post
         await db.update(blogPosts)
-            .set({
-                title,
-                slug: newSlug,
-                content,
-                tags: tags || null,
-                thumbnail: thumbnail || null,
-                status: statusId,
-                updatedAt: new Date(),
-            })
+            .set(updateData)
             .where(eq(blogPosts.slug, slug));
 
         return NextResponse.json(
@@ -170,13 +204,29 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
     try {
+        // Get user ID from JWT token
+        const token = request.cookies.get('admin_auth')?.value;
+        if (!token) {
+            return NextResponse.json(
+                { error: 'Unauthorized - No token provided' },
+                { status: 401 }
+            );
+        }
+
+        const userId = getUserIdFromToken(token);
+        if (!userId) {
+            return NextResponse.json(
+                { error: 'Unauthorized - Invalid token' },
+                { status: 401 }
+            );
+        }
 
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (!id) {
             return NextResponse.json(
-                { error: 'Invalid' },
+                { error: 'Post ID is required' },
                 { status: 400 }
             );
         }

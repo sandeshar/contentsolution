@@ -19,6 +19,8 @@ const SeedRunner = () => {
     const [individualResults, setIndividualResults] = useState<SeedResults>({});
 
     const seedTargets = [
+        { key: "status", label: "Status (Required First)", priority: true },
+        { key: "users", label: "Users" },
         { key: "homepage", label: "Homepage" },
         { key: "about", label: "About" },
         { key: "services", label: "Services" },
@@ -26,7 +28,6 @@ const SeedRunner = () => {
         { key: "faq", label: "FAQ" },
         { key: "terms", label: "Terms" },
         { key: "blog", label: "Blog" },
-        { key: "users", label: "Users" },
     ];
 
     const runSeed = async () => {
@@ -123,12 +124,12 @@ const SeedRunner = () => {
                     </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {seedTargets.map(({ key, label }) => {
+                    {seedTargets.map(({ key, label, priority }) => {
                         const itemState = individualResults[key];
                         return (
-                            <div key={key} className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3">
+                            <div key={key} className={`flex flex-col gap-2 rounded-lg border p-3 ${priority ? 'border-primary bg-primary/5' : 'border-slate-200 bg-white'}`}>
                                 <div className="flex items-center justify-between">
-                                    <p className="text-sm font-semibold text-slate-900">{label}</p>
+                                    <p className={`text-sm font-semibold ${priority ? 'text-primary' : 'text-slate-900'}`}>{label}</p>
                                     {itemState && (
                                         <span className={`text-xs font-semibold ${itemState.success ? "text-emerald-700" : "text-amber-700"}`}>
                                             {itemState.success ? "Success" : "Check"}

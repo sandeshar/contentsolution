@@ -4,15 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 export function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const cookie = request.cookies.get('admin_auth')?.value || '';
-    if (!cookie) {
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
-    const verified = verifyJWT(cookie);
-    if (!verified) {
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
+    const role = returnRole(cookie);
+    if (pathname.startsWith('/admin') && !cookie && !role) {
 
-    const role = returnRole(request.cookies.get('admin_auth')?.value || '');
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
 
     if (pathname.startsWith('/api') && (request.method === 'POST' || request.method === 'PUT' || request.method === 'DELETE')) {
         if (!role) {
@@ -31,7 +27,3 @@ export function proxy(request: NextRequest) {
 
     return NextResponse.next();
 }
-
-export const config = {
-    matcher: ['/admin/:path*', '/admin', '/api/:path*', '/api'],
-};
