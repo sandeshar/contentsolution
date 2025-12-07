@@ -18,6 +18,7 @@ interface ContactInfoData {
 interface ContactFormConfigData {
     name_placeholder: string;
     email_placeholder: string;
+    phone_placeholder?: string;
     subject_placeholder: string;
     message_placeholder: string;
     submit_button_text: string;

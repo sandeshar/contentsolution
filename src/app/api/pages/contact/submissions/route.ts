@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { name, email, subject, message, status = 'new' } = body;
+        const { name, email, phone, subject, message, status = 'new' } = body;
 
         if (!name || !email || !message) {
             return NextResponse.json({ error: 'Name, email, and message are required' }, { status: 400 });
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
         const result = await db.insert(contactFormSubmissions).values({
             name,
             email,
+            phone: phone || null,
             subject: subject || null,
             message,
             status,
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, status } = body;
+        const { id, status, phone } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -78,6 +79,7 @@ export async function PUT(request: NextRequest) {
 
         const updateData: any = {};
         if (status !== undefined) updateData.status = status;
+        if (phone !== undefined) updateData.phone = phone;
 
         await db.update(contactFormSubmissions).set(updateData).where(eq(contactFormSubmissions.id, id));
 

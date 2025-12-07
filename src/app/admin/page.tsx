@@ -1,14 +1,21 @@
 import { db } from "@/db";
 import { blogPosts, users, status } from "@/db/schema";
-import { eq, desc, count, sql } from "drizzle-orm";
+import { contactFormSubmissions } from "@/db/contactPageSchema";
+import { eq, desc, count } from "drizzle-orm";
 import Link from "next/link";
 import { getBlogStatusClasses } from "@/utils/statusHelpers";
 
 const Page = async () => {
     // Fetch real statistics
-    const [totalPosts, totalUsers, publishedPosts, draftPosts, recentPosts] = await Promise.all([
+    const [
+        totalPosts,
+        publishedPosts,
+        draftPosts,
+        recentPosts,
+        totalContact,
+        newContact,
+    ] = await Promise.all([
         db.select({ count: count() }).from(blogPosts),
-        db.select({ count: count() }).from(users),
         db.select({ count: count() }).from(blogPosts).where(eq(blogPosts.status, 2)), // Published
         db.select({ count: count() }).from(blogPosts).where(eq(blogPosts.status, 1)), // Draft
         db.select({
@@ -24,14 +31,17 @@ const Page = async () => {
             .leftJoin(users, eq(blogPosts.authorId, users.id))
             .leftJoin(status, eq(blogPosts.status, status.id))
             .orderBy(desc(blogPosts.createdAt))
-            .limit(4)
+            .limit(4),
+        db.select({ count: count() }).from(contactFormSubmissions),
+        db.select({ count: count() }).from(contactFormSubmissions).where(eq(contactFormSubmissions.status, "new")),
     ]);
 
     const stats = [
         { label: "Total Posts", value: totalPosts[0]?.count?.toString() || "0", icon: "article", delta: "+12%", deltaType: "up" },
-        { label: "Total Users", value: totalUsers[0]?.count?.toString() || "0", icon: "group", delta: "+5%", deltaType: "up" },
         { label: "Published", value: publishedPosts[0]?.count?.toString() || "0", icon: "check_circle", delta: "0%", deltaType: "up" },
         { label: "Draft", value: draftPosts[0]?.count?.toString() || "0", icon: "edit_note", delta: "0%", deltaType: "down" },
+        { label: "Contact Messages", value: totalContact[0]?.count?.toString() || "0", icon: "contact_mail", delta: "", deltaType: "up" },
+        { label: "New Messages", value: newContact[0]?.count?.toString() || "0", icon: "mark_email_unread", delta: "", deltaType: "up" },
     ];
 
     const recent = recentPosts.map(post => ({
@@ -63,7 +73,7 @@ const Page = async () => {
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
                         {stats.map((s) => (
                             <div key={s.label} className="bg-white rounded-lg shadow-sm p-6 border border-slate-200">
                                 <div className="flex items-start justify-between">
@@ -74,10 +84,14 @@ const Page = async () => {
                                     <span className="material-symbols-outlined text-slate-400 text-3xl">{s.icon}</span>
                                 </div>
                                 <div className="mt-4 inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-50 text-slate-600">
-                                    <span className="material-symbols-outlined text-base {s.deltaType === 'up' ? 'text-green-600' : 'text-red-600'}">
-                                        {s.deltaType === "up" ? "arrow_upward" : "arrow_downward"}
-                                    </span>
-                                    {s.delta} since last week
+                                    {s.delta && (
+                                        <>
+                                            <span className={`material-symbols-outlined text-base ${s.deltaType === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                                                {s.deltaType === "up" ? "arrow_upward" : "arrow_downward"}
+                                            </span>
+                                            {s.delta} since last week
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -158,6 +172,13 @@ const Page = async () => {
                                     <span className="flex items-center gap-2 text-slate-700">
                                         <span className="material-symbols-outlined">settings</span>
                                         Store Settings
+                                    </span>
+                                    <span className="material-symbols-outlined text-slate-400">chevron_right</span>
+                                </Link>
+                                <Link href="/admin/contact" className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-slate-200 hover:bg-slate-50">
+                                    <span className="flex items-center gap-2 text-slate-700">
+                                        <span className="material-symbols-outlined">contact_mail</span>
+                                        Contact Submissions
                                     </span>
                                     <span className="material-symbols-outlined text-slate-400">chevron_right</span>
                                 </Link>

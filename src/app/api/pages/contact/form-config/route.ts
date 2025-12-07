@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { name_placeholder, email_placeholder, subject_placeholder, message_placeholder, submit_button_text, success_message, is_active = 1 } = body;
+        const { name_placeholder, email_placeholder, phone_placeholder, subject_placeholder, message_placeholder, submit_button_text, success_message, is_active = 1 } = body;
 
         if (!name_placeholder || !email_placeholder || !subject_placeholder || !message_placeholder || !submit_button_text || !success_message) {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
         const result = await db.insert(contactPageFormConfig).values({
             name_placeholder,
             email_placeholder,
+            phone_placeholder: phone_placeholder || null,
             subject_placeholder,
             message_placeholder,
             submit_button_text,
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, name_placeholder, email_placeholder, subject_placeholder, message_placeholder, submit_button_text, success_message, is_active } = body;
+        const { id, name_placeholder, email_placeholder, phone_placeholder, subject_placeholder, message_placeholder, submit_button_text, success_message, is_active } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -75,6 +76,7 @@ export async function PUT(request: NextRequest) {
         const updateData: any = {};
         if (name_placeholder !== undefined) updateData.name_placeholder = name_placeholder;
         if (email_placeholder !== undefined) updateData.email_placeholder = email_placeholder;
+        if (phone_placeholder !== undefined) updateData.phone_placeholder = phone_placeholder;
         if (subject_placeholder !== undefined) updateData.subject_placeholder = subject_placeholder;
         if (message_placeholder !== undefined) updateData.message_placeholder = message_placeholder;
         if (submit_button_text !== undefined) updateData.submit_button_text = submit_button_text;

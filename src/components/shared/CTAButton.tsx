@@ -5,13 +5,17 @@ interface CTAButtonProps {
     variant?: 'primary' | 'secondary' | 'outline';
     className?: string;
     onClick?: () => void;
+    type?: 'button' | 'submit' | 'reset';
+    disabled?: boolean;
 }
 
 const CTAButton: React.FC<CTAButtonProps> = ({
     text,
     variant = 'primary',
     className = "",
-    onClick
+    onClick,
+    type = 'button',
+    disabled = false
 }) => {
     const baseClasses = "flex items-center justify-center rounded-lg h-12 px-6 text-base font-bold leading-normal tracking-[0.015em] transition-colors";
 
@@ -23,7 +27,9 @@ const CTAButton: React.FC<CTAButtonProps> = ({
 
     return (
         <button
-            className={`${baseClasses} ${variantClasses[variant]} ${className}`}
+            type={type}
+            disabled={disabled}
+            className={`${baseClasses} ${variantClasses[variant]} ${className} disabled:opacity-60 disabled:cursor-not-allowed`}
             onClick={onClick}
         >
             <span className="truncate">{text}</span>

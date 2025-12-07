@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { office_location, phone, email, map_image, map_image_alt, is_active = 1 } = body;
+        const { office_location, phone, email, map_url, is_active = 1 } = body;
 
-        if (!office_location || !phone || !email || !map_image || !map_image_alt) {
+        if (!office_location || !phone || !email || !map_url) {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
         }
 
@@ -46,8 +46,7 @@ export async function POST(request: NextRequest) {
             office_location,
             phone,
             email,
-            map_image,
-            map_image_alt,
+            map_url,
             is_active,
         });
 
@@ -65,7 +64,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, office_location, phone, email, map_image, map_image_alt, is_active } = body;
+        const { id, office_location, phone, email, map_url, is_active } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -75,8 +74,7 @@ export async function PUT(request: NextRequest) {
         if (office_location !== undefined) updateData.office_location = office_location;
         if (phone !== undefined) updateData.phone = phone;
         if (email !== undefined) updateData.email = email;
-        if (map_image !== undefined) updateData.map_image = map_image;
-        if (map_image_alt !== undefined) updateData.map_image_alt = map_image_alt;
+        if (map_url !== undefined) updateData.map_url = map_url;
         if (is_active !== undefined) updateData.is_active = is_active;
 
         await db.update(contactPageInfo).set(updateData).where(eq(contactPageInfo.id, id));
