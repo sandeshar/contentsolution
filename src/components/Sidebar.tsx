@@ -98,14 +98,22 @@ const SideBar = () => {
                 </nav>
             </div>
             <div className="flex flex-col gap-1 border-t border-gray-700 pt-4">
-                <a className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-white/10" href="#">
-                    <span className="material-symbols-outlined text-lg">account_circle</span>
-                    <p className="text-sm font-medium leading-normal">Profile</p>
-                </a>
-                <a className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-white/10" href="#">
+                <button 
+                    onClick={async () => {
+                        try {
+                            const response = await fetch('/api/logout', { method: 'POST' });
+                            if (response.ok) {
+                                window.location.href = '/login';
+                            }
+                        } catch (error) {
+                            console.error('Logout failed:', error);
+                        }
+                    }}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-white/10 w-full text-left"
+                >
                     <span className="material-symbols-outlined text-lg">logout</span>
                     <p className="text-sm font-medium leading-normal">Logout</p>
-                </a>
+                </button>
             </div>
         </aside>
     );
