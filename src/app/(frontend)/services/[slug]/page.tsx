@@ -91,117 +91,146 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
     if (!post) notFound();
 
     return (
-        <main className="bg-[#f9fbff]">
-            {/* Attractive Header Section */}
-            <div className="relative overflow-hidden bg-gradient-to-r from-primary via-indigo-500 to-primary/80 py-20 sm:py-28 shadow-lg">
-                {/* Decorative blobs */}
-                <div className="absolute inset-0 opacity-20" aria-hidden>
-                    <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-white/20 blur-3xl" />
-                    <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/20 blur-2xl" />
-                </div>
-
-                <div className="container mx-auto px-4 relative z-10">
-                    <div className="mx-auto max-w-4xl text-center text-white">
-                        <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold mb-6 backdrop-blur">
-                            <span className="material-symbols-outlined text-base">workspace_premium</span>
-                            Featured Service
-                        </div>
-                        <div className="flex flex-col items-center gap-4">
-                            {post.icon && (
-                                <span className="material-symbols-outlined text-7xl drop-shadow-lg animate-pulse">{post.icon}</span>
-                            )}
-                            <h1 className="text-5xl md:text-6xl font-black leading-tight tracking-[-0.04em] drop-shadow-lg">
-                                {post.title}
-                            </h1>
-                            <p className="text-lg text-white/95 leading-relaxed max-w-3xl drop-shadow">
-                                {post.excerpt}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <article className="py-16 sm:py-24">
+        <main className="bg-white">
+            {/* Hero Section */}
+            <section className="relative py-16 sm:py-24 md:py-32 overflow-hidden">
+                <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 to-slate-100" />
+                
                 <div className="container mx-auto px-4">
-                    {/* Main layout with compact side card */}
-                    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-[1.8fr_1fr]">
-                        <div className="space-y-8">
-                            {/* Image and Description in Same Card */}
+                    <div className="mx-auto max-w-4xl">
+                        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                            {/* Left Content */}
+                            <div className="flex-1">
+                                {post.icon && (
+                                    <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-2xl mb-6">
+                                        <span className="material-symbols-outlined text-4xl md:text-5xl text-primary">{post.icon}</span>
+                                    </div>
+                                )}
+                                <h1 className="text-4xl md:text-5xl font-bold text-[#0f172a] mb-4 leading-tight">
+                                    {post.title}
+                                </h1>
+                                <p className="text-lg text-[#4b5563] leading-relaxed mb-8">
+                                    {post.excerpt}
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <a
+                                        href="/contact"
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition"
+                                    >
+                                        <span className="material-symbols-outlined">arrow_forward</span>
+                                        Get Started
+                                    </a>
+                                    <a
+                                        href="#details"
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 text-[#0f172a] font-semibold rounded-lg hover:bg-slate-50 transition"
+                                    >
+                                        Learn More
+                                    </a>
+                                </div>
+                            </div>
+
+                            {/* Right Image */}
                             {post.thumbnail && (
-                                <div className="overflow-hidden rounded-2xl shadow-lg border border-slate-100 bg-white">
-                                    <div className="relative aspect-[16/9] w-full">
-                                        <img src={post.thumbnail} alt={post.title} className="h-full w-full object-cover" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent" />
-                                    </div>
-                                    <div className="p-8">
-                                        <h2 className="text-2xl font-bold text-[#0f172a] mb-3">About This Service</h2>
-                                        <p className="text-[#4b5563] text-base leading-relaxed">{post.excerpt}</p>
+                                <div className="flex-1">
+                                    <div className="relative">
+                                        <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-3xl -z-10" />
+                                        <img 
+                                            src={post.thumbnail} 
+                                            alt={post.title}
+                                            className="w-full rounded-2xl shadow-2xl"
+                                        />
                                     </div>
                                 </div>
                             )}
-
-                            {!post.thumbnail && (
-                                <div className="rounded-2xl bg-white p-8 shadow-lg border border-slate-100">
-                                    <h2 className="text-2xl font-bold text-[#0f172a] mb-4">About This Service</h2>
-                                    <p className="text-[#4b5563] text-base leading-relaxed">{post.excerpt}</p>
-                                </div>
-                            )}
-
-                            <div className="rounded-2xl bg-white p-8 shadow-sm border border-slate-100">
-                                <div
-                                    className="prose prose-lg max-w-none prose-headings:font-black prose-headings:text-[#0f172a] prose-p:text-[#475569] prose-a:text-primary prose-strong:text-[#0f172a]"
-                                    dangerouslySetInnerHTML={{ __html: post.content }}
-                                />
-                            </div>
                         </div>
-
-                        <aside className="space-y-6 lg:sticky lg:top-24">
-                            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
-                                <div className="flex items-center justify-between mb-4">
-                                    <p className="text-sm font-semibold text-primary flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-base">insights</span>
-                                        Key Points
-                                    </p>
-                                </div>
-                                <div className="space-y-3 text-sm text-[#475569]">
-                                    <div className="flex items-start gap-2">
-                                        <span className="material-symbols-outlined text-primary">task_alt</span>
-                                        <span>Outcome-focused messaging aligned to your objectives.</span>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <span className="material-symbols-outlined text-primary">schedule</span>
-                                        <span>Milestone-based delivery for transparency.</span>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                        <span className="material-symbols-outlined text-primary">shield_person</span>
-                                        <span>Quality review and edits loop baked in.</span>
-                                    </div>
-                                </div>
-                                <hr className="my-4 border-slate-200" />
-                                <a
-                                    href="/contact"
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
-                                >
-                                    <span className="material-symbols-outlined text-[20px]">call</span>
-                                    Talk with us
-                                </a>
-                            </div>
-
-                            <div className="rounded-2xl bg-gradient-to-r from-primary to-indigo-600 p-6 text-white shadow-sm">
-                                <h3 className="text-lg font-bold mb-2">Need this fast?</h3>
-                                <p className="text-sm text-white/90 mb-4">We can prioritize your project and outline next steps in one call.</p>
-                                <a
-                                    href="/contact"
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white text-primary px-4 py-3 text-sm font-semibold shadow-sm transition hover:shadow-md"
-                                >
-                                    <span className="material-symbols-outlined text-[20px]">calendar_month</span>
-                                    Book a discovery call
-                                </a>
-                            </div>
-                        </aside>
                     </div>
                 </div>
-            </article>
+            </section>
+
+            {/* Details Section */}
+            <section id="details" className="py-16 sm:py-24">
+                <div className="container mx-auto px-4">
+                    <div className="mx-auto max-w-4xl">
+                        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12">
+                            {/* Main Content */}
+                            <div className="space-y-12">
+                                {/* About Section */}
+                                <div>
+                                    <h2 className="text-3xl font-bold text-[#0f172a] mb-6">How It Works</h2>
+                                    <div
+                                        className="prose prose-lg max-w-none 
+                                            prose-headings:font-bold prose-headings:text-[#0f172a] prose-headings:mt-6 prose-headings:mb-3
+                                            prose-p:text-[#475569] prose-p:mb-4
+                                            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                                            prose-strong:text-[#0f172a] prose-strong:font-semibold
+                                            prose-li:text-[#475569] prose-li:marker:text-primary"
+                                        dangerouslySetInnerHTML={{ __html: post.content }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Sidebar */}
+                            <aside className="space-y-6">
+                                {/* Quick Action Card */}
+                                <div className="bg-gradient-to-br from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg sticky top-24">
+                                    <h3 className="text-xl font-bold mb-2">Ready?</h3>
+                                    <p className="text-white/90 text-sm mb-6">Let's discuss your project needs.</p>
+                                    <a
+                                        href="/contact"
+                                        className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-white text-primary font-semibold rounded-lg hover:shadow-lg transition"
+                                    >
+                                        <span className="material-symbols-outlined text-[20px]">call</span>
+                                        Contact Us
+                                    </a>
+                                </div>
+
+                                {/* Features */}
+                                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                                    <h4 className="text-sm font-bold text-[#0f172a] mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">star</span>
+                                        Benefits
+                                    </h4>
+                                    <ul className="space-y-3 text-sm text-[#475569]">
+                                        <li className="flex gap-3">
+                                            <span className="material-symbols-outlined text-primary text-base flex-shrink-0">check_circle</span>
+                                            <span>Expert team with proven track record</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="material-symbols-outlined text-primary text-base flex-shrink-0">check_circle</span>
+                                            <span>Transparent communication throughout</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="material-symbols-outlined text-primary text-base flex-shrink-0">check_circle</span>
+                                            <span>Quality results on schedule</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </aside>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="py-16 sm:py-20 bg-gradient-to-r from-primary/5 to-indigo-500/5 border-y border-slate-200">
+                <div className="container mx-auto px-4">
+                    <div className="mx-auto max-w-2xl text-center">
+                        <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
+                            Let's Bring Your Vision to Life
+                        </h2>
+                        <p className="text-lg text-[#4b5563] mb-8">
+                            Schedule a free consultation to explore how {post.title} can benefit your business.
+                        </p>
+                        <a
+                            href="/contact"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition shadow-lg"
+                        >
+                            <span className="material-symbols-outlined">calendar_month</span>
+                            Schedule Consultation
+                        </a>
+                    </div>
+                </div>
+            </section>
         </main>
     );
 }
