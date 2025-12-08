@@ -9,13 +9,13 @@ export default function HomePageUI() {
 
     // --- State Management ---
     const [heroData, setHeroData] = useState<any>({});
-    
+
     const [trustSection, setTrustSection] = useState<any>({});
     const [trustLogos, setTrustLogos] = useState<any[]>([]);
-    
+
     const [expertiseSection, setExpertiseSection] = useState<any>({});
     const [expertiseItems, setExpertiseItems] = useState<any[]>([]);
-    
+
     const [contactData, setContactData] = useState<any>({});
 
     // Track deleted items
@@ -177,7 +177,7 @@ export default function HomePageUI() {
                                         <InputGroup label="CTA Link" value={heroData.cta_link || ''} onChange={(v) => setHeroData({ ...heroData, cta_link: v })} />
                                     </div>
                                     <InputGroup label="Background Image URL" value={heroData.background_image || ''} onChange={(v) => setHeroData({ ...heroData, background_image: v })} />
-                                    
+
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
                                         <Toggle checked={heroData.is_active === 1} onChange={(c) => setHeroData({ ...heroData, is_active: c ? 1 : 0 })} />
@@ -215,7 +215,7 @@ export default function HomePageUI() {
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (logo.id) setDeletedTrustLogos([...deletedTrustLogos, logo.id]);
                                                         setTrustLogos(trustLogos.filter((_, i) => i !== idx));
@@ -228,7 +228,7 @@ export default function HomePageUI() {
                                             <div className="space-y-4">
                                                 <InputGroup label="Alt Text" value={logo.alt_text || ''} onChange={(v) => updateItem(idx, 'alt_text', v, trustLogos, setTrustLogos)} />
                                                 <InputGroup label="Logo URL" value={logo.logo_url || ''} onChange={(v) => updateItem(idx, 'logo_url', v, trustLogos, setTrustLogos)} />
-                                                
+
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <InputGroup label="Display Order" value={String(logo.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), trustLogos, setTrustLogos)} />
                                                     <div className="flex items-end justify-between">
@@ -279,7 +279,7 @@ export default function HomePageUI() {
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (item.id) setDeletedExpertiseItems([...deletedExpertiseItems, item.id]);
                                                         setExpertiseItems(expertiseItems.filter((_, i) => i !== idx));
@@ -299,7 +299,7 @@ export default function HomePageUI() {
                                                     </div>
                                                 </div>
                                                 <TextAreaGroup label="Description" value={item.description || ''} onChange={(v) => updateItem(idx, 'description', v, expertiseItems, setExpertiseItems)} />
-                                                
+
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <InputGroup label="Display Order" value={String(item.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), expertiseItems, setExpertiseItems)} />
                                                     <div className="flex items-end">
@@ -325,11 +325,12 @@ export default function HomePageUI() {
                                 <div className="space-y-5">
                                     <InputGroup label="Title" value={contactData.title || ''} onChange={(v) => setContactData({ ...contactData, title: v })} />
                                     <TextAreaGroup label="Description" value={contactData.description || ''} onChange={(v) => setContactData({ ...contactData, description: v })} />
-                                    
+
                                     <div className="grid grid-cols-2 gap-5">
                                         <InputGroup label="Name Placeholder" value={contactData.name_placeholder || ''} onChange={(v) => setContactData({ ...contactData, name_placeholder: v })} />
                                         <InputGroup label="Email Placeholder" value={contactData.email_placeholder || ''} onChange={(v) => setContactData({ ...contactData, email_placeholder: v })} />
-                                        <InputGroup label="Company Placeholder" value={contactData.company_placeholder || ''} onChange={(v) => setContactData({ ...contactData, company_placeholder: v })} />
+                                        <InputGroup label="Phone Placeholder" value={contactData.phone_placeholder || ''} onChange={(v) => setContactData({ ...contactData, phone_placeholder: v })} />
+                                        <InputGroup label="Service Placeholder" value={contactData.service_placeholder || ''} onChange={(v) => setContactData({ ...contactData, service_placeholder: v })} />
                                         <InputGroup label="Message Placeholder" value={contactData.message_placeholder || ''} onChange={(v) => setContactData({ ...contactData, message_placeholder: v })} />
                                     </div>
                                     <InputGroup label="Submit Button Text" value={contactData.submit_button_text || ''} onChange={(v) => setContactData({ ...contactData, submit_button_text: v })} />

@@ -26,6 +26,8 @@ export default function EditBlogPage() {
         title: "",
         slug: "",
         tags: "",
+        metaTitle: "",
+        metaDescription: "",
     });
     const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
     const [wordCount, setWordCount] = useState(0);
@@ -93,7 +95,7 @@ export default function EditBlogPage() {
             setWordCount(text.trim().split(/\s+/).filter(Boolean).length);
             setCharCount(text.length);
         },
-        immediatelyRender: false,
+        immediatelyRender: true,
     });
 
     useEffect(() => {
@@ -119,6 +121,8 @@ export default function EditBlogPage() {
                     title: post.title || "",
                     slug: post.slug || "",
                     tags: post.tags || "",
+                    metaTitle: post.metaTitle || "",
+                    metaDescription: post.metaDescription || "",
                 });
 
                 // Set thumbnail url
@@ -172,6 +176,8 @@ export default function EditBlogPage() {
                     content,
                     tags: formData.tags,
                     thumbnail: thumbnailUrl || null,
+                    metaTitle: formData.metaTitle || formData.title,
+                    metaDescription: formData.metaDescription,
                     status: isDraft ? 'draft' : 'published'
                 }),
             });
@@ -311,6 +317,38 @@ export default function EditBlogPage() {
                                             required
                                         />
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="metaTitle" className="block text-sm font-medium text-slate-700 mb-2">
+                                        Meta Title (SEO)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="metaTitle"
+                                        value={formData.metaTitle}
+                                        onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                                        className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-primary"
+                                        placeholder="Leave empty to use post title"
+                                        maxLength={60}
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">{formData.metaTitle.length}/60 characters (optimal for search engines)</p>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="metaDescription" className="block text-sm font-medium text-slate-700 mb-2">
+                                        Meta Description (SEO)
+                                    </label>
+                                    <textarea
+                                        id="metaDescription"
+                                        value={formData.metaDescription}
+                                        onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                                        className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-primary"
+                                        placeholder="Brief description for search results"
+                                        rows={3}
+                                        maxLength={160}
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">{formData.metaDescription.length}/160 characters (optimal for search engines)</p>
                                 </div>
 
                                 <div>

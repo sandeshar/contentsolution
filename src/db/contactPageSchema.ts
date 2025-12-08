@@ -30,6 +30,7 @@ export const contactPageFormConfig = mysqlTable("contact_page_form_config", {
     email_placeholder: varchar("email_placeholder", { length: 100 }).notNull(),
     phone_placeholder: varchar("phone_placeholder", { length: 100 }),
     subject_placeholder: varchar("subject_placeholder", { length: 100 }).notNull(),
+    service_placeholder: varchar("service_placeholder", { length: 100 }).notNull(),
     message_placeholder: varchar("message_placeholder", { length: 100 }).notNull(),
     submit_button_text: varchar("submit_button_text", { length: 100 }).notNull(),
     success_message: varchar("success_message", { length: 512 }).notNull(),
@@ -44,6 +45,7 @@ export const contactFormSubmissions = mysqlTable("contact_form_submissions", {
     email: varchar("email", { length: 256 }).notNull(),
     phone: varchar("phone", { length: 50 }),
     subject: varchar("subject", { length: 512 }),
+    service: varchar("service", { length: 256 }),
     message: varchar("message", { length: 65535 }).notNull(),
     status: varchar("status", { length: 50 }).default("new").notNull(), // new, read, replied, archived
     createdAt: timestamp("created_at").defaultNow().notNull(),

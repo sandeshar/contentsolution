@@ -36,6 +36,7 @@ export async function POST() {
             name_placeholder: 'Your Name',
             email_placeholder: 'Your Email',
             subject_placeholder: 'Subject',
+            service_placeholder: 'Select a service',
             message_placeholder: 'Your Message',
             submit_button_text: 'Send Message',
             success_message: 'Thank you for contacting us! We will get back to you soon.',

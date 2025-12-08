@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
         const key = searchParams.get('key');
+        const slug = searchParams.get('slug');
 
         if (id) {
             const service = await db.select().from(servicesPageDetails).where(eq(servicesPageDetails.id, parseInt(id))).limit(1);
@@ -22,6 +23,16 @@ export async function GET(request: NextRequest) {
 
         if (key) {
             const service = await db.select().from(servicesPageDetails).where(eq(servicesPageDetails.key, key)).limit(1);
+
+            if (service.length === 0) {
+                return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+            }
+
+            return NextResponse.json(service[0]);
+        }
+
+        if (slug) {
+            const service = await db.select().from(servicesPageDetails).where(eq(servicesPageDetails.slug, slug)).limit(1);
 
             if (service.length === 0) {
                 return NextResponse.json({ error: 'Service not found' }, { status: 404 });
@@ -45,7 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { key, icon, title, description, bullets, image, image_alt, display_order, is_active = 1 } = body;
+        const { key, slug, icon, title, description, bullets, image, image_alt, display_order, is_active = 1 } = body;
 
         if (!key || !icon || !title || !description || !bullets || !image || !image_alt || display_order === undefined) {
             return NextResponse.json(
@@ -56,6 +67,7 @@ export async function POST(request: NextRequest) {
 
         const result = await db.insert(servicesPageDetails).values({
             key,
+            slug: slug || null,
             icon,
             title,
             description,
@@ -85,7 +97,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, key, icon, title, description, bullets, image, image_alt, display_order, is_active } = body;
+        const { id, key, slug, icon, title, description, bullets, image, image_alt, display_order, is_active } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -93,6 +105,7 @@ export async function PUT(request: NextRequest) {
 
         const updateData: any = {};
         if (key !== undefined) updateData.key = key;
+        if (slug !== undefined) updateData.slug = slug;
         if (icon !== undefined) updateData.icon = icon;
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;

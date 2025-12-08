@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { title, description, name_placeholder, email_placeholder, company_placeholder, message_placeholder, submit_button_text, is_active = 1 } = body;
+        const { title, description, name_placeholder, email_placeholder, phone_placeholder, service_placeholder, message_placeholder, submit_button_text, is_active = 1 } = body;
 
-        if (!title || !description || !name_placeholder || !email_placeholder || !company_placeholder || !message_placeholder || !submit_button_text) {
+        if (!title || !description || !name_placeholder || !email_placeholder || !service_placeholder || !message_placeholder || !submit_button_text) {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
         }
 
@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
             description,
             name_placeholder,
             email_placeholder,
-            company_placeholder,
+            phone_placeholder: phone_placeholder || null,
+            service_placeholder,
             message_placeholder,
             submit_button_text,
             is_active,
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, title, description, name_placeholder, email_placeholder, company_placeholder, message_placeholder, submit_button_text, is_active } = body;
+        const { id, title, description, name_placeholder, email_placeholder, phone_placeholder, service_placeholder, message_placeholder, submit_button_text, is_active } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -78,7 +79,8 @@ export async function PUT(request: NextRequest) {
         if (description !== undefined) updateData.description = description;
         if (name_placeholder !== undefined) updateData.name_placeholder = name_placeholder;
         if (email_placeholder !== undefined) updateData.email_placeholder = email_placeholder;
-        if (company_placeholder !== undefined) updateData.company_placeholder = company_placeholder;
+        if (phone_placeholder !== undefined) updateData.phone_placeholder = phone_placeholder;
+        if (service_placeholder !== undefined) updateData.service_placeholder = service_placeholder;
         if (message_placeholder !== undefined) updateData.message_placeholder = message_placeholder;
         if (submit_button_text !== undefined) updateData.submit_button_text = submit_button_text;
         if (is_active !== undefined) updateData.is_active = is_active;

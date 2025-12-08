@@ -4,6 +4,7 @@ import 'dotenv/config';
 import * as schema from './schema';
 import * as homepageSchema from './homepageSchema';
 import * as servicesPageSchema from './servicesPageSchema';
+import * as servicePostsSchema from './servicePostsSchema';
 import * as aboutPageSchema from './aboutPageSchema';
 import * as contactPageSchema from './contactPageSchema';
 import * as faqPageSchema from './faqPageSchema';
@@ -27,6 +28,7 @@ export const db = drizzle(pool, {
         ...schema,
         ...homepageSchema,
         ...servicesPageSchema,
+        ...servicePostsSchema,
         ...aboutPageSchema,
         ...contactPageSchema,
         ...faqPageSchema,

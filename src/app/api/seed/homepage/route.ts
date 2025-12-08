@@ -132,11 +132,12 @@ export async function POST() {
         await db.insert(homepageContactSection).values({
             title: 'Ready to Grow Your Business?',
             description: "Let's talk about how our content solutions can help you achieve your goals. Fill out the form, and we'll get back to you within 24 hours.",
-            name_placeholder: 'Name',
-            email_placeholder: 'Email',
-            company_placeholder: 'Company',
-            message_placeholder: 'Message',
-            submit_button_text: 'Submit',
+            name_placeholder: 'Your Name',
+            email_placeholder: 'Your Email',
+            phone_placeholder: 'Phone Number',
+            service_placeholder: 'Select a service',
+            message_placeholder: 'Your Message',
+            submit_button_text: 'Get Started',
             is_active: 1,
         });
 

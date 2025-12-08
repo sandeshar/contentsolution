@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { name, email, phone, subject, message, status = 'new' } = body;
+        const { name, email, phone, subject, service, message, status = 'new' } = body;
 
         if (!name || !email || !message) {
             return NextResponse.json({ error: 'Name, email, and message are required' }, { status: 400 });
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
             email,
             phone: phone || null,
             subject: subject || null,
+            service: service || null,
             message,
             status,
         });

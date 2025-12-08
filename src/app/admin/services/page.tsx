@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ServicesPageUI() {
+export default function ServicesAdminPage() {
     const router = useRouter();
 
     useEffect(() => {

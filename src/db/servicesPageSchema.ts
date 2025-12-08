@@ -16,6 +16,7 @@ export const servicesPageHero = mysqlTable("services_page_hero", {
 export const servicesPageDetails = mysqlTable("services_page_details", {
     id: int("id").primaryKey().autoincrement(),
     key: varchar("key", { length: 50 }).notNull().unique(),
+    slug: varchar("slug", { length: 256 }),
     icon: varchar("icon", { length: 100 }).notNull(),
     title: varchar("title", { length: 256 }).notNull(),
     description: varchar("description", { length: 1024 }).notNull(),

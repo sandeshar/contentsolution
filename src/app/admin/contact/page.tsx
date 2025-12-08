@@ -8,6 +8,7 @@ type Submission = {
     email: string;
     phone?: string | null;
     subject?: string | null;
+    service?: string | null;
     message: string;
     status: string;
     createdAt: string;
@@ -69,7 +70,7 @@ export default function ContactAdminPage() {
         if (!term) return base;
 
         return base.filter((s) =>
-            [s.name, s.email, s.phone || "", s.subject || "", s.message]
+            [s.name, s.email, s.phone || "", s.service || s.subject || "", s.message]
                 .some((field) => field.toLowerCase().includes(term))
         );
     }, [filter, search, submissions]);
@@ -215,7 +216,7 @@ export default function ContactAdminPage() {
                                 <th className="w-32 px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Name</th>
                                 <th className="w-44 px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Email</th>
                                 <th className="w-28 px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Phone</th>
-                                <th className="w-32 px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Subject</th>
+                                <th className="w-32 px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Service</th>
                                 <th className="w-24 px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                                 <th className="w-36 px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Date</th>
                                 <th className="w-36 px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
@@ -231,7 +232,7 @@ export default function ContactAdminPage() {
                                     <td className="px-4 py-3 text-sm font-medium text-slate-900 truncate">{s.name}</td>
                                     <td className="px-4 py-3 text-sm text-slate-600 truncate">{s.email}</td>
                                     <td className="px-4 py-3 text-sm text-slate-600 font-mono truncate">{s.phone || '—'}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-700 truncate">{s.subject || '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-slate-700 truncate">{s.service || s.subject || '—'}</td>
                                     <td className="px-4 py-3 whitespace-nowrap">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${statusConfig[s.status as keyof typeof statusConfig]?.bg} ${statusConfig[s.status as keyof typeof statusConfig]?.text}`}>
                                             <span className={`h-1.5 w-1.5 rounded-full ${statusConfig[s.status as keyof typeof statusConfig]?.dot}`} />
@@ -280,7 +281,7 @@ export default function ContactAdminPage() {
                     <div className="w-full max-w-3xl rounded-lg bg-white shadow-xl max-h-[90vh] flex flex-col overflow-hidden">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
-                            <h2 className="text-xl font-semibold text-slate-900">{selected.subject || 'Message Details'}</h2>
+                            <h2 className="text-xl font-semibold text-slate-900">{selected.service || selected.subject || 'Message Details'}</h2>
                             <button
                                 onClick={() => setSelected(null)}
                                 className="text-slate-400 hover:text-slate-600"
@@ -303,6 +304,10 @@ export default function ContactAdminPage() {
                                 <div>
                                     <label className="text-xs font-medium text-slate-500">Phone</label>
                                     <p className="text-sm text-slate-900 mt-1">{selected.phone || '—'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-medium text-slate-500">Service</label>
+                                    <p className="text-sm text-slate-900 mt-1">{selected.service || selected.subject || '—'}</p>
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-slate-500">Status</label>

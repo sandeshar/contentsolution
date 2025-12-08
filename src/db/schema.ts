@@ -17,6 +17,8 @@ export const blogPosts = mysqlTable("blog_posts", {
     content: varchar("content", { length: 65535 }).notNull(),
     tags: varchar("tags", { length: 512 }),
     thumbnail: varchar("thumbnail", { length: 512 }),
+    metaTitle: varchar("meta_title", { length: 256 }),
+    metaDescription: varchar("meta_description", { length: 512 }),
     authorId: int("author_id").references(() => users.id).notNull(),
     status: int("status").references(() => status.id).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),

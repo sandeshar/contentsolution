@@ -7,6 +7,9 @@ import {
     servicesPageProcessSteps,
     servicesPageCTA
 } from '@/db/servicesPageSchema';
+import { servicePosts } from '@/db/servicePostsSchema';
+import { status, users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function POST() {
     try {
@@ -16,6 +19,7 @@ export async function POST() {
         await db.delete(servicesPageProcessSection);
         await db.delete(servicesPageProcessSteps);
         await db.delete(servicesPageCTA);
+        await db.delete(servicePosts);
 
         // Seed Hero Section
         await db.insert(servicesPageHero).values({
@@ -75,6 +79,32 @@ export async function POST() {
 
         for (const service of serviceDetails) {
             await db.insert(servicesPageDetails).values(service);
+        }
+
+        // Seed Service Posts to match details (ensures manager/detail pages work)
+        // Pick first user as author, fallback to 1
+        const [firstUser] = await db.select().from(users).limit(1);
+        const authorId = firstUser?.id || 1;
+        // Ensure published status exists (id=1), fallback to 1
+        const published = await db.select().from(status).where(eq(status.id, 1)).limit(1);
+        const statusId = published.length ? 1 : 1;
+
+        const posts = serviceDetails.map(s => ({
+            slug: s.key,
+            title: s.title,
+            excerpt: s.description,
+            content: `<p>${s.description}</p>`,
+            thumbnail: s.image,
+            icon: s.icon,
+            featured: 0,
+            authorId,
+            statusId,
+            meta_title: s.title,
+            meta_description: s.description,
+        }));
+
+        for (const p of posts) {
+            await db.insert(servicePosts).values(p);
         }
 
         // Seed Process Section

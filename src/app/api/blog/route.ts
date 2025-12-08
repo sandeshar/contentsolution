@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { title, slug, content, tags, thumbnail, status = 'draft' } = body;
+        const { title, slug, content, tags, thumbnail, metaTitle, metaDescription, status = 'draft' } = body;
 
         // Validate required fields
         if (!title || !slug || !content) {
@@ -44,6 +44,8 @@ export async function POST(request: NextRequest) {
             content,
             tags: tags || null,
             thumbnail: thumbnail || null,
+            metaTitle: metaTitle || null,
+            metaDescription: metaDescription || null,
             authorId,
             status: statusId,
         });
@@ -147,7 +149,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { slug, title, newSlug, content, tags, thumbnail, status = 'draft' } = body;
+        const { slug, title, newSlug, content, tags, thumbnail, metaTitle, metaDescription, status = 'draft' } = body;
 
         // Validate required fields
         if (!slug) {
@@ -170,6 +172,8 @@ export async function PUT(request: NextRequest) {
         if (content) updateData.content = content;
         if (tags !== undefined) updateData.tags = tags || null;
         if (thumbnail !== undefined) updateData.thumbnail = thumbnail || null;
+        if (metaTitle !== undefined) updateData.metaTitle = metaTitle || null;
+        if (metaDescription !== undefined) updateData.metaDescription = metaDescription || null;
         if (status) updateData.status = statusId;
 
         // Update blog post

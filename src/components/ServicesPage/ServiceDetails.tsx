@@ -1,6 +1,7 @@
 interface ServiceDetailData {
     id: number;
     key: string;
+    slug?: string;
     icon: string;
     title: string;
     description: string;
@@ -64,7 +65,7 @@ const ServiceDetails = ({ services = [] }: ServiceDetailsProps) => {
                                             </li>
                                         ))}
                                     </ul>
-                                    <a href="#" className="mt-8 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-3 font-semibold text-white transition-colors hover:bg-primary/90">
+                                    <a href={`/services/${s.slug || s.key}`} className="mt-8 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-3 font-semibold text-white transition-colors hover:bg-primary/90">
                                         Learn More <span className="material-symbols-outlined ml-2">arrow_forward</span>
                                     </a>
                                 </div>

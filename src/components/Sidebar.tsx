@@ -27,6 +27,7 @@ const SideBar = () => {
         { name: 'Dashboard', icon: 'dashboard', href: '/admin' },
         { name: 'Users', icon: 'group', href: '/admin/users' },
         { name: 'Blog', icon: 'article', href: '/admin/blog' },
+        { name: 'Services', icon: 'service_toolbox', href: '/admin/services' },
         { name: 'Contact', icon: 'contact_mail', href: '/admin/contact' },
         { name: 'Store Setting', icon: 'settings', href: '/admin/store-setting' },
     ];
@@ -46,7 +47,7 @@ const SideBar = () => {
     ];
 
     return (
-        <aside className="sticky top-0 flex h-screen w-64 min-w-64 flex-shrink-0 flex-col justify-between border-r border-gray-700 bg-gray-900 p-4 shadow-sm">
+        <aside className="sticky top-0 flex h-screen w-64 min-w-64 shrink-0 flex-col justify-between border-r border-gray-700 bg-gray-900 p-4 shadow-sm">
             <div className="flex flex-col gap-8">
                 <div className="flex items-center gap-3 px-2">
                     <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-white">

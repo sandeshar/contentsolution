@@ -192,6 +192,7 @@ export default function ContactPageUI() {
                                         <InputGroup label="Phone Placeholder" value={formConfig.phone_placeholder || ''} onChange={(v) => setFormConfig({ ...formConfig, phone_placeholder: v })} />
                                         <InputGroup label="Subject Placeholder" value={formConfig.subject_placeholder || ''} onChange={(v) => setFormConfig({ ...formConfig, subject_placeholder: v })} />
                                     </div>
+                                    <InputGroup label="Service Placeholder" value={formConfig.service_placeholder || ''} onChange={(v) => setFormConfig({ ...formConfig, service_placeholder: v })} />
                                     <InputGroup label="Message Placeholder" value={formConfig.message_placeholder || ''} onChange={(v) => setFormConfig({ ...formConfig, message_placeholder: v })} />
                                     <InputGroup label="Submit Button Text" value={formConfig.submit_button_text || ''} onChange={(v) => setFormConfig({ ...formConfig, submit_button_text: v })} />
                                     <InputGroup label="Success Message" value={formConfig.success_message || ''} onChange={(v) => setFormConfig({ ...formConfig, success_message: v })} />

@@ -20,6 +20,7 @@ interface ContactFormConfigData {
     email_placeholder: string;
     phone_placeholder?: string;
     subject_placeholder: string;
+    service_placeholder?: string;
     message_placeholder: string;
     submit_button_text: string;
     success_message: string;
@@ -61,31 +62,37 @@ export default async function ContactPage() {
         return <div>Loading...</div>;
     }
 
+    const mapUrl = data.info.map_url || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.77259250663!2d85.33749181506213!3d27.6934339828003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1999f82d1c07%3A0x6b69b5033a763c6c!2sNew%20Baneshwor%2C%20Kathmandu%2044600%2C%20Nepal!5e0!3m2!1sen!2sus!4v1678886450123!5m2!1sen!2sus';
+
     return (
-        <main className="grow">
-            <section className="w-full py-16 sm:py-24 lg:py-32">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
-                        <div className="flex flex-col gap-8">
-                            <ContactHero data={data.hero} />
-                            <ContactInfo data={data.info} />
-                        </div>
-                        <ContactForm data={data.formConfig} />
-                    </div>
+        <main className="grow bg-[#f5f7fb]">
+            <section className="w-full bg-white py-20 sm:py-24">
+                <div className="container mx-auto px-4 text-center">
+                    <ContactHero data={data.hero} />
                 </div>
             </section>
-            <section className="w-full">
-                <div className="w-full h-[450px]">
-                    <iframe
-                        src={data.info.map_url}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0 }}
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title="Google Maps Location"
-                    />
+
+            <section className="container mx-auto px-4 py-16 sm:py-24">
+                <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-start">
+                    <ContactInfo data={data.info} />
+                    <ContactForm data={data.formConfig} />
+                </div>
+            </section>
+
+            <section className="container mx-auto px-4 pb-16 sm:pb-24">
+                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
+                    <div className="overflow-hidden rounded-lg">
+                        <iframe
+                            src={mapUrl}
+                            width="100%"
+                            height="450"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title="Google Maps Location"
+                        />
+                    </div>
                 </div>
             </section>
         </main>
