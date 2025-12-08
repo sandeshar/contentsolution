@@ -26,8 +26,7 @@ export async function POST() {
             office_location: 'Kathmandu, Nepal',
             phone: '+977 9876543210',
             email: 'hello@contentsolution.np',
-            map_image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCiFTLaRUOW5mjSaoIEkUFTyi4xKz9-qYf_QF1iCeo0qHrpZpgyOmVzH4MyUE8mqWN4-R186bFaehsXx3uw4VEssmzCZrk9lstEmusWqRoylYx4_vO1YCHJ5HruL8RvDpBQmbDLFZT8sHwcEfLMd90smmbFeIc4fjSmYdws0dScLUnl-G9V9YYmuUvDB3nESBrClJly_3F-3UMNmP_Ebnj_Fy_ere901i_xPLFP4XtnVT4jj0ZwX82UL-nYxu8oFpM4CHC9OXWttTk',
-            map_image_alt: 'A map showing the location of the office in a city.',
+            map_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.5769816700773!2d85.3206!3d27.7172!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjfCsDQzJzAyLjAiTiA4NcKwMTknMjIuMiJF!5e0!3m2!1sen!2snp!4v',
             is_active: 1,
         });
 

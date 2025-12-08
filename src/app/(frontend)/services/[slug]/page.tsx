@@ -95,7 +95,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
             {/* Hero Section */}
             <section className="relative py-16 sm:py-24 md:py-32 overflow-hidden">
                 <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 to-slate-100" />
-                
+
                 <div className="container mx-auto px-4">
                     <div className="mx-auto max-w-4xl">
                         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
@@ -134,8 +134,8 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                 <div className="flex-1">
                                     <div className="relative">
                                         <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-3xl -z-10" />
-                                        <img 
-                                            src={post.thumbnail} 
+                                        <img
+                                            src={post.thumbnail}
                                             alt={post.title}
                                             className="w-full rounded-2xl shadow-2xl"
                                         />

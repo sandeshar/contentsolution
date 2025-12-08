@@ -27,7 +27,7 @@ const SideBar = () => {
         { name: 'Dashboard', icon: 'dashboard', href: '/admin' },
         { name: 'Users', icon: 'group', href: '/admin/users' },
         { name: 'Blog', icon: 'article', href: '/admin/blog' },
-        { name: 'Services', icon: 'service_toolbox', href: '/admin/services' },
+        { name: 'Services Manager', icon: 'service_toolbox', href: '/admin/services/manager' },
         { name: 'Contact', icon: 'contact_mail', href: '/admin/contact' },
         { name: 'Store Setting', icon: 'settings', href: '/admin/store-setting' },
     ];
@@ -39,7 +39,6 @@ const SideBar = () => {
 
     const uiSubItems = [
         { name: 'Home', icon: 'home', href: '/admin/ui/home' },
-        { name: 'Service', icon: 'service_toolbox', href: '/admin/ui/services' },
         { name: 'Contact', icon: 'contact_mail', href: '/admin/ui/contact' },
         { name: 'FaQ', icon: 'help_outline', href: '/admin/ui/faq' },
         { name: 'About', icon: 'info', href: '/admin/ui/about' },

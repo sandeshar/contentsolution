@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
             featured: featured || 0,
             authorId,
             statusId,
-            metaTitle: metaTitle || null,
-            metaDescription: metaDescription || null,
+            meta_title: metaTitle || null,
+            meta_description: metaDescription || null,
         });
 
         return NextResponse.json(
