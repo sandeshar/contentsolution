@@ -10,6 +10,7 @@ import * as contactPageSchema from './contactPageSchema';
 import * as faqPageSchema from './faqPageSchema';
 import * as termsPageSchema from './termsPageSchema';
 import * as blogPageSchema from './blogPageSchema';
+import * as review from './reviewSchema';
 
 // Singleton pattern for database connection to prevent "Too many connections" error in development
 const globalForDb = global as unknown as { conn: Pool | undefined };
@@ -34,6 +35,7 @@ export const db = drizzle(pool, {
         ...faqPageSchema,
         ...termsPageSchema,
         ...blogPageSchema,
+        ...review
     },
     mode: 'default'
 });
