@@ -433,7 +433,7 @@ export default function ServicesManagerPage() {
                     {/* SERVICES SECTION */}
                     {activeTab === "services" && (
                         <div className="space-y-6">
-                            {/* Search, Filter, and Add */}
+                            {/* Search and Add */}
                             <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
                                 <div className="flex-1">
                                     <div className="relative">
@@ -449,16 +449,6 @@ export default function ServicesManagerPage() {
                                         />
                                     </div>
                                 </div>
-                                <select
-                                    value={statusFilter ?? ""}
-                                    onChange={(e) => setStatusFilter(e.target.value === "" ? null : Number(e.target.value))}
-                                    className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                >
-                                    <option value="">All Statuses</option>
-                                    <option value="1">Published</option>
-                                    <option value="2">Draft</option>
-                                    <option value="3">Hidden</option>
-                                </select>
                                 <button
                                     onClick={addServiceWithPost}
                                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
@@ -502,11 +492,6 @@ export default function ServicesManagerPage() {
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className="text-base font-semibold text-slate-900 truncate">{service.title}</h3>
                                                     <p className="text-sm text-slate-500 line-clamp-2 mt-1">{service.description}</p>
-                                                    <div className="mt-3">
-                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getBlogStatusClasses(service.statusId)}`}>
-                                                            {getBlogStatusLabel(service.statusId)}
-                                                        </span>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -705,7 +690,6 @@ export default function ServicesManagerPage() {
                                                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             >
                                                 <option value={1}>Published</option>
-                                                <option value={2}>Draft</option>
                                                 <option value={3}>Hidden</option>
                                             </select>
                                         </div>
@@ -915,8 +899,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     disabled={!editor.can().chain().focus().toggleBold().run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('bold')
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Bold"
                 >
@@ -927,8 +911,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                     onClick={() => editor.chain().focus().toggleItalic().run()}
                     disabled={!editor.can().chain().focus().toggleItalic().run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('italic')
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Italic"
                 >
@@ -939,8 +923,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                     onClick={() => editor.chain().focus().toggleUnderline().run()}
                     disabled={!editor.can().chain().focus().toggleUnderline().run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('underline')
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Underline"
                 >
@@ -952,8 +936,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                 <button
                     onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('heading', { level: 1 })
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Heading 1"
                 >
@@ -963,8 +947,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                 <button
                     onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('heading', { level: 2 })
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Heading 2"
                 >
@@ -974,12 +958,12 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                 <button
                     onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('heading', { level: 3 })
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Heading 3"
                 >
-                    <span className="material-symbols-outlined text-[18px]">looks_three</span>
+                    <span className="material-symbols-outlined text-[18px]">looks_3</span>
                 </button>
 
                 <div className="w-px bg-slate-300 mx-1"></div>
@@ -987,8 +971,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                 <button
                     onClick={() => editor.chain().focus().toggleBulletList().run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('bulletList')
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Bullet List"
                 >
@@ -998,8 +982,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                 <button
                     onClick={() => editor.chain().focus().toggleOrderedList().run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('orderedList')
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Numbered List"
                 >
@@ -1009,8 +993,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                 <button
                     onClick={() => editor.chain().focus().toggleCodeBlock().run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('codeBlock')
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Code Block"
                 >
@@ -1022,8 +1006,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                 <button
                     onClick={addLink}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('link')
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Add Link"
                 >
@@ -1041,8 +1025,8 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
                 <button
                     onClick={() => editor.chain().focus().toggleBlockquote().run()}
                     className={`p-2 rounded text-sm font-medium transition-colors ${editor.isActive('blockquote')
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                     title="Quote"
                 >

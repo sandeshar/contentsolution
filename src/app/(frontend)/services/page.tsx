@@ -49,6 +49,45 @@ async function getServicesPageData() {
     }
 }
 
+function mergeServiceDetailsWithPosts(details: any[], posts: any[]) {
+    const normalizedDetails = (details || []).map((detail) => ({
+        ...detail,
+        // Ensure bullets stays a JSON string for the ServiceDetails component
+        bullets: typeof detail.bullets === 'string'
+            ? detail.bullets
+            : JSON.stringify(detail.bullets || []),
+    }));
+
+    const existingSlugs = new Set(
+        normalizedDetails.map((d) => (d.slug || d.key || '').toLowerCase())
+    );
+
+    const fallbackFromPosts = (posts || [])
+        // Keep only published/active posts (statusId 2 is "Published")
+        .filter((p) => p.statusId === 2)
+        // Avoid duplicating services that already have page details
+        .filter((p) => !existingSlugs.has((p.slug || '').toLowerCase()))
+        .map((p, idx) => ({
+            // Map to the shape ServiceDetails expects
+            id: p.id,
+            key: p.slug,
+            slug: p.slug,
+            icon: p.icon || 'design_services',
+            title: p.title,
+            description: p.excerpt,
+            bullets: '[]',
+            image: p.thumbnail || '',
+            image_alt: p.title,
+            // Append after any existing detailed services
+            display_order: normalizedDetails.length + idx + 1,
+            is_active: 1,
+            createdAt: p.createdAt,
+            updatedAt: p.updatedAt,
+        }));
+
+    return [...normalizedDetails, ...fallbackFromPosts];
+}
+
 async function getServicePosts() {
     try {
         const posts = await db
@@ -69,10 +108,12 @@ export default async function ServicesPage() {
         getServicePosts()
     ]);
 
+    const services = mergeServiceDetailsWithPosts(data.details, posts);
+
     return (
         <main className="page-bg grow">
             <HeroSection data={data.hero} />
-            <ServiceDetails services={data.details} />
+            <ServiceDetails services={services} />
             <ProcessSection section={data.processSection} steps={data.processSteps} />
 
             <CTASection data={data.cta} />
