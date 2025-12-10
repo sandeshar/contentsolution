@@ -8,6 +8,7 @@ export default defineConfig({
         './src/db/homepageSchema.ts',
         './src/db/servicesPageSchema.ts',
         './src/db/servicePostsSchema.ts',
+        './src/db/serviceCategoriesSchema.ts',
         './src/db/aboutPageSchema.ts',
         './src/db/contactPageSchema.ts',
         './src/db/faqPageSchema.ts',

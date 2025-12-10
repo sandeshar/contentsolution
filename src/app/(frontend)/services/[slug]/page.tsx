@@ -22,6 +22,11 @@ type ServiceRecord = {
     meta_description?: string | null;
 };
 
+type ServiceDetail = {
+    title: string;
+    bullets: string;
+};
+
 type ServicePostPageProps = {
     params: Promise<{ slug: string }>;
 };
@@ -87,20 +92,59 @@ function normalizeDetail(detail: any, fallbackSlug: string): ServiceRecord {
     };
 }
 
+async function getServiceDetailBySlug(slug: string): Promise<ServiceDetail | null> {
+    try {
+        // Try to find by slug first
+        const detailBySlug = await db
+            .select({
+                title: servicesPageDetails.title,
+                bullets: servicesPageDetails.bullets,
+            })
+            .from(servicesPageDetails)
+            .where(eq(servicesPageDetails.slug, slug))
+            .limit(1);
+
+        if (detailBySlug.length) {
+            return detailBySlug[0];
+        }
+
+        // Fallback to key
+        const detailByKey = await db
+            .select({
+                title: servicesPageDetails.title,
+                bullets: servicesPageDetails.bullets,
+            })
+            .from(servicesPageDetails)
+            .where(eq(servicesPageDetails.key, slug))
+            .limit(1);
+
+        if (detailByKey.length) {
+            return detailByKey[0];
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error fetching service detail:', error);
+        return null;
+    }
+}
+
 export default async function ServicePostPage({ params }: ServicePostPageProps) {
     const { slug } = await params;
-    const post = await getServicePost(slug);
+    const [post, serviceDetail] = await Promise.all([
+        getServicePost(slug),
+        getServiceDetailBySlug(slug)
+    ]);
 
     if (!post) notFound();
 
     return (
-        <main className="bg-white">
-            {/* Hero Section */}
-            <section className="relative py-16 sm:py-24 md:py-32 overflow-hidden">
-                <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 to-slate-100" />
-
-                <div className="container mx-auto px-4">
-                    <div className="mx-auto max-w-4xl">
+        <main className="flex flex-col items-center page-bg">
+            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+                {/* Hero Section */}
+                <section className="relative py-16 sm:py-24">
+                    <div className="absolute inset-0 -z-10 bg-linear-to-br from-slate-50 to-slate-100" />
+                    <div className="mx-auto w-full max-w-6xl">
                         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
                             {/* Left Content */}
                             <div className="flex-1">
@@ -131,7 +175,6 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                     </a>
                                 </div>
                             </div>
-
                             {/* Right Image */}
                             {post.thumbnail && (
                                 <div className="flex-1">
@@ -147,13 +190,11 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                             )}
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Details Section */}
-            <section id="details" className="py-16 sm:py-24">
-                <div className="container mx-auto px-4">
-                    <div className="mx-auto max-w-4xl">
+                {/* Details Section */}
+                <section id="details" className="py-16 sm:py-24">
+                    <div className="mx-auto w-full max-w-6xl">
                         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12">
                             {/* Main Content */}
                             <div className="space-y-12">
@@ -171,11 +212,10 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                     />
                                 </div>
                             </div>
-
                             {/* Sidebar */}
-                            <aside className="space-y-6">
+                            <aside className="space-y-6 sticky top-24">
                                 {/* Quick Action Card */}
-                                <div className="bg-gradient-to-br from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg sticky top-24">
+                                <div className="bg-linear-to-br from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg">
                                     <h3 className="text-xl font-bold mb-2">Ready?</h3>
                                     <p className="text-white/90 text-sm mb-6">Let's discuss your project needs.</p>
                                     <a
@@ -186,47 +226,53 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                         Contact Us
                                     </a>
                                 </div>
-
-                                {/* Features */}
-                                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                                    <h4 className="text-sm font-bold text-[#0f172a] mb-4 flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-primary">star</span>
-                                        Benefits
-                                    </h4>
-                                    <ul className="space-y-3 text-sm text-[#475569]">
-                                        <li className="flex gap-3">
-                                            <span className="material-symbols-outlined text-primary text-base flex-shrink-0">check_circle</span>
-                                            <span>Expert team with proven track record</span>
-                                        </li>
-                                        <li className="flex gap-3">
-                                            <span className="material-symbols-outlined text-primary text-base flex-shrink-0">check_circle</span>
-                                            <span>Transparent communication throughout</span>
-                                        </li>
-                                        <li className="flex gap-3">
-                                            <span className="material-symbols-outlined text-primary text-base flex-shrink-0">check_circle</span>
-                                            <span>Quality results on schedule</span>
-                                        </li>
-                                    </ul>
-                                </div>
+                                {/* Service Benefits */}
+                                {serviceDetail && (() => {
+                                    let bullets: string[] = [];
+                                    try {
+                                        bullets = JSON.parse(serviceDetail.bullets);
+                                    } catch (e) {
+                                        console.error('Error parsing bullets:', e);
+                                    }
+                                    if (bullets.length > 0) {
+                                        return (
+                                            <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                                                <h4 className="text-sm font-bold text-[#0f172a] mb-4 flex items-center gap-2">
+                                                    <span className="material-symbols-outlined text-primary">star</span>
+                                                    Key Benefits
+                                                </h4>
+                                                <ul className="space-y-3 text-sm text-[#475569]">
+                                                    {bullets.map((bullet, idx) => (
+                                                        <li key={idx} className="flex gap-3">
+                                                            <span className="material-symbols-outlined text-primary text-base shrink-0">check_circle</span>
+                                                            <span>{bullet}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
                             </aside>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Testimonials */}
-            {post.id && (
-                <TestimonialSlider
-                    filter={String(post.id)}
-                    title={`Success Stories for ${post.title}`}
-                    subtitle="See how we've helped clients succeed with this service"
-                />
-            )}
+                {/* Testimonials */}
+                {post.id && (
+                    <section className="py-16 sm:py-24">
+                        <TestimonialSlider
+                            filter={String(post.id)}
+                            title={`Success Stories for ${post.title}`}
+                            subtitle="See how we've helped clients succeed with this service"
+                        />
+                    </section>
+                )}
 
-            {/* CTA Section */}
-            <section className="py-16 sm:py-20 bg-gradient-to-r from-primary/5 to-indigo-500/5 border-y border-slate-200">
-                <div className="container mx-auto px-4">
-                    <div className="mx-auto max-w-2xl text-center">
+                {/* CTA Section */}
+                <section className="py-16 sm:py-24 bg-linear-to-r from-primary/5 to-indigo-500/5 border-y border-slate-200">
+                    <div className="mx-auto w-full max-w-3xl text-center">
                         <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
                             Let's Bring Your Vision to Life
                         </h2>
@@ -241,8 +287,8 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                             Schedule Consultation
                         </a>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
         </main>
     );
 }

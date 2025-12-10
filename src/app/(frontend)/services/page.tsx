@@ -7,6 +7,9 @@ import { db } from "@/db";
 import { servicePosts } from "@/db/servicePostsSchema";
 import { desc, eq } from "drizzle-orm";
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 async function getServicesPageData() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 

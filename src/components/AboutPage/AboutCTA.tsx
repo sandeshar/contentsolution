@@ -22,9 +22,9 @@ const AboutCTA = ({ data }: AboutCTAProps) => {
     }
 
     return (
-        <section className="w-full py-20 lg:py-32">
-            <div className="mx-auto max-w-6xl px-4">
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 px-8 py-16 shadow-lg lg:px-16 lg:py-20">
+        <section className="w-full py-16 sm:py-24">
+            <div className="mx-auto max-w-6xl">
+                <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-primary/80 px-8 py-16 shadow-lg lg:px-16 lg:py-20">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_50%)]"></div>
                     <div className="relative z-10 mx-auto max-w-3xl text-center">
                         <h2 className="text-3xl font-black leading-tight tracking-[-0.02em] text-white md:text-5xl">

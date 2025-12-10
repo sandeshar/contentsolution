@@ -5,6 +5,7 @@ import * as schema from './schema';
 import * as homepageSchema from './homepageSchema';
 import * as servicesPageSchema from './servicesPageSchema';
 import * as servicePostsSchema from './servicePostsSchema';
+import * as serviceCategoriesSchema from './serviceCategoriesSchema';
 import * as aboutPageSchema from './aboutPageSchema';
 import * as contactPageSchema from './contactPageSchema';
 import * as faqPageSchema from './faqPageSchema';
@@ -30,6 +31,7 @@ export const db = drizzle(pool, {
         ...homepageSchema,
         ...servicesPageSchema,
         ...servicePostsSchema,
+        ...serviceCategoriesSchema,
         ...aboutPageSchema,
         ...contactPageSchema,
         ...faqPageSchema,

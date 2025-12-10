@@ -14,10 +14,13 @@ import Color from "@tiptap/extension-color";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Placeholder from "@tiptap/extension-placeholder";
 import { common, createLowlight } from "lowlight";
+import nextDynamic from "next/dynamic";
 
 const lowlight = createLowlight(common);
 
-export default function AddBlogPage() {
+export const dynamic = 'force-dynamic';
+
+function AddBlogPage() {
     const [formData, setFormData] = useState({
         title: "",
         slug: "",
@@ -602,3 +605,5 @@ export default function AddBlogPage() {
         </main>
     );
 }
+
+export default nextDynamic(() => Promise.resolve(AddBlogPage), { ssr: false });

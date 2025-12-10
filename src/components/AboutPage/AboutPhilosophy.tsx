@@ -30,8 +30,8 @@ const AboutPhilosophy = ({ section, principles = [] }: AboutPhilosophyProps) => 
     }
 
     return (
-        <section className="w-full bg-slate-50 py-20 lg:py-32">
-            <div className="mx-auto max-w-6xl px-4">
+        <section className="w-full bg-slate-50 py-16 sm:py-24">
+            <div className="mx-auto max-w-6xl">
                 <div className="mb-12 text-center">
                     <h2 className="text-3xl font-black leading-tight tracking-[-0.02em] text-slate-900 md:text-5xl">
                         {section.title}

@@ -24,8 +24,8 @@ const AboutHero = ({ data }: AboutHeroProps) => {
     }
 
     return (
-        <section className="w-full py-20 lg:py-32">
-            <div className="mx-auto max-w-6xl px-4">
+        <section className="w-full py-16 sm:py-24">
+            <div className="mx-auto max-w-6xl">
                 <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
                     <div className="flex flex-col gap-6">
                         <h1 className="text-4xl font-black leading-tight tracking-[-0.033em] text-slate-900 md:text-6xl">

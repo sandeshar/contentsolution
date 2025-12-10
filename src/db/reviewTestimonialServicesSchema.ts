@@ -14,13 +14,11 @@ export const reviewTestimonialServices = mysqlTable(
             columns: [table.testimonialId],
             foreignColumns: [reviewTestimonials.id],
             name: "rt_svc_testimonial_fk",
-            onDelete: "cascade",
-        }),
+        }).onDelete("cascade"),
         serviceFk: foreignKey({
             columns: [table.serviceId],
             foreignColumns: [servicePosts.id],
             name: "rt_svc_service_fk",
-            onDelete: "cascade",
-        }),
+        }).onDelete("cascade"),
     })
 );

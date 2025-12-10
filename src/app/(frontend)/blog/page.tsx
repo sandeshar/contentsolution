@@ -8,6 +8,9 @@ import { blogPosts, storeSettings } from "@/db/schema";
 import { desc, eq, sql, like, and, or } from "drizzle-orm";
 import type { Metadata } from "next";
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 const POSTS_PER_PAGE = 6;
 
 async function getBlogHeroData() {
@@ -113,8 +116,8 @@ export default async function BlogPage({
     const categories = ['All', ...Array.from(categoriesSet).sort()];
 
     return (
-        <main className="grow px-4 py-8 sm:px-6 lg:px-8 flex flex-col items-center page-bg">
-            <div className="w-full max-w-7xl">
+        <main className="flex flex-col items-center page-bg">
+            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
                 <BlogHero data={heroData} />
                 <BlogSearch
                     categories={categories}

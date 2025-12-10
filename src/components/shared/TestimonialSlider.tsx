@@ -77,8 +77,14 @@ const TestimonialSlider: React.FC<TestimonialSliderProps> = ({
         return null;
     }
 
-    // Duplicate testimonials for infinite loop effect
-    const duplicatedTestimonials = [...testimonials, ...testimonials];
+    // Duplicate testimonials multiple times for infinite loop effect
+    // Repeat 4 times to ensure smooth scrolling even with few testimonials
+    const duplicatedTestimonials = [
+        ...testimonials,
+        ...testimonials,
+        ...testimonials,
+        ...testimonials
+    ];
 
     return (
         <section className="py-16 sm:py-24 overflow-hidden">
@@ -97,7 +103,7 @@ const TestimonialSlider: React.FC<TestimonialSliderProps> = ({
                         {duplicatedTestimonials.map((testimonial, index) => (
                             <div
                                 key={`${testimonial.id}-${index}`}
-                                className="flex-shrink-0 w-[90vw] md:w-[45vw] lg:w-[30vw] flex flex-col justify-between gap-6 p-6 rounded-xl bg-white border border-slate-200"
+                                className="shrink-0 w-[90vw] md:w-[45vw] lg:w-[30vw] flex flex-col justify-between gap-6 p-6 rounded-xl bg-white border border-slate-200"
                             >
                                 <div className="flex flex-col gap-4">
                                     <div className="flex items-center gap-0.5 text-yellow-500">
@@ -140,7 +146,7 @@ const TestimonialSlider: React.FC<TestimonialSliderProps> = ({
                         transform: translateX(0);
                     }
                     100% {
-                        transform: translateX(-50%);
+                        transform: translateX(-25%);
                     }
                 }
 

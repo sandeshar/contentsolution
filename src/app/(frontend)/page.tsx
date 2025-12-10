@@ -4,6 +4,9 @@ import Hero from "@/components/Homepage/Hero";
 import Trust from "@/components/Homepage/Trust";
 import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 async function getHomepageData() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 

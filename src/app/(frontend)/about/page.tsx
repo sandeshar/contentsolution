@@ -5,6 +5,9 @@ import TeamSection from "@/components/AboutPage/TeamSection";
 import AboutCTA from "@/components/AboutPage/AboutCTA";
 import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 async function getAboutPageData() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -72,17 +75,19 @@ export default async function AboutPage() {
     const data = await getAboutPageData();
 
     return (
-        <main className="grow page-bg">
-            <AboutHero data={data.hero} />
-            <AboutJourney section={data.journey} stats={data.stats} features={data.features} />
-            <AboutPhilosophy section={data.philosophy} principles={data.principles} />
-            <TeamSection section={data.teamSection} members={data.teamMembers} />
-            <TestimonialSlider
-                filter="about"
-                title="Trusted by Industry Leaders"
-                subtitle="See what our partners and clients have to say about working with us"
-            />
-            <AboutCTA data={data.cta} />
+        <main className="flex flex-col items-center page-bg">
+            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+                <AboutHero data={data.hero} />
+                <AboutJourney section={data.journey} stats={data.stats} features={data.features} />
+                <AboutPhilosophy section={data.philosophy} principles={data.principles} />
+                <TeamSection section={data.teamSection} members={data.teamMembers} />
+                <TestimonialSlider
+                    filter="about"
+                    title="Trusted by Industry Leaders"
+                    subtitle="See what our partners and clients have to say about working with us"
+                />
+                <AboutCTA data={data.cta} />
+            </div>
         </main>
     );
 }

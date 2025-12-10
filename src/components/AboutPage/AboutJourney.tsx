@@ -45,8 +45,8 @@ const AboutJourney = ({ section, stats = [], features = [] }: AboutJourneyProps)
     }
 
     return (
-        <section className="w-full py-20 lg:py-32">
-            <div className="mx-auto max-w-6xl px-4">
+        <section className="w-full py-16 sm:py-24">
+            <div className="mx-auto max-w-6xl">
                 <div className="grid gap-12 lg:grid-cols-2 lg:items-start lg:gap-16">
                     <div className="flex flex-col gap-6">
                         <h2 className="text-3xl font-black leading-tight tracking-[-0.02em] text-slate-900 md:text-5xl">{section.title}</h2>

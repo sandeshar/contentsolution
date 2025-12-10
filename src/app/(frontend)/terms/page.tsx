@@ -3,6 +3,9 @@ interface TermsHeaderData {
     last_updated: string;
 }
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 interface TermsSectionData {
     id: number;
     title: string;
@@ -44,8 +47,8 @@ export default async function TermsPage() {
     }
 
     return (
-        <main className="w-full grow bg-white">
-            <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8">
+        <main className="flex flex-col items-center page-bg">
+            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
                 <div className="flex flex-col items-center text-center">
                     <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
                         {data.header.title}

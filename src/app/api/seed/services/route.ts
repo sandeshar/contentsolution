@@ -5,96 +5,138 @@ import {
     servicesPageDetails,
     servicesPageProcessSection,
     servicesPageProcessSteps,
-    servicesPageCTA
+    servicesPageCTA,
 } from '@/db/servicesPageSchema';
 import { servicePosts } from '@/db/servicePostsSchema';
+import { serviceCategories, serviceSubcategories } from '@/db/serviceCategoriesSchema';
 import { reviewTestimonials } from '@/db/reviewSchema';
 import { status, users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function POST() {
     try {
-        // Clear existing data - delete in correct order (children first, then parents)
-        // Skip deleting testimonials if table doesn't exist yet
+        // Clean existing data (children first)
         try {
             await db.delete(reviewTestimonials);
         } catch (error) {
-            // Table might not exist yet, skip
+            // Table might not exist yet; ignore
         }
         await db.delete(servicePosts);
+        await db.delete(serviceSubcategories);
+        await db.delete(serviceCategories);
         await db.delete(servicesPageHero);
         await db.delete(servicesPageDetails);
         await db.delete(servicesPageProcessSection);
         await db.delete(servicesPageProcessSteps);
         await db.delete(servicesPageCTA);
 
-        // Seed Hero Section
+        const [firstUser] = await db.select().from(users).limit(1);
+        const [publishedStatus] = await db.select().from(status).limit(1);
+
         await db.insert(servicesPageHero).values({
             tagline: 'OUR SERVICES',
             title: 'Content Solutions That Drive Results',
-            description: "From strategy to execution, we offer comprehensive content services designed to help your business grow. Whether you need blog posts, website copy, or social media content, we've got you covered.",
+            description: 'Comprehensive content services designed to help your business grow.',
             is_active: 1,
         });
 
-        // Seed Service Details
-        const serviceDetails = [
+        const categorySlug = 'content-services';
+        await db.insert(serviceCategories).values({
+            name: 'Content Services',
+            slug: categorySlug,
+            description: 'Strategic writing, SEO, and social storytelling crafted for measurable growth.',
+            icon: 'category',
+            thumbnail: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1400&q=80',
+            display_order: 1,
+            is_active: 1,
+            meta_title: 'Content Services',
+            meta_description: 'Explore SEO content, social media, website copy, and blog writing services.',
+        });
+
+        const [category] = await db
+            .select()
+            .from(serviceCategories)
+            .where(eq(serviceCategories.slug, categorySlug))
+            .limit(1);
+
+        const serviceData = [
             {
                 key: 'seo',
                 icon: 'search',
                 title: 'SEO Content',
-                description: 'Boost your organic visibility and climb the search engine ranks. We create high-quality, keyword-rich content that not only attracts your target audience but also establishes your brand as an authority in your industry.',
-                bullets: JSON.stringify(['Keyword Research & Strategy', 'On-Page SEO Optimization', 'Long-form Articles & Landing Pages']),
-                image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCFR7tIGeKNlooQKoKzI99ZmhdAiYEeN7-W0VuqKkzn5_LkeWBmDZuWq2D1sKPTZW8vgWE1MvRe4iQHi9_Cley5gsMoFI7WJk7Oot3IO0kSVaiD0P5Gc0exZJ4CefO_K6hXJHRaHpWDvobpNb7rOeFCulKjyIwwaecQGDoo9nq5Aulw1jqloMBd1rvSNYcd0KVkIvmBdnXtBXr7_zQgUXnqHwROX0L36QjKYpwBnJflSI6CLCBY_AcCn8G29HBQPOlh3GMuTSz5KKw',
-                image_alt: 'Team collaborating on SEO content strategy with analytics dashboard',
-                display_order: 1,
-                is_active: 1,
+                description: 'Search-optimized articles and landing pages that pair audience intent with brand authority to rank and convert.',
+                bullets: ['Search intent research and briefs', 'On-page structure, schema, and internal links', 'Long-form pages that convert and rank'],
+                image: 'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1400&q=80',
+                image_alt: 'Content strategist reviewing SEO metrics on a laptop',
             },
             {
                 key: 'social',
                 icon: 'thumb_up',
                 title: 'Social Media Content',
-                description: 'Engage your community and build a powerful brand presence across social platforms. We craft compelling visuals, captivating captions, and strategic campaigns that spark conversations and foster loyalty.',
-                bullets: JSON.stringify(['Content Calendars & Scheduling', 'Custom Graphics & Video Shorts', 'Community Management & Engagement']),
-                image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBfyYtWae3vDTMudIqY7zy-xrwjkbuSwc7swbiEFB4yiwV0OmcrzjUcmRQbVVHJ3DveM1X28-ibIQYv2DjPbKMYW2KuF3i1p1e63rsgEQEJkuWPjOjf3Zbe8U_4OnpW24wNh2Eu7RdjVTyxZSVw8nhnRV0FsHs3AuDAJ8Ff43U5gmwN-9t1jfGQiSCmm1CfETzn844jgpGXRKqc-R-tLDyptOfOrcH2hzPwwO3L0MzYihnJbpjqKnRNKkHhXa3UTWMol8KM1qkD_8k',
-                image_alt: 'Creative social media content planning with visuals',
-                display_order: 2,
-                is_active: 1,
+                description: 'Channel-ready posts, short-form video hooks, and visuals that earn saves, shares, and clicks.',
+                bullets: ['Monthly content calendars with hooks and CTAs', 'Platform-native short video scripts and captions', 'Design kits for carousels, stories, and ads'],
+                image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1400&q=80',
+                image_alt: 'Team planning social content with phones and laptops',
             },
             {
                 key: 'copy',
                 icon: 'language',
                 title: 'Website Copywriting',
-                description: 'Turn visitors into customers with persuasive and clear website copy. We write words that reflect your brand voice, articulate your value proposition, and guide users to take action.',
-                bullets: JSON.stringify(['Homepage & Landing Page Copy', 'Product & Service Descriptions', 'About Us & Brand Storytelling']),
-                image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBfyYtWae3vDTMudIqY7zy-xrwjkbuSwc7swbiEFB4yiwV0OmcrzjUcmRQbVVHJ3DveM1X28-ibIQYv2DjPbKMYW2KuF3i1p1e63rsgEQEJkuWPjOjf3Zbe8U_4OnpW24wNh2Eu7RdjVTyxZSVw8nhnRV0FsHs3AuDAJ8Ff43U5gmwN-9t1jfGQiSCmm1CfETzn844jgpGXRKqc-R-tLDyptOfOrcH2hzPwwO3L0MzYihnJbpjqKnRNKkHhXa3UTWMol8KM1qkD_8k',
-                image_alt: 'Designer and copywriter refining website copy',
-                display_order: 3,
-                is_active: 1,
+                description: 'Conversion-focused messaging that clarifies your offer and guides visitors to act on key pages.',
+                bullets: ['Value-prop and messaging frameworks', 'Landing and product pages with A/B testable sections', 'Microcopy for forms, nav, and CTAs'],
+                image: 'https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e?auto=format&fit=crop&w=1400&q=80',
+                image_alt: 'Copywriter drafting website copy next to design mockups',
             },
             {
                 key: 'blog',
                 icon: 'article',
                 title: 'Blog Writing',
-                description: 'Establish thought leadership and provide genuine value to your audience. Our team produces well-researched, insightful, and engaging blog articles that drive traffic and build trust with your readers.',
-                bullets: JSON.stringify(['Content Ideation & Topic Research', 'In-depth, Researched Articles', 'Editing, Proofreading & Formatting']),
-                image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBfyYtWae3vDTMudIqY7zy-xrwjkbuSwc7swbiEFB4yiwV0OmcrzjUcmRQbVVHJ3DveM1X28-ibIQYv2DjPbKMYW2KuF3i1p1e63rsgEQEJkuWPjOjf3Zbe8U_4OnpW24wNh2Eu7RdjVTyxZSVw8nhnRV0FsHs3AuDAJ8Ff43U5gmwN-9t1jfGQiSCmm1CfETzn844jgpGXRKqc-R-tLDyptOfOrcH2hzPwwO3L0MzYihnJbpjqKnRNKkHhXa3UTWMol8KM1qkD_8k',
-                image_alt: 'Writer drafting long-form blog article with research notes',
-                display_order: 4,
-                is_active: 1,
+                description: 'Research-backed articles that build trust, answer intent, and drive subscribers and leads.',
+                bullets: ['Audience and keyword-led topic ideation', 'SME interviews and sourced insights', 'Editorial polish: structure, voice, and SEO basics'],
+                image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1400&q=80',
+                image_alt: 'Writer working on a long-form article with notes and laptop',
             },
         ];
 
-        for (const service of serviceDetails) {
-            await db.insert(servicesPageDetails).values(service);
+        const subcategoryMap: Record<string, number> = {};
+
+        for (const [index, s] of serviceData.entries()) {
+            await db.insert(serviceSubcategories).values({
+                category_id: category?.id as number,
+                name: s.title,
+                slug: s.key,
+                description: s.description,
+                icon: s.icon,
+                thumbnail: s.image,
+                display_order: index + 1,
+                is_active: 1,
+                meta_title: s.title,
+                meta_description: s.description,
+            });
+
+            const [subcat] = await db
+                .select()
+                .from(serviceSubcategories)
+                .where(eq(serviceSubcategories.slug, s.key))
+                .limit(1);
+            if (subcat?.id) subcategoryMap[s.key] = subcat.id as number;
         }
 
-        // Seed Service Posts to match details (ensures manager/detail pages work)
-        try {
-            const allUsers = await db.select().from(users).limit(1);
-            const allStatuses = await db.select().from(status).limit(1);
+        for (const [index, s] of serviceData.entries()) {
+            await db.insert(servicesPageDetails).values({
+                key: s.key,
+                icon: s.icon,
+                title: s.title,
+                description: s.description,
+                bullets: JSON.stringify(s.bullets),
+                image: s.image,
+                image_alt: s.image_alt,
+                display_order: index + 1,
+                is_active: 1,
+            });
 
-            if (allUsers.length > 0 && allStatuses.length > 0) {
-                const posts = serviceDetails.map(s => ({
+            if (firstUser && publishedStatus) {
+                await db.insert(servicePosts).values({
                     slug: s.key,
                     title: s.title,
                     excerpt: s.description,
@@ -102,85 +144,49 @@ export async function POST() {
                     thumbnail: s.image,
                     icon: s.icon,
                     featured: 0,
-                    authorId: allUsers[0].id,
-                    statusId: allStatuses[0].id,
+                    category_id: category?.id,
+                    subcategory_id: subcategoryMap[s.key],
+                    price: '499.00',
+                    price_type: 'fixed',
+                    price_label: 'Starting at',
+                    price_description: 'Pricing varies by scope and deliverables.',
+                    authorId: firstUser.id,
+                    statusId: publishedStatus.id,
                     meta_title: s.title,
-                    meta_description: s.description,
-                }));
-
-                for (const p of posts) {
-                    await db.insert(servicePosts).values(p);
-                }
+                    meta_description: `Professional ${s.title.toLowerCase()} services`,
+                });
             }
-        } catch (error) {
-            // Service posts might fail due to foreign keys, but servicePage details are more important
-            console.error('Warning: Failed to seed service posts:', error);
         }
 
-        // Seed Process Section
         await db.insert(servicesPageProcessSection).values({
             title: 'Our Process',
-            description: 'We follow a proven, collaborative process to deliver high-quality content that aligns with your goals and resonates with your audience.',
+            description: 'We follow a proven, collaborative process to deliver high-quality content.',
             is_active: 1,
         });
 
-        // Seed Process Steps
         const processSteps = [
-            {
-                step_number: 1,
-                title: 'Discovery',
-                description: 'We start by understanding your business, audience, and goals through an in-depth discovery session.',
-                display_order: 1,
-                is_active: 1,
-            },
-            {
-                step_number: 2,
-                title: 'Strategy',
-                description: 'Our team develops a tailored content strategy that aligns with your brand and objectives.',
-                display_order: 2,
-                is_active: 1,
-            },
-            {
-                step_number: 3,
-                title: 'Creation',
-                description: 'We craft compelling content that engages your audience and drives results.',
-                display_order: 3,
-                is_active: 1,
-            },
-            {
-                step_number: 4,
-                title: 'Review',
-                description: 'We work with you to refine the content, ensuring it meets your standards and expectations.',
-                display_order: 4,
-                is_active: 1,
-            },
-            {
-                step_number: 5,
-                title: 'Delivery',
-                description: 'We deliver the final content in your preferred format, ready for publication.',
-                display_order: 5,
-                is_active: 1,
-            },
+            { step_number: 1, title: 'Discovery', description: 'Understanding your needs', display_order: 1 },
+            { step_number: 2, title: 'Strategy', description: 'Developing a tailored strategy', display_order: 2 },
+            { step_number: 3, title: 'Creation', description: 'Creating compelling content', display_order: 3 },
         ];
 
         for (const step of processSteps) {
-            await db.insert(servicesPageProcessSteps).values(step);
+            await db.insert(servicesPageProcessSteps).values({
+                ...step,
+                is_active: 1,
+            });
         }
 
-        // Seed CTA Section
         await db.insert(servicesPageCTA).values({
             title: 'Ready to Elevate Your Content?',
-            description: "Let's discuss how we can help you achieve your content marketing goals.",
+            description: "Let's discuss how we can help you achieve your goals.",
             button_text: 'Get a Quote',
             button_link: '/contact',
             is_active: 1,
         });
 
         return NextResponse.json(
-            {
-                success: true,
-                message: 'Services page seeded successfully with default values',
-            },
+            { success: true, message: 'Services seeded successfully' },
             { status: 201 }
         );
     } catch (error) {

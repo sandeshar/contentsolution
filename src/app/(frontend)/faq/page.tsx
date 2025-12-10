@@ -2,6 +2,9 @@ import CTAButton from '@/components/shared/CTAButton';
 import FAQSection from '@/components/FAQPage/FAQSection';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 interface FAQHeaderData {
     title: string;
     description: string;
@@ -68,8 +71,8 @@ export default async function FAQPage() {
     }
 
     return (
-        <main className="flex grow justify-center py-10 sm:py-16">
-            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <main className="flex flex-col items-center page-bg">
+            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
                 <div className="flex flex-col items-center text-center gap-3 p-4 mb-8">
                     <p className="text-slate-900 text-4xl sm:text-5xl font-black leading-tight tracking-[-0.033em]">
                         {data.header.title}
