@@ -34,6 +34,7 @@ export async function POST() {
         await db.insert(contactPageFormConfig).values({
             name_placeholder: 'Your Name',
             email_placeholder: 'Your Email',
+            phone_placeholder: 'Phone (optional)',
             subject_placeholder: 'Subject',
             service_placeholder: 'Select a service',
             message_placeholder: 'Your Message',
