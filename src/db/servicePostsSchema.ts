@@ -12,17 +12,17 @@ export const servicePosts = mysqlTable("service_posts", {
     thumbnail: varchar("thumbnail", { length: 512 }),
     icon: varchar("icon", { length: 100 }), // Material icon name for service
     featured: int("featured").default(0).notNull(), // Show on homepage/services page
-    
+
     // Category relationships
     category_id: int("category_id").references(() => serviceCategories.id),
     subcategory_id: int("subcategory_id").references(() => serviceSubcategories.id),
-    
+
     // Pricing fields
     price: decimal("price", { precision: 10, scale: 2 }), // Base price
     price_type: varchar("price_type", { length: 50 }).default("fixed"), // fixed, hourly, monthly, custom
     price_label: varchar("price_label", { length: 100 }), // e.g., "Starting at", "From", "Per hour"
     price_description: text("price_description"), // Additional pricing details
-    
+
     authorId: int("author_id").references(() => users.id).notNull(),
     statusId: int("status_id").references(() => status.id).notNull(),
     meta_title: varchar("meta_title", { length: 256 }),

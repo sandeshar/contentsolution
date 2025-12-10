@@ -13,7 +13,7 @@ async function runMigration() {
     try {
         const migrationFile = process.argv[2] || 'drizzle/0004_curvy_spacker_dave.sql';
         const sqlPath = path.join(process.cwd(), migrationFile);
-        
+
         console.log(`📄 Reading migration file: ${sqlPath}`);
         const sql = fs.readFileSync(sqlPath, 'utf8');
 
