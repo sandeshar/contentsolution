@@ -4,12 +4,14 @@ import { db } from "@/db";
 import { servicePosts } from "@/db/servicePostsSchema";
 import { servicesPageDetails } from "@/db/servicesPageSchema";
 import { eq } from "drizzle-orm";
+import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
 // Ensure Node runtime (needed for mysql2)
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type ServiceRecord = {
+    id?: number;
     slug: string;
     title: string;
     excerpt: string;
@@ -35,6 +37,7 @@ async function getServicePost(slug: string): Promise<ServiceRecord | null> {
     if (post.length) {
         const p = post[0];
         return {
+            id: p.id,
             slug: p.slug,
             title: p.title,
             excerpt: p.excerpt,
@@ -210,6 +213,15 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                     </div>
                 </div>
             </section>
+
+            {/* Testimonials */}
+            {post.id && (
+                <TestimonialSlider
+                    filter={String(post.id)}
+                    title={`Success Stories for ${post.title}`}
+                    subtitle="See how we've helped clients succeed with this service"
+                />
+            )}
 
             {/* CTA Section */}
             <section className="py-16 sm:py-20 bg-gradient-to-r from-primary/5 to-indigo-500/5 border-y border-slate-200">

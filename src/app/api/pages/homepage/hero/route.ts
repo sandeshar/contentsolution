@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
         const hero = await db.select().from(homepageHero).where(eq(homepageHero.is_active, 1)).limit(1);
 
         if (hero.length === 0) {
-            return NextResponse.json({ error: 'No active hero section found' }, { status: 404 });
+            // Return empty object to allow admin UI to create new entry
+            return NextResponse.json({});
         }
 
         return NextResponse.json(hero[0]);

@@ -9,6 +9,7 @@ export const reviewTestimonials = mysqlTable("review_testimonials", {
     role: varchar("role", { length: 256 }).notNull(),
     content: varchar("content", { length: 65535 }).notNull(),
     rating: int("rating").notNull(),
-    service: int("service").notNull().references(() => servicePosts.id, { onDelete: 'cascade' }),
+    service: int("service").references(() => servicePosts.id, { onDelete: 'cascade' }),
+    link: varchar("link", { length: 256 }).notNull().default('homepage'),
     date: timestamp("date").defaultNow().notNull(),
 });

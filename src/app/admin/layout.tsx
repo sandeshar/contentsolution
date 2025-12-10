@@ -1,7 +1,11 @@
 import SideBar from "@/components/Sidebar"
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { storeSettings } from "@/db/schema";
+import { storeSettings, users } from "@/db/schema";
+import { checkAuth } from "@/utils/authHelper";
+import { count, inArray } from "drizzle-orm";
 
 export async function generateMetadata(): Promise<Metadata> {
     try {
@@ -23,11 +27,12 @@ export async function generateMetadata(): Promise<Metadata> {
     }
 }
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+
     return (
         <div className="flex">
             <SideBar />

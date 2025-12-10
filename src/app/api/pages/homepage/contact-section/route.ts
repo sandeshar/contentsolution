@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
         const section = await db.select().from(homepageContactSection).where(eq(homepageContactSection.is_active, 1)).limit(1);
 
         if (section.length === 0) {
-            return NextResponse.json({ error: 'No active contact section found' }, { status: 404 });
+            // Return empty object to allow admin UI to create new entry
+            return NextResponse.json({});
         }
 
         return NextResponse.json(section[0]);

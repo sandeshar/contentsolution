@@ -7,18 +7,14 @@ export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const cookie = request.cookies.get('admin_auth')?.value || '';
     const role = returnRole(cookie);
-    if (pathname.startsWith('/admin') && !cookie && !role) {
 
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    // Allow public contact form submissions
-    if (pathname.startsWith('/api/pages/contact/submissions') && request.method === 'POST') {
+    // Public auth endpoints
+    if (pathname === '/login' || pathname.startsWith('/api/login')) {
         return NextResponse.next();
     }
 
     // Allow seed operations if no users exist (initial setup)
-    if (pathname.startsWith('/api/seed')) {
+    if (pathname.startsWith('/api/seed') || pathname.startsWith('/admin/seed')) {
         try {
             const userCount = await db.select().from(users).limit(1);
             const hasUsers = userCount.length > 0;
@@ -35,7 +31,22 @@ export async function proxy(request: NextRequest) {
         return NextResponse.next();
     }
 
+    if (pathname.startsWith('/admin') && !cookie && !role) {
+
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Allow public contact form submissions
+    if (pathname.startsWith('/api/pages/contact/submissions') && request.method === 'POST') {
+        return NextResponse.next();
+    }
+
     if (pathname.startsWith('/api') && (request.method === 'POST' || request.method === 'PUT' || request.method === 'DELETE')) {
+        // Allow login and logout without auth
+        if (pathname.startsWith('/api/login') || pathname.startsWith('/api/logout')) {
+            return NextResponse.next();
+        }
+
         if (!role) {
             return NextResponse.json(
                 { error: 'Unauthorized' },

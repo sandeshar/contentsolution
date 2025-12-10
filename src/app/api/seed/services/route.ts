@@ -8,18 +8,25 @@ import {
     servicesPageCTA
 } from '@/db/servicesPageSchema';
 import { servicePosts } from '@/db/servicePostsSchema';
+import { reviewTestimonials } from '@/db/reviewSchema';
 import { status, users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function POST() {
     try {
-        // Clear existing data
+        // Clear existing data - delete in correct order (children first, then parents)
+        // Skip deleting testimonials if table doesn't exist yet
+        try {
+            await db.delete(reviewTestimonials);
+        } catch (error) {
+            // Table might not exist yet, skip
+        }
+        await db.delete(servicePosts);
         await db.delete(servicesPageHero);
         await db.delete(servicesPageDetails);
         await db.delete(servicesPageProcessSection);
         await db.delete(servicesPageProcessSteps);
         await db.delete(servicesPageCTA);
-        await db.delete(servicePosts);
 
         // Seed Hero Section
         await db.insert(servicesPageHero).values({
@@ -82,29 +89,32 @@ export async function POST() {
         }
 
         // Seed Service Posts to match details (ensures manager/detail pages work)
-        // Pick first user as author, fallback to 1
-        const [firstUser] = await db.select().from(users).limit(1);
-        const authorId = firstUser?.id || 1;
-        // Ensure published status exists (id=1), fallback to 1
-        const published = await db.select().from(status).where(eq(status.id, 1)).limit(1);
-        const statusId = published.length ? 1 : 1;
+        try {
+            const allUsers = await db.select().from(users).limit(1);
+            const allStatuses = await db.select().from(status).limit(1);
 
-        const posts = serviceDetails.map(s => ({
-            slug: s.key,
-            title: s.title,
-            excerpt: s.description,
-            content: `<p>${s.description}</p>`,
-            thumbnail: s.image,
-            icon: s.icon,
-            featured: 0,
-            authorId,
-            statusId,
-            meta_title: s.title,
-            meta_description: s.description,
-        }));
+            if (allUsers.length > 0 && allStatuses.length > 0) {
+                const posts = serviceDetails.map(s => ({
+                    slug: s.key,
+                    title: s.title,
+                    excerpt: s.description,
+                    content: `<p>${s.description}</p>`,
+                    thumbnail: s.image,
+                    icon: s.icon,
+                    featured: 0,
+                    authorId: allUsers[0].id,
+                    statusId: allStatuses[0].id,
+                    meta_title: s.title,
+                    meta_description: s.description,
+                }));
 
-        for (const p of posts) {
-            await db.insert(servicePosts).values(p);
+                for (const p of posts) {
+                    await db.insert(servicePosts).values(p);
+                }
+            }
+        } catch (error) {
+            // Service posts might fail due to foreign keys, but servicePage details are more important
+            console.error('Warning: Failed to seed service posts:', error);
         }
 
         // Seed Process Section

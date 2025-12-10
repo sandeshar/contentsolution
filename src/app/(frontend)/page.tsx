@@ -2,6 +2,7 @@ import Contact from "@/components/Homepage/Contact";
 import Expertise from "@/components/Homepage/Expertise";
 import Hero from "@/components/Homepage/Hero";
 import Trust from "@/components/Homepage/Trust";
+import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
 async function getHomepageData() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -16,20 +17,20 @@ async function getHomepageData() {
             fetch(`${baseUrl}/api/pages/homepage/contact-section`, { cache: 'no-store' }),
         ]);
 
-        const hero = heroRes.ok ? await heroRes.json() : null;
-        const trustSection = trustSectionRes.ok ? await trustSectionRes.json() : null;
+        const hero = heroRes.ok ? await heroRes.json() : {};
+        const trustSection = trustSectionRes.ok ? await trustSectionRes.json() : {};
         const trustLogos = trustLogosRes.ok ? await trustLogosRes.json() : [];
-        const expertiseSection = expertiseSectionRes.ok ? await expertiseSectionRes.json() : null;
+        const expertiseSection = expertiseSectionRes.ok ? await expertiseSectionRes.json() : {};
         const expertiseItems = expertiseItemsRes.ok ? await expertiseItemsRes.json() : [];
-        const contactSection = contactSectionRes.ok ? await contactSectionRes.json() : null;
+        const contactSection = contactSectionRes.ok ? await contactSectionRes.json() : {};
 
         return {
-            hero,
-            trustSection,
+            hero: Object.keys(hero).length ? hero : null,
+            trustSection: Object.keys(trustSection).length ? trustSection : null,
             trustLogos,
-            expertiseSection,
+            expertiseSection: Object.keys(expertiseSection).length ? expertiseSection : null,
             expertiseItems,
-            contactSection,
+            contactSection: Object.keys(contactSection).length ? contactSection : null,
         };
     } catch (error) {
         console.error('Error fetching homepage data:', error);
@@ -53,6 +54,7 @@ export default async function Home() {
                 <Hero data={data.hero} />
                 <Trust section={data.trustSection} logos={data.trustLogos} />
                 <Expertise section={data.expertiseSection} items={data.expertiseItems} />
+                <TestimonialSlider filter="homepage" />
                 <Contact data={data.contactSection} />
             </div>
         </main>

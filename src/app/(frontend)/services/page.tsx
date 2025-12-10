@@ -2,6 +2,7 @@ import HeroSection from "@/components/ServicesPage/HeroSection";
 import ServiceDetails from "@/components/ServicesPage/ServiceDetails";
 import ProcessSection from "@/components/ServicesPage/ProcessSection";
 import CTASection from "@/components/ServicesPage/CTASection";
+import TestimonialSlider from "@/components/shared/TestimonialSlider";
 import { db } from "@/db";
 import { servicePosts } from "@/db/servicePostsSchema";
 import { desc, eq } from "drizzle-orm";
@@ -115,7 +116,11 @@ export default async function ServicesPage() {
             <HeroSection data={data.hero} />
             <ServiceDetails services={services} />
             <ProcessSection section={data.processSection} steps={data.processSteps} />
-
+            <TestimonialSlider
+                filter="services"
+                title="Client Success Stories"
+                subtitle="Discover how we've helped businesses achieve their goals"
+            />
             <CTASection data={data.cta} />
         </main>
     );

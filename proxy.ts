@@ -4,6 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 export function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
+    // Allow seed UI and seed APIs so first admin can be created
+    if (pathname.startsWith('/admin/seed') || pathname.startsWith('/api/seed')) {
+        return NextResponse.next();
+    }
+
     // Allow public access to login page and login API
     if (pathname === '/login' || pathname.startsWith('/api/login')) {
         return NextResponse.next();
@@ -26,8 +31,8 @@ export function proxy(request: NextRequest) {
         }
     }
 
-    // Require authentication and superadmin role for protected endpoints
-    if ((pathname.startsWith('/api/users') || pathname.startsWith('/api/store-setting') || pathname.startsWith('/api/seed')) && request.method !== 'GET') {
+    // Require authentication and superadmin role for protected endpoints (excluding seed which is allowed above)
+    if ((pathname.startsWith('/api/users') || pathname.startsWith('/api/store-setting')) && request.method !== 'GET') {
         const cookie = request.cookies.get('admin_auth')?.value || '';
         if (!cookie) {
             return NextResponse.json(

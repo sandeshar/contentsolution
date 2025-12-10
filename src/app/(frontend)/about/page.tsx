@@ -3,6 +3,7 @@ import AboutJourney from "@/components/AboutPage/AboutJourney";
 import AboutPhilosophy from "@/components/AboutPage/AboutPhilosophy";
 import TeamSection from "@/components/AboutPage/TeamSection";
 import AboutCTA from "@/components/AboutPage/AboutCTA";
+import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
 async function getAboutPageData() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -76,6 +77,11 @@ export default async function AboutPage() {
             <AboutJourney section={data.journey} stats={data.stats} features={data.features} />
             <AboutPhilosophy section={data.philosophy} principles={data.principles} />
             <TeamSection section={data.teamSection} members={data.teamMembers} />
+            <TestimonialSlider
+                filter="about"
+                title="Trusted by Industry Leaders"
+                subtitle="See what our partners and clients have to say about working with us"
+            />
             <AboutCTA data={data.cta} />
         </main>
     );

@@ -57,13 +57,24 @@ export default function HomePageUI() {
         setSaving(true);
         try {
             const saveSection = async (url: string, data: any) => {
+                // Skip saving if data is empty (no fields filled)
+                const hasContent = Object.keys(data).some(key =>
+                    key !== 'id' && key !== 'is_active' && data[key] !== '' && data[key] !== null && data[key] !== undefined
+                );
+                if (!hasContent && !data.id) {
+                    return; // Skip empty sections without id
+                }
+
                 const method = data.id ? 'PUT' : 'POST';
                 const res = await fetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
                 });
-                if (!res.ok) throw new Error(`Failed to save ${url}`);
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(`Failed to save ${url}: ${errorData.error || res.statusText}`);
+                }
                 return res.json();
             };
 
@@ -92,7 +103,7 @@ export default function HomePageUI() {
             window.location.reload();
         } catch (error) {
             console.error("Error saving settings:", error);
-            alert("Failed to save settings. Please try again.");
+            alert(`Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setSaving(false);
         }
