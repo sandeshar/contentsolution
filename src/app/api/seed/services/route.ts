@@ -150,6 +150,7 @@ export async function POST() {
                     price_type: 'fixed',
                     price_label: 'Starting at',
                     price_description: 'Pricing varies by scope and deliverables.',
+                    currency: 'USD',
                     authorId: firstUser.id,
                     statusId: publishedStatus.id,
                     meta_title: s.title,

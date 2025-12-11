@@ -1,0 +1,1 @@
+ALTER TABLE service_posts ADD COLUMN currency VARCHAR(10) DEFAULT 'USD';

@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { slug, title, excerpt, content, thumbnail, icon, featured, statusId, metaTitle, metaDescription } = body;
+        const { slug, title, excerpt, content, thumbnail, icon, featured, statusId, metaTitle, metaDescription, category_id, subcategory_id, price, price_type, price_label, price_description } = body;
 
         if (!slug || !title || !excerpt || !content || !statusId) {
             return NextResponse.json({ error: 'Required fields: slug, title, excerpt, content, statusId' }, { status: 400 });
@@ -87,6 +87,12 @@ export async function POST(request: NextRequest) {
             thumbnail: thumbnail || null,
             icon: icon || null,
             featured: featured || 0,
+            category_id: category_id || null,
+            subcategory_id: subcategory_id || null,
+            price: price || null,
+            price_type: price_type || 'fixed',
+            price_label: price_label || null,
+            price_description: price_description || null,
             authorId,
             statusId,
             meta_title: metaTitle || null,
@@ -99,6 +105,11 @@ export async function POST(request: NextRequest) {
         );
     } catch (error: any) {
         console.error('Error creating service post:', error);
+
+        // Handle duplicate slug error
+        if (error.code === 'ER_DUP_ENTRY') {
+            return NextResponse.json({ error: 'A service with this slug already exists. Please use a different slug.' }, { status: 409 });
+        }
 
         // Handle foreign key constraint error
         if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.code === 'ER_NO_REFERENCED_ROW') {
@@ -113,7 +124,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, slug, title, excerpt, content, thumbnail, icon, featured, statusId, metaTitle, metaDescription } = body;
+        const { id, slug, title, excerpt, content, thumbnail, icon, featured, statusId, metaTitle, metaDescription, category_id, subcategory_id, price, price_type, price_label, price_description } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -127,6 +138,12 @@ export async function PUT(request: NextRequest) {
         if (thumbnail !== undefined) updateData.thumbnail = thumbnail;
         if (icon !== undefined) updateData.icon = icon;
         if (featured !== undefined) updateData.featured = featured;
+        if (category_id !== undefined) updateData.category_id = category_id;
+        if (subcategory_id !== undefined) updateData.subcategory_id = subcategory_id;
+        if (price !== undefined) updateData.price = price;
+        if (price_type !== undefined) updateData.price_type = price_type;
+        if (price_label !== undefined) updateData.price_label = price_label;
+        if (price_description !== undefined) updateData.price_description = price_description;
         if (statusId !== undefined) updateData.statusId = statusId;
         if (metaTitle !== undefined) updateData.metaTitle = metaTitle;
         if (metaDescription !== undefined) updateData.metaDescription = metaDescription;

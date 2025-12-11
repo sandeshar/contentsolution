@@ -22,6 +22,12 @@ type ServicePost = {
     statusId: number;
     meta_title?: string | null;
     meta_description?: string | null;
+    category_id?: number | null;
+    subcategory_id?: number | null;
+    price?: string | null;
+    price_type?: string | null;
+    price_label?: string | null;
+    price_description?: string | null;
     createdAt: string;
     updatedAt: string;
 };
@@ -39,6 +45,10 @@ export default function ServicesManagerPage() {
     const [ctaData, setCtaData] = useState<any>({});
     const [deletedProcessSteps, setDeletedProcessSteps] = useState<number[]>([]);
 
+    // Categories state
+    const [categories, setCategories] = useState<any[]>([]);
+    const [subcategories, setSubcategories] = useState<any[]>([]);
+
     // Modal state
     const [selectedService, setSelectedService] = useState<any | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,17 +62,25 @@ export default function ServicesManagerPage() {
     const fetchAllData = async () => {
         setLoading(true);
         try {
-            const [postsRes, heroRes, servicesRes, procSecRes, procStepsRes, ctaRes] = await Promise.all([
+            const [postsRes, heroRes, servicesRes, procSecRes, procStepsRes, ctaRes, categoriesRes, subcategoriesRes] = await Promise.all([
                 fetch('/api/services'),
                 fetch('/api/pages/services/hero'),
                 fetch('/api/pages/services/details'),
                 fetch('/api/pages/services/process-section'),
                 fetch('/api/pages/services/process-steps'),
                 fetch('/api/pages/services/cta'),
+                fetch('/api/pages/services/categories'),
+                fetch('/api/pages/services/subcategories'),
             ]);
 
             const posts = postsRes.ok ? await postsRes.json() : [];
             const servicesDetails = servicesRes.ok ? await servicesRes.json() : [];
+            const cats = categoriesRes.ok ? await categoriesRes.json() : [];
+            const subs = subcategoriesRes.ok ? await subcategoriesRes.json() : [];
+            console.log('Categories loaded:', cats);
+            console.log('Subcategories loaded:', subs);
+            setCategories(cats);
+            setSubcategories(subs);
 
             const postsMap = new Map(posts.map((p: ServicePost) => [p.slug, p]));
 
@@ -79,6 +97,12 @@ export default function ServicesManagerPage() {
                     statusId: post?.statusId || 1,
                     metaTitle: post?.meta_title || s.title,
                     metaDescription: post?.meta_description || s.description,
+                    category_id: post?.category_id,
+                    subcategory_id: post?.subcategory_id,
+                    price: post?.price,
+                    price_type: post?.price_type,
+                    price_label: post?.price_label,
+                    price_description: post?.price_description,
                 };
             });
 
@@ -133,6 +157,12 @@ export default function ServicesManagerPage() {
             statusId: 1,
             metaTitle: "New Service",
             metaDescription: "Service description",
+            category_id: null,
+            subcategory_id: null,
+            price: null,
+            price_type: 'fixed',
+            price_label: null,
+            price_description: null,
             isNew: true
         };
         setSelectedService(newService);
@@ -142,11 +172,27 @@ export default function ServicesManagerPage() {
     const saveServiceWithPost = async () => {
         if (!selectedService) return;
 
+        // Validate slug
+        if (!selectedService.slug && !selectedService.key) {
+            alert('Please enter a slug for the service');
+            return;
+        }
+
         setSaving(true);
         try {
+            const finalSlug = (selectedService.slug || selectedService.key).trim();
+
+            if (!finalSlug) {
+                alert('Slug cannot be empty');
+                setSaving(false);
+                return;
+            }
+
+            console.log('Saving service with slug:', finalSlug);
+
             const postPayload = {
                 title: selectedService.title,
-                slug: selectedService.slug || selectedService.key,
+                slug: finalSlug,
                 excerpt: selectedService.excerpt || selectedService.description,
                 content: selectedService.content || `<p>${selectedService.description}</p>`,
                 thumbnail: selectedService.thumbnail || selectedService.image || null,
@@ -154,6 +200,12 @@ export default function ServicesManagerPage() {
                 statusId: selectedService.statusId || 1,
                 metaTitle: selectedService.metaTitle || selectedService.title,
                 metaDescription: selectedService.metaDescription || selectedService.description,
+                category_id: selectedService.category_id || null,
+                subcategory_id: selectedService.subcategory_id || null,
+                price: selectedService.price || null,
+                price_type: selectedService.price_type || 'fixed',
+                price_label: selectedService.price_label || null,
+                price_description: selectedService.price_description || null,
             };
 
             let postResponse;
@@ -171,14 +223,30 @@ export default function ServicesManagerPage() {
                 });
             }
 
-            if (!postResponse.ok) throw new Error('Failed to save service post');
+            if (!postResponse.ok) {
+                const errorData = await postResponse.json();
+                throw new Error(errorData.error || 'Failed to save service post');
+            }
             const postData = await postResponse.json();
 
-            const detailPayload = {
-                ...selectedService,
+            const detailPayload: any = {
+                key: finalSlug,
+                slug: finalSlug,
+                icon: selectedService.icon || 'design_services',
+                title: selectedService.title || 'New Service',
+                description: selectedService.description || selectedService.excerpt || 'Service description',
+                bullets: JSON.stringify(selectedService.bullets || []),
+                image: selectedService.image || selectedService.thumbnail || '/placeholder-service.jpg',
+                image_alt: selectedService.image_alt || selectedService.title || 'Service image',
+                display_order: selectedService.display_order ?? 0,
+                is_active: 1,
                 postId: postData.id || selectedService.postId,
-                bullets: JSON.stringify(selectedService.bullets || [])
             };
+
+            // Add ID for updates
+            if (selectedService.id) {
+                detailPayload.id = selectedService.id;
+            }
 
             const detailMethod = selectedService.id ? 'PUT' : 'POST';
             const detailResponse = await fetch('/api/pages/services/details', {
@@ -187,7 +255,11 @@ export default function ServicesManagerPage() {
                 body: JSON.stringify(detailPayload),
             });
 
-            if (!detailResponse.ok) throw new Error('Failed to save service detail');
+            if (!detailResponse.ok) {
+                const errorData = await detailResponse.json();
+                console.error('Detail save error:', errorData);
+                throw new Error(`Failed to save service detail: ${errorData.error || 'Unknown error'}`);
+            }
 
             alert('Service saved successfully!');
             setIsModalOpen(false);
@@ -601,248 +673,369 @@ export default function ServicesManagerPage() {
                             </div>
                         </div>
                     )}
-                </div>
-            </div>
 
-            {/* SERVICE EDITOR MODAL */}
-            {isModalOpen && selectedService && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-                        {/* Modal Header */}
-                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-indigo-600 text-xl">
-                                        {selectedService.icon || "design_services"}
-                                    </span>
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-slate-900">
-                                        {selectedService.isNew ? "New Service" : "Edit Service"}
-                                    </h2>
-                                    <p className="text-sm text-slate-500">{selectedService.slug || selectedService.key}</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => {
-                                    setIsModalOpen(false);
-                                    setSelectedService(null);
-                                }}
-                                className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
-                            >
-                                <span className="material-symbols-outlined text-slate-600">close</span>
-                            </button>
-                        </div>
-
-                        {/* Modal Content */}
-                        <div className="flex-1 overflow-y-auto p-6">
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Left Column */}
-                                    <div className="space-y-4">
-                                        <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Service Details</h4>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
-                                            <input
-                                                type="text"
-                                                value={selectedService.title}
-                                                onChange={(e) => updateItem('title', e.target.value)}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            />
+                    {/* SERVICE EDITOR MODAL */}
+                    {isModalOpen && selectedService && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                                {/* Modal Header */}
+                                <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-indigo-600 text-xl">
+                                                {selectedService.icon || "design_services"}
+                                            </span>
                                         </div>
-
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
-                                            <input
-                                                type="text"
-                                                value={selectedService.slug || selectedService.key}
-                                                onChange={(e) => updateItem('slug', e.target.value)}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Icon (Material Symbol)</label>
-                                            <input
-                                                type="text"
-                                                value={selectedService.icon}
-                                                onChange={(e) => updateItem('icon', e.target.value)}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Short Description</label>
-                                            <textarea
-                                                value={selectedService.description}
-                                                onChange={(e) => updateItem('description', e.target.value)}
-                                                rows={3}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                                            <select
-                                                value={selectedService.statusId}
-                                                onChange={(e) => updateItem('statusId', Number(e.target.value))}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            >
-                                                <option value={1}>Published</option>
-                                                <option value={3}>Hidden</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Image URL</label>
-                                            <input
-                                                type="text"
-                                                value={selectedService.image || selectedService.thumbnail}
-                                                onChange={(e) => {
-                                                    updateItem('image', e.target.value);
-                                                    updateItem('thumbnail', e.target.value);
-                                                }}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Image Alt Text</label>
-                                            <input
-                                                type="text"
-                                                value={selectedService.image_alt}
-                                                onChange={(e) => updateItem('image_alt', e.target.value)}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            />
+                                            <h2 className="text-xl font-bold text-slate-900">
+                                                {selectedService.isNew ? "New Service" : "Edit Service"}
+                                            </h2>
+                                            <p className="text-sm text-slate-500">{selectedService.slug || selectedService.key}</p>
                                         </div>
                                     </div>
-
-                                    {/* Right Column */}
-                                    <div className="space-y-4">
-                                        <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Post Content & SEO</h4>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Excerpt</label>
-                                            <textarea
-                                                value={selectedService.excerpt}
-                                                onChange={(e) => updateItem('excerpt', e.target.value)}
-                                                rows={3}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Content</label>
-                                            <RichTextEditor
-                                                value={selectedService.content}
-                                                onChange={(v: string) => updateItem('content', v)}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Meta Title</label>
-                                            <input
-                                                type="text"
-                                                value={selectedService.metaTitle}
-                                                onChange={(e) => updateItem('metaTitle', e.target.value)}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Meta Description</label>
-                                            <textarea
-                                                value={selectedService.metaDescription}
-                                                onChange={(e) => updateItem('metaDescription', e.target.value)}
-                                                rows={3}
-                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            />
-                                        </div>
-                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            setSelectedService(null);
+                                        }}
+                                        className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-slate-600">close</span>
+                                    </button>
                                 </div>
 
-                                {/* Bullets Section */}
-                                <div className="border-t border-slate-300 pt-6">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Bullet Points</h4>
-                                        <button
-                                            onClick={addBullet}
-                                            className="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center gap-1"
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">add</span>
-                                            Add Bullet
-                                        </button>
-                                    </div>
-                                    <div className="space-y-2">
-                                        {(selectedService.bullets || []).map((bullet: string, bulletIdx: number) => (
-                                            <div key={bulletIdx} className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={bullet}
-                                                    onChange={(e) => updateBullet(bulletIdx, e.target.value)}
-                                                    placeholder={`Bullet point ${bulletIdx + 1}`}
-                                                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                />
+                                {/* Modal Content */}
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {/* Left Column */}
+                                            <div className="space-y-4">
+                                                <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Service Details</h4>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedService.title}
+                                                        onChange={(e) => updateItem('title', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedService.slug ?? selectedService.key ?? ''}
+                                                        onChange={(e) => {
+                                                            const newSlug = e.target.value;
+                                                            setSelectedService({ ...selectedService, slug: newSlug, key: newSlug });
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Icon (Material Symbol)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedService.icon}
+                                                        onChange={(e) => updateItem('icon', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Short Description</label>
+                                                    <textarea
+                                                        value={selectedService.description}
+                                                        onChange={(e) => updateItem('description', e.target.value)}
+                                                        rows={3}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                                                    <select
+                                                        value={selectedService.statusId}
+                                                        onChange={(e) => updateItem('statusId', Number(e.target.value))}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    >
+                                                        <option value={1}>Published</option>
+                                                        <option value={3}>Hidden</option>
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Image URL</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedService.image || selectedService.thumbnail}
+                                                        onChange={(e) => {
+                                                            updateItem('image', e.target.value);
+                                                            updateItem('thumbnail', e.target.value);
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Image Alt Text</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedService.image_alt}
+                                                        onChange={(e) => updateItem('image_alt', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    />
+                                                </div>
+
+                                                {/* Category & Subcategory */}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                                                    <select
+                                                        value={selectedService.category_id?.toString() || ''}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value ? Number(e.target.value) : null;
+                                                            console.log('Category changed to:', val);
+                                                            setSelectedService({ ...selectedService, category_id: val, subcategory_id: null });
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    >
+                                                        <option value="">No Category</option>
+                                                        {categories.map((cat: any) => (
+                                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    <p className="text-xs text-slate-500 mt-1">Categories available: {categories.length}</p>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Subcategory</label>
+                                                    <select
+                                                        value={selectedService.subcategory_id?.toString() || ''}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value ? Number(e.target.value) : null;
+                                                            setSelectedService({ ...selectedService, subcategory_id: val });
+                                                        }}
+                                                        disabled={!selectedService.category_id}
+                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                                                    >
+                                                        <option value="">No Subcategory</option>
+                                                        {subcategories.filter((sub: any) => sub.category_id === selectedService.category_id).map((sub: any) => (
+                                                            <option key={sub.id} value={sub.id}>{sub.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {/* Pricing */}
+                                                <div className="border-t border-slate-200 pt-4">
+                                                    <h5 className="text-sm font-semibold text-slate-700 mb-3">Pricing</h5>
+
+                                                    <div className="grid grid-cols-2 gap-3 mb-3">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-slate-700 mb-1">Price</label>
+                                                            <input
+                                                                type="text"
+                                                                value={selectedService.price || ''}
+                                                                onChange={(e) => updateItem('price', e.target.value)}
+                                                                placeholder="499.00"
+                                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
+                                                            <select
+                                                                value={selectedService.currency || 'USD'}
+                                                                onChange={(e) => updateItem('currency', e.target.value)}
+                                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            >
+                                                                <option value="USD">USD ($)</option>
+                                                                <option value="EUR">EUR (€)</option>
+                                                                <option value="GBP">GBP (£)</option>
+                                                                <option value="CAD">CAD (C$)</option>
+                                                                <option value="AUD">AUD (A$)</option>
+                                                                <option value="JPY">JPY (¥)</option>
+                                                                <option value="INR">INR (₹)</option>
+                                                                <option value="NRS">NRS (रु)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-3 mb-3">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-slate-700 mb-1">Price Type</label>
+                                                            <select
+                                                                value={selectedService.price_type || 'fixed'}
+                                                                onChange={(e) => updateItem('price_type', e.target.value)}
+                                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            >
+                                                                <option value="fixed">Fixed</option>
+                                                                <option value="starting">Starting At</option>
+                                                                <option value="hourly">Hourly</option>
+                                                                <option value="custom">Custom</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div className="mb-3">
+                                                            <label className="block text-sm font-medium text-slate-700 mb-1">Price Label</label>
+                                                            <input
+                                                                type="text"
+                                                                value={selectedService.price_label || ''}
+                                                                onChange={(e) => updateItem('price_label', e.target.value)}
+                                                                placeholder="Starting at"
+                                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            />
+                                                        </div>
+
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-slate-700 mb-1">Price Description</label>
+                                                            <textarea
+                                                                value={selectedService.price_description || ''}
+                                                                onChange={(e) => updateItem('price_description', e.target.value)}
+                                                                rows={2}
+                                                                placeholder="e.g. Pricing varies by scope and deliverables."
+                                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div>
+                                                {/* Middle Column: Post Content */}
+                                                <div className="space-y-4 md:col-span-2">
+                                                    <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Post Content</h4>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Excerpt</label>
+                                                        <textarea
+                                                            value={selectedService.excerpt}
+                                                            onChange={(e) => updateItem('excerpt', e.target.value)}
+                                                            rows={3}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Content</label>
+                                                        <RichTextEditor
+                                                            value={selectedService.content}
+                                                            onChange={(v: string) => updateItem('content', v)}
+                                                        />
+                                                    </div>
+
+                                                </div>
+
+                                                {/* Right Column: SEO */}
+                                                <div className="space-y-4 md:col-span-1">
+                                                    <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">SEO</h4>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Meta Title</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedService.metaTitle}
+                                                            onChange={(e) => updateItem('metaTitle', e.target.value)}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Meta Description</label>
+                                                        <textarea
+                                                            value={selectedService.metaDescription}
+                                                            onChange={(e) => updateItem('metaDescription', e.target.value)}
+                                                            rows={3}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Bullets Section */}
+                                        <div className="border-t border-slate-300 pt-6">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Bullet Points</h4>
                                                 <button
-                                                    onClick={() => removeBullet(bulletIdx)}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    onClick={addBullet}
+                                                    className="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center gap-1"
                                                 >
-                                                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                    <span className="material-symbols-outlined text-[18px]">add</span>
+                                                    Add Bullet
                                                 </button>
                                             </div>
-                                        ))}
-                                        {(!selectedService.bullets || selectedService.bullets.length === 0) && (
-                                            <p className="text-sm text-slate-500 italic">No bullet points yet</p>
+                                            <div className="space-y-2">
+                                                {(selectedService.bullets || []).map((bullet: string, bulletIdx: number) => (
+                                                    <div key={bulletIdx} className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            value={bullet}
+                                                            onChange={(e) => updateBullet(bulletIdx, e.target.value)}
+                                                            placeholder={`Bullet point ${bulletIdx + 1}`}
+                                                            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                        <button
+                                                            onClick={() => removeBullet(bulletIdx)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {(!selectedService.bullets || selectedService.bullets.length === 0) && (
+                                                    <p className="text-sm text-slate-500 italic">No bullet points yet</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Modal Footer */}
+                                    <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex gap-3">
+                                        <button
+                                            onClick={saveServiceWithPost}
+                                            disabled={saving}
+                                            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                        >
+                                            {saving ? (
+                                                <>
+                                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    Saving...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="material-symbols-outlined text-[18px]">save</span>
+                                                    Save Service
+                                                </>
+                                            )}
+                                        </button>
+                                        {!selectedService.isNew && (
+                                            <button
+                                                onClick={handleDeleteService}
+                                                disabled={saving}
+                                                className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                Delete
+                                            </button>
                                         )}
+                                        <button
+                                            onClick={() => {
+                                                setIsModalOpen(false);
+                                                setSelectedService(null);
+                                            }}
+                                            disabled={saving}
+                                            className="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                                        >
+                                            Cancel
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Modal Footer */}
-                        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex gap-3">
-                            <button
-                                onClick={saveServiceWithPost}
-                                disabled={saving}
-                                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                {saving ? (
-                                    <>
-                                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="material-symbols-outlined text-[18px]">save</span>
-                                        Save Service
-                                    </>
-                                )}
-                            </button>
-                            {!selectedService.isNew && (
-                                <button
-                                    onClick={handleDeleteService}
-                                    disabled={saving}
-                                    className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
-                                >
-                                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                                    Delete
-                                </button>
-                            )}
-                            <button
-                                onClick={() => {
-                                    setIsModalOpen(false);
-                                    setSelectedService(null);
-                                }}
-                                disabled={saving}
-                                className="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
 }

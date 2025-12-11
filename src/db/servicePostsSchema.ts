@@ -22,6 +22,7 @@ export const servicePosts = mysqlTable("service_posts", {
     price_type: varchar("price_type", { length: 50 }).default("fixed"), // fixed, hourly, monthly, custom
     price_label: varchar("price_label", { length: 100 }), // e.g., "Starting at", "From", "Per hour"
     price_description: text("price_description"), // Additional pricing details
+    currency: varchar("currency", { length: 10 }).default("USD"), // Currency code like USD, EUR, GBP
 
     authorId: int("author_id").references(() => users.id).notNull(),
     statusId: int("status_id").references(() => status.id).notNull(),

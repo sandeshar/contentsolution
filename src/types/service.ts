@@ -46,6 +46,7 @@ export interface ServicePostWithPricing {
     price_type?: string; // 'fixed', 'hourly', 'monthly', 'custom'
     price_label?: string | null; // 'Starting at', 'From', 'Per hour'
     price_description?: string | null;
+    currency?: string | null; // Currency code like USD, EUR, GBP
     authorId: number;
     statusId: number;
     meta_title?: string | null;

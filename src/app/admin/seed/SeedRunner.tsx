@@ -28,6 +28,7 @@ const SeedRunner = () => {
         { key: "faq", label: "FAQ" },
         { key: "terms", label: "Terms" },
         { key: "blog", label: "Blog" },
+        { key: "navbar", label: "Navbar" },
     ];
 
     const runSeed = async () => {

@@ -58,6 +58,7 @@ export async function POST(request: Request) {
             terms: { success: false, message: '' },
             blog: { success: false, message: '' },
             testimonials: { success: false, message: '' },
+            navbar: { success: false, message: '' },
         };
 
         // 1. Seed Status
@@ -449,7 +450,8 @@ export async function POST(request: Request) {
                         price: '499.00',
                         price_type: 'fixed',
                         price_label: 'Starting at',
-                        price_description: 'Pricing varies by scope and deliverables.',
+                        price_description: s.price_description || 'Pricing varies by scope and deliverables.',
+                        currency: 'USD',
                         authorId: firstUser.id,
                         statusId: publishedStatus.id,
                         meta_title: s.title,
@@ -759,6 +761,46 @@ export async function POST(request: Request) {
             results.testimonials = { success: true, message: 'Testimonials seeded successfully' };
         } catch (error) {
             results.testimonials.message = error instanceof Error ? error.message : 'Failed to seed testimonials';
+        }
+
+        // 10. Seed Navbar
+        try {
+            const { navbarItems } = await import('@/db/navbarSchema');
+            const existingNavItems = await db.select().from(navbarItems).limit(1);
+
+            if (existingNavItems.length === 0) {
+                // Get first service category for services dropdown
+                const categories = await db.select().from(serviceCategories).limit(5);
+
+                // Seed main navbar items
+                const homeResult = await db.insert(navbarItems).values({ label: 'Home', href: '/', order: 0, is_button: 0, is_active: 1 });
+                const servicesResult = await db.insert(navbarItems).values({ label: 'Services', href: '/services', order: 1, is_button: 0, is_active: 1 });
+
+                // Add service categories as dropdown items (parent_id = services item id)
+                if (categories.length > 0) {
+                    const servicesId = servicesResult[0].insertId;
+                    for (let i = 0; i < categories.length; i++) {
+                        await db.insert(navbarItems).values({
+                            label: categories[i].name,
+                            href: `/services?category=${categories[i].slug}`,
+                            order: i,
+                            parent_id: servicesId,
+                            is_button: 0,
+                            is_active: 1,
+                        });
+                    }
+                }
+
+                // Other main nav items
+                await db.insert(navbarItems).values({ label: 'About Us', href: '/about', order: 2, is_button: 0, is_active: 1 });
+                await db.insert(navbarItems).values({ label: 'Blog', href: '/blog', order: 3, is_button: 0, is_active: 1 });
+                await db.insert(navbarItems).values({ label: 'FAQ', href: '/faq', order: 4, is_button: 0, is_active: 1 });
+                await db.insert(navbarItems).values({ label: 'Contact', href: '/contact', order: 5, is_button: 0, is_active: 1 });
+                await db.insert(navbarItems).values({ label: 'Get a Quote', href: '/contact', order: 6, is_button: 1, is_active: 1 });
+            }
+            results.navbar = { success: true, message: 'Navbar seeded successfully' };
+        } catch (error) {
+            results.navbar.message = error instanceof Error ? error.message : 'Failed to seed navbar';
         }
 
         // Seed other pages with minimal data

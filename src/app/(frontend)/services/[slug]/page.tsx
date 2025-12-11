@@ -20,6 +20,10 @@ type ServiceRecord = {
     icon?: string | null;
     meta_title?: string | null;
     meta_description?: string | null;
+    price?: string | null;
+    price_type?: string | null;
+    price_label?: string | null;
+    price_description?: string | null;
 };
 
 type ServiceDetail = {
@@ -51,6 +55,10 @@ async function getServicePost(slug: string): Promise<ServiceRecord | null> {
             icon: p.icon,
             meta_title: p.meta_title,
             meta_description: p.meta_description,
+            price: p.price,
+            price_type: p.price_type,
+            price_label: p.price_label,
+            price_description: p.price_description,
         };
     }
 
@@ -131,6 +139,21 @@ async function getServiceDetailBySlug(slug: string): Promise<ServiceDetail | nul
 
 export default async function ServicePostPage({ params }: ServicePostPageProps) {
     const { slug } = await params;
+
+    // Helper function to get currency symbol
+    const getCurrencySymbol = (currency: string | null) => {
+        const symbols: Record<string, string> = {
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'CAD': 'C$',
+            'AUD': 'A$',
+            'JPY': '¥',
+            'INR': '₹',
+            'NRS': 'रु'
+        };
+        return symbols[currency || 'USD'] || '$';
+    };
     const [post, serviceDetail] = await Promise.all([
         getServicePost(slug),
         getServiceDetailBySlug(slug)
@@ -213,7 +236,30 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                 </div>
                             </div>
                             {/* Sidebar */}
-                            <aside className="space-y-6 sticky top-24">
+                            <aside className="space-y-6 sticky top-20 self-start">
+                                {/* Pricing Card */}
+                                {post.price && (
+                                    <div className="bg-white rounded-xl p-6 border-2 border-primary shadow-lg">
+                                        <div className="text-center mb-6">
+                                            <div className="text-sm font-semibold text-primary uppercase tracking-wide mb-2">
+                                                {post.price_label || 'Pricing'}
+                                            </div>
+                                            <div className="text-4xl font-bold text-[#0f172a] mb-1">
+                                                {getCurrencySymbol(post.currency)}{post.price}
+                                            </div>
+                                            {post.price_description && (
+                                                <p className="text-sm text-[#475569] mt-2">{post.price_description}</p>
+                                            )}
+                                        </div>
+                                        <a
+                                            href="/contact"
+                                            className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition shadow-md"
+                                        >
+                                            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                                            Get Started
+                                        </a>
+                                    </div>
+                                )}
                                 {/* Quick Action Card */}
                                 <div className="bg-linear-to-br from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg">
                                     <h3 className="text-xl font-bold mb-2">Ready?</h3>

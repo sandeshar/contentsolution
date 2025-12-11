@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { key, slug, icon, title, description, bullets, image, image_alt, display_order, is_active = 1 } = body;
 
-        if (!key || !icon || !title || !description || !bullets || !image || !image_alt || display_order === undefined) {
+        if (!key || !icon || !title || !description || bullets === undefined || !image || !image_alt || display_order === undefined) {
             return NextResponse.json(
                 { error: 'Key, icon, title, description, bullets, image, image_alt, and display_order are required' },
                 { status: 400 }

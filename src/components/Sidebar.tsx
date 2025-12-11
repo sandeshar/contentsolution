@@ -29,6 +29,8 @@ const SideBar = () => {
         { name: 'Blog', icon: 'article', href: '/admin/blog' },
         { name: 'Testimonials', icon: 'reviews', href: '/admin/testimonials' },
         { name: 'Services Manager', icon: 'service_toolbox', href: '/admin/services/manager' },
+        { name: 'Category Manager', icon: 'category', href: '/admin/categories' },
+        { name: 'Navbar Manager', icon: 'menu', href: '/admin/navbar' },
         { name: 'Contact', icon: 'contact_mail', href: '/admin/contact' },
         { name: 'Store Setting', icon: 'settings', href: '/admin/store-setting' },
     ];
