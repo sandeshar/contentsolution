@@ -210,7 +210,7 @@ export async function POST() {
                 const basePostContent = contentMap[s.key]
                     ? generateLongContent(s.title, 28)
                     : generateLongContent(s.title, 28);
-                    await db.insert(servicePosts).values({
+                await db.insert(servicePosts).values({
                     slug: s.key,
                     title: s.title,
                     excerpt: s.description,
