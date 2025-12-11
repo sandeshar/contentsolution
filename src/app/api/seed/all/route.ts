@@ -424,7 +424,7 @@ export async function POST(request: Request) {
                     if (subcat) subcategoryMap[s.key] = subcat.id as number;
                 }
 
-                for (const s of serviceData) {
+                for (const [index, s] of serviceData.entries()) {
                     await db.insert(servicesPageDetails).values({
                         key: s.key,
                         icon: s.icon,
@@ -433,24 +433,98 @@ export async function POST(request: Request) {
                         bullets: JSON.stringify(s.bullets),
                         image: s.image,
                         image_alt: s.image_alt,
-                        display_order: serviceData.indexOf(s) + 1,
+                        display_order: index + 1,
                         is_active: 1,
                     });
 
+                    const contentMap: Record<string, string> = {
+                        seo: `
+                            <p>SEO Content services focus on ranking and conversion. We conduct keyword research tailored to Nepal's market to identify queries with the right intent. Our long-form articles are structured with clear H2/H3 headings, a table of contents, and internal links to strengthen topical authority.</p>
+                            <p>Deliverables include a content brief, SEO meta optimization, on-page schema where relevant, and 2000+ word pillar content as needed. We also provide optional research-backed statistics and client interview integration to establish trust and back claims.</p>
+                            <h3>Package & Pricing</h3>
+                            <p>Our base package starts with a discovery call and a 1,200–1,500 word article. Larger pillar pages and content clusters are priced per scope and research needs.</p>
+                        `,
+                        social: `
+                            <p>Social Media Content services deliver platform-ready posts designed to build community. We create monthly calendars, short-form video hooks, caption variations, and design assets for carousels and stories.</p>
+                            <p>We focus on localized content for Nepali audiences that respects cultural moments and optimizes for engagement—shares, saves, and comments—while aligning with conversion goals.</p>
+                            <h3>Package & Pricing</h3>
+                            <p>Packages are typically retainer-based and include content strategy, production, and monthly performance reporting.</p>
+                        `,
+                        copy: `
+                            <p>Website Copywriting services aim to convert visitors into customers through persuasive messaging. We create clear value propositions, headlines, and microcopy that support user flows across your site.</p>
+                            <p>Our process includes stakeholder interviews, competitor analysis, and iterative drafting. We craft landing pages, product descriptions, and contact flows optimized for clarity and action.</p>
+                            <h3>Package & Pricing</h3>
+                            <p>One-time projects like a landing page start with a brief and testing round. Ongoing content refinement is available as a retainer.</p>
+                        `,
+                        blog: `
+                            <p>Blog Writing services focus on long-form content that builds organic visibility, educates your audience, and captures leads. Our articles include SEO research, expert interviews, images, and a clear CTA to guide conversions.</p>
+                            <p>We emphasize editorial quality, readability, and strategic linking to convert readers into leads or subscribers.</p>
+                            <h3>Package & Pricing</h3>
+                            <p>Standard packages include topic ideation, a 1,200–2,000 word article, and basic optimization for search engines.</p>
+                        `,
+                    };
+
+                    const generateLongContentForService = (title: string, paragraphs = 6) => {
+                        let out = `<h1>${title}</h1>`;
+                        out += `<p>${title} — extended documentation including examples and step-by-step guidance for execution.</p>`;
+                        for (let i = 1; i <= paragraphs; i++) {
+                            out += `<h2>Section ${i}</h2><p>Long-form section ${i} with best practices and local context for Nepali businesses.</p>`;
+                        }
+                        out += `<h2>Final Notes</h2><p>Summary and recommended actions.</p>`;
+                        return out;
+                    };
+
+                    const postVariants = [
+                        { suffix: 'guide', paragraphs: 8 },
+                        { suffix: 'advanced-techniques', paragraphs: 10 },
+                        { suffix: 'case-study', paragraphs: 6 },
+                    ];
+
+                    for (const [vIndex, variant] of postVariants.entries()) {
+                        const variantContent = contentMap[s.key]
+                            ? generateLongContentForService(`${s.title} — ${variant.suffix}`, variant.paragraphs)
+                            : generateLongContentForService(`${s.title} — ${variant.suffix}`, variant.paragraphs);
+
+                        await db.insert(servicePosts).values({
+                            slug: `${s.key}-${variant.suffix}`,
+                            title: `${s.title} — ${variant.suffix.replace(/-/g, ' ')}`,
+                            excerpt: s.description,
+                            content: variantContent,
+                            thumbnail: s.image,
+                            icon: s.icon,
+                            featured: index === 0 && vIndex === 0 ? 1 : 0,
+                            category_id: category?.id,
+                            subcategory_id: subcategoryMap[s.key],
+                            price: '499.00',
+                            price_type: 'fixed',
+                            price_label: 'Starting at',
+                            price_description: (s as any).price_description || 'Pricing varies by scope and deliverables.',
+                            currency: 'USD',
+                            authorId: firstUser.id,
+                            statusId: publishedStatus.id,
+                            meta_title: `${s.title} — ${variant.suffix.replace(/-/g, ' ')}`,
+                            meta_description: `Professional ${s.title.toLowerCase()} services`,
+                        });
+                    }
+
+                    // Insert base post (s.key) so service slug resolves to a long post
+                    const baseContent = contentMap[s.key]
+                        ? generateLongContentForService(s.title, 28)
+                        : generateLongContentForService(s.title, 28);
                     await db.insert(servicePosts).values({
                         slug: s.key,
                         title: s.title,
                         excerpt: s.description,
-                        content: `<p>${s.description}</p>`,
+                        content: baseContent,
                         thumbnail: s.image,
                         icon: s.icon,
-                        featured: 0,
+                        featured: index === 0 ? 1 : 0,
                         category_id: category?.id,
                         subcategory_id: subcategoryMap[s.key],
                         price: '499.00',
                         price_type: 'fixed',
                         price_label: 'Starting at',
-                        price_description: s.price_description || 'Pricing varies by scope and deliverables.',
+                        price_description: (s as any).price_description || 'Pricing varies by scope and deliverables.',
                         currency: 'USD',
                         authorId: firstUser.id,
                         statusId: publishedStatus.id,
@@ -721,17 +795,99 @@ export async function POST(request: Request) {
             });
 
             if (firstUser && publishedStatus) {
-                await db.insert(blogPosts).values({
-                    slug: 'welcome-to-content-solution',
-                    title: 'Welcome to Content Solution',
-                    content: '<p>Welcome to our content solution platform. This is your first blog post.</p>',
-                    tags: 'welcome,content',
-                    thumbnail: 'https://via.placeholder.com/500x400',
-                    metaTitle: 'Welcome to Content Solution',
-                    metaDescription: 'Welcome to our platform',
-                    authorId: firstUser.id,
-                    status: publishedStatus.id,
-                });
+                const generateLongContent = (title: string, paragraphs = 20) => {
+                    let out = `<h1>${title}</h1>`;
+                    out += `<p>${title} — an in-depth guide.</p>`;
+                    for (let i = 1; i <= paragraphs; i++) {
+                        out += `<h2>Section ${i}</h2>`;
+                        out += `<p>${title} — detailed paragraph ${i}. This paragraph provides an extended explanation of the topic, covering best practices, examples, data points, and actionable steps. Use examples and region-specific insights where appropriate to drive relevance for Nepali users.</p>`;
+                        out += `<p>Additional insights: research, testing, and iteration are key. Tools and measurement help guide changes. Use analytics to identify which sections drive engagement and optimize headings for featured snippets. Consider designing content for skimmers with clear takeaways, lists, and callouts.</p>`;
+                    }
+                    out += `<h2>Wrap Up</h2><p>Concluding notes and takeaways.</p>`;
+                    return out;
+                };
+
+                const baseTopics = [
+                    {
+                        slug: 'content-marketing-strategy-nepal',
+                        title: 'A Modern Content Marketing Strategy for Nepali Businesses',
+                        content: `
+                            <p>Building a content marketing strategy in Nepal often requires a tailored approach that recognizes local audience semantics and search behaviors. Start with audience research: who are your customers, where they live, and what drives their decisions. Combine this with a keyword strategy that mixes high-level branded queries with localized, intent-driven reaches.</p>
+                            <p>Next, map your content to the buyer journey. Topics that answer awareness questions perform well at the top of the funnel, while decision-stage content focuses on product comparisons, case studies, and ROI-focused materials. Create long-form pillar pages that link to shorter, action-driven posts. Regularly measure engagement metrics and iterate, emphasizing local trends and cultural events that can be timely hooks.</p>
+                            <h2>Execution Tips</h2>
+                            <ul>
+                                <li>Create editorial calendars with clear publishing cadence.</li>
+                                <li>Interview subject matter experts and amplify quotes to add authority.</li>
+                                <li>Monitor organic and referral growth, and double down on high-performing topics.</li>
+                            </ul>
+                            <p>By combining strategic planning with local context and consistent execution, businesses in Nepal can create content that attracts, engages, and converts.</p>
+                        `,
+                        tags: 'content,marketing,nepal,strategy',
+                        thumbnail: 'https://images.unsplash.com/photo-1528426776029-6f72c03bd0d7?auto=format&fit=crop&w=1400&q=80',
+                        metaTitle: 'Content Marketing Strategy for Nepali Businesses',
+                        metaDescription: 'Learn how to craft a content strategy that works in Nepal with audience research, pillar pages, and execution tips.',
+                        authorId: firstUser.id,
+                        status: publishedStatus.id,
+                    },
+                    {
+                        slug: 'long-form-seo-best-practices',
+                        title: 'Long-Form SEO: How to Create Content That Ranks',
+                        content: `
+                            <p>Long-form content remains a powerful tool for ranking, especially when it follows strong SEO fundamentals: clear structure, internal links, authoritative citations, and semantic keyword coverage. Use headings to break up content, provide a table of contents for longer reads, and include example use cases that help readers apply concepts.</p>
+                            <p>When constructing long-form articles, build topical authority by creating clusters of related pieces and linking them back to a central hub. Optimize for readability by using short paragraphs and adding visual elements like charts, screenshots, and callouts for important takeaways.</p>
+                            <h3>On-Page Optimization</h3>
+                            <ul>
+                                <li>Target long-tail keywords with high intent and low competition.</li>
+                                <li>Use structured data where appropriate to help search engines understand your content.</li>
+                                <li>Ensure page speed and mobile friendliness to reduce bounce rates.</li>
+                            </ul>
+                            <p>Good long-form SEO is both technical and human-centered; aim for value first, then enhance discoverability.</p>
+                        `,
+                        tags: 'seo,long-form,content',
+                        thumbnail: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=1400&q=80',
+                        metaTitle: 'Long-Form SEO Best Practices',
+                        metaDescription: 'A guide to creating long-form content that ranks and converts.',
+                        authorId: firstUser.id,
+                        status: publishedStatus.id,
+                    },
+                    {
+                        slug: 'case-study-pillar-page-growth',
+                        title: 'Case Study: How Pillar Pages Drove Organic Growth',
+                        content: `
+                            <p>Pillar pages act as strategic anchors for topic clusters. In this case study, a Nepal-based client consolidated fragmented blog posts into a single, comprehensive pillar page, and interlinked related articles with clear navigation. Within 16 weeks, organic traffic to the topic cluster increased by 68% and keyword rankings improved on the target 10+ queries.</p>
+                            <p>This approach worked because it improved topical relevance and user experience. The team included original research, local data points, and strong calls to action that guided readers to the services page. Remember: internal links transfer topical signals and help search engines understand the semantic relationships between pages.</p>
+                        `,
+                        tags: 'case-study,seo,pillar-pages',
+                        thumbnail: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80',
+                        metaTitle: 'Pillar Page Case Study',
+                        metaDescription: 'Learn how consolidating content into pillar pages can grow organic traffic and rankings.',
+                        authorId: firstUser.id,
+                        status: publishedStatus.id,
+                    },
+                ];
+
+                const posts = [] as any[];
+                for (let i = 0; i < baseTopics.length; i++) {
+                    const t = baseTopics[i];
+                    posts.push({ ...t, content: generateLongContent(t.title, 24) });
+                    for (let v = 1; v <= 3; v++) {
+                        posts.push({
+                            slug: `${t.slug}-part-${v}`,
+                            title: `${t.title} — Part ${v}`,
+                            content: generateLongContent(`${t.title} — Part ${v}`, 24 + v * 6),
+                            tags: t.tags + ',longform',
+                            thumbnail: t.thumbnail,
+                            metaTitle: `${t.metaTitle} — Part ${v}`,
+                            metaDescription: t.metaDescription,
+                            authorId: t.authorId,
+                            status: t.status,
+                        });
+                    }
+                }
+
+                for (const p of posts) {
+                    await db.insert(blogPosts).values(p as any);
+                }
             }
             results.blog = { success: true, message: 'Blog seeded successfully' };
         } catch (error) {

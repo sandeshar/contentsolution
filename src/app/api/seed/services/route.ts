@@ -33,6 +33,17 @@ export async function POST() {
         const [firstUser] = await db.select().from(users).limit(1);
         const [publishedStatus] = await db.select().from(status).limit(1);
 
+        const generateLongContent = (title: string, paragraphs = 20) => {
+            let out = `<h1>${title}</h1>`;
+            out += `<p>${title} — an extended guide covering principles, recommended workflows, examples, and step-by-step implementation details. The focus is on clear examples and advice tailored for Nepali businesses but also applicable globally.</p>`;
+            for (let i = 1; i <= paragraphs; i++) {
+                out += `<h2>Section ${i}</h2>`;
+                out += `<p>${title} — paragraph ${i}. This text expands on relevant industry best practices, case study summaries, and suggested tactics that teams can adopt today. It includes examples, local context, and actionable steps that teams can follow. Where possible, add references to data, frameworks, or tested patterns and include links to resources and templates.</p>`;
+            }
+            out += `<h2>Conclusion</h2><p>Final summary and next steps.</p>`;
+            return out;
+        };
+
         await db.insert(servicesPageHero).values({
             tagline: 'OUR SERVICES',
             title: 'Content Solutions That Drive Results',
@@ -136,14 +147,77 @@ export async function POST() {
             });
 
             if (firstUser && publishedStatus) {
-                await db.insert(servicePosts).values({
+                const contentMap: Record<string, string> = {
+                    seo: `
+                        <p>SEO Content services focus on ranking and conversion. We conduct keyword research tailored to Nepal's market to identify queries with the right intent. Our long-form articles are structured with clear H2/H3 headings, a table of contents, and internal links to strengthen topical authority.</p>
+                        <p>Deliverables include a content brief, SEO meta optimization, on-page schema where relevant, and 2000+ word pillar content as needed. We also provide optional research-backed statistics and client interview integration to establish trust and back claims.</p>
+                        <h3>Package & Pricing</h3>
+                        <p>Our base package starts with a discovery call and a 1,200–1,500 word article. Larger pillar pages and content clusters are priced per scope and research needs.</p>
+                    `,
+                    social: `
+                        <p>Social Media Content services deliver platform-ready posts designed to build community. We create monthly calendars, short-form video hooks, caption variations, and design assets for carousels and stories.</p>
+                        <p>We focus on localized content for Nepali audiences that respects cultural moments and optimizes for engagement—shares, saves, and comments—while aligning with conversion goals.</p>
+                        <h3>Package & Pricing</h3>
+                        <p>Packages are typically retainer-based and include content strategy, production, and monthly performance reporting.</p>
+                    `,
+                    copy: `
+                        <p>Website Copywriting services aim to convert visitors into customers through persuasive messaging. We create clear value propositions, headlines, and microcopy that support user flows across your site.</p>
+                        <p>Our process includes stakeholder interviews, competitor analysis, and iterative drafting. We craft landing pages, product descriptions, and contact flows optimized for clarity and action.</p>
+                        <h3>Package & Pricing</h3>
+                        <p>One-time projects like a landing page start with a brief and testing round. Ongoing content refinement is available as a retainer.</p>
+                    `,
+                    blog: `
+                        <p>Blog Writing services focus on long-form content that builds organic visibility, educates your audience, and captures leads. Our articles include SEO research, expert interviews, images, and a clear CTA to guide conversions.</p>
+                        <p>We emphasize editorial quality, readability, and strategic linking to convert readers into leads or subscribers.</p>
+                        <h3>Package & Pricing</h3>
+                        <p>Standard packages include topic ideation, a 1,200–2,000 word article, and basic optimization for search engines.</p>
+                    `,
+                };
+
+                const postVariants = [
+                    { suffix: 'guide', paragraphs: 20 },
+                    { suffix: 'advanced-techniques', paragraphs: 30 },
+                    { suffix: 'case-study', paragraphs: 24 },
+                ];
+
+                for (const [vIndex, variant] of postVariants.entries()) {
+                    const variantContent = contentMap[s.key]
+                        ? generateLongContent(`${s.title} — ${variant.suffix}`, variant.paragraphs)
+                        : generateLongContent(`${s.title} — ${variant.suffix}`, variant.paragraphs);
+
+                    await db.insert(servicePosts).values({
+                        slug: `${s.key}-${variant.suffix}`,
+                        title: `${s.title} — ${variant.suffix.replace(/-/g, ' ')}`,
+                        excerpt: s.description,
+                        content: variantContent,
+                        thumbnail: s.image,
+                        icon: s.icon,
+                        featured: index === 0 && vIndex === 0 ? 1 : 0,
+                        category_id: category?.id,
+                        subcategory_id: subcategoryMap[s.key],
+                        price: '499.00',
+                        price_type: 'fixed',
+                        price_label: 'Starting at',
+                        price_description: 'Pricing varies by scope and deliverables.',
+                        currency: 'USD',
+                        authorId: firstUser.id,
+                        statusId: publishedStatus.id,
+                        meta_title: `${s.title} — ${variant.suffix.replace(/-/g, ' ')}`,
+                        meta_description: `Professional ${s.title.toLowerCase()} services`,
+                    });
+                }
+                // Insert a base post with the default slug (e.g., 'seo') so /services/[slug] resolves to a long post
+                const basePostContent = contentMap[s.key]
+                    ? generateLongContent(s.title, 28)
+                    : generateLongContent(s.title, 28);
+                    await db.insert(servicePosts).values({
                     slug: s.key,
                     title: s.title,
                     excerpt: s.description,
-                    content: `<p>${s.description}</p>`,
+                    content: basePostContent,
                     thumbnail: s.image,
                     icon: s.icon,
-                    featured: 0,
+                    featured: index === 0 ? 1 : 0,
                     category_id: category?.id,
                     subcategory_id: subcategoryMap[s.key],
                     price: '499.00',

@@ -21,6 +21,7 @@ type ServiceRecord = {
     meta_title?: string | null;
     meta_description?: string | null;
     price?: string | null;
+    currency?: string | null;
     price_type?: string | null;
     price_label?: string | null;
     price_description?: string | null;
@@ -141,7 +142,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
     const { slug } = await params;
 
     // Helper function to get currency symbol
-    const getCurrencySymbol = (currency: string | null) => {
+    const getCurrencySymbol = (currency?: string | null) => {
         const symbols: Record<string, string> = {
             'USD': '$',
             'EUR': '€',
@@ -238,40 +239,50 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                             {/* Sidebar */}
                             <aside className="space-y-6 sticky top-20 self-start">
                                 {/* Pricing Card */}
-                                {post.price && (
-                                    <div className="bg-white rounded-xl p-6 border-2 border-primary shadow-lg">
-                                        <div className="text-center mb-6">
-                                            <div className="text-sm font-semibold text-primary uppercase tracking-wide mb-2">
-                                                {post.price_label || 'Pricing'}
+                                {/* Combined Pricing + CTA Card (or Ready CTA when no pricing) */}
+                                {post.price ? (
+                                    <div className="bg-linear-to-br from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+                                        <div className="flex items-center justify-between gap-4 mb-4">
+                                            <div>
+                                                <div className="text-sm font-semibold uppercase tracking-wide mb-1 text-white/90">{post.price_label || 'Pricing'}</div>
+                                                {post.price ? (
+                                                    <div className="text-3xl font-extrabold text-white">
+                                                        {getCurrencySymbol(post.currency)}{post.price}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-lg font-semibold text-white">Pricing on request</div>
+                                                )}
+                                                {post.price_description && (
+                                                    <p className="text-sm text-white/90 mt-2">{post.price_description}</p>
+                                                )}
                                             </div>
-                                            <div className="text-4xl font-bold text-[#0f172a] mb-1">
-                                                {getCurrencySymbol(post.currency)}{post.price}
-                                            </div>
-                                            {post.price_description && (
-                                                <p className="text-sm text-[#475569] mt-2">{post.price_description}</p>
-                                            )}
+                                            <div className="hidden sm:block text-sm text-white/90">{/* reserved for future summary */}</div>
                                         </div>
+                                        <div className="mt-4">
+                                            <a
+                                                href="/contact"
+                                                className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-white text-primary font-semibold rounded-lg hover:shadow-lg transition"
+                                            >
+                                                <span className="material-symbols-outlined">call</span>
+                                                Contact Us
+                                            </a>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-linear-to-br from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+                                        <h3 className="text-xl font-bold mb-2">Ready?</h3>
+                                        <p className="text-white/90 text-sm mb-6">Let's discuss your project needs.</p>
                                         <a
                                             href="/contact"
-                                            className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition shadow-md"
+                                            className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-white text-primary font-semibold rounded-lg hover:shadow-lg transition"
                                         >
-                                            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-                                            Get Started
+                                            <span className="material-symbols-outlined text-[20px]">call</span>
+                                            Contact Us
                                         </a>
                                     </div>
                                 )}
                                 {/* Quick Action Card */}
-                                <div className="bg-linear-to-br from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg">
-                                    <h3 className="text-xl font-bold mb-2">Ready?</h3>
-                                    <p className="text-white/90 text-sm mb-6">Let's discuss your project needs.</p>
-                                    <a
-                                        href="/contact"
-                                        className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-white text-primary font-semibold rounded-lg hover:shadow-lg transition"
-                                    >
-                                        <span className="material-symbols-outlined text-[20px]">call</span>
-                                        Contact Us
-                                    </a>
-                                </div>
+                                {/* Removed duplicated "Ready?" card as combined card covers CTA */}
                                 {/* Service Benefits */}
                                 {serviceDetail && (() => {
                                     let bullets: string[] = [];
