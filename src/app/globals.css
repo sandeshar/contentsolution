@@ -290,3 +290,60 @@ html,
 body {
     font-family: Inter, sans-serif;
 }
+
+/* Thin, subtle scrollbar for admin sidebar */
+.admin-sidebar {
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    /* Firefox thumb color and track */
+}
+
+.admin-sidebar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    /* creates padding effect */
+    background-clip: padding-box;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Thin scrollbar for admin main content (light background) */
+.admin-main {
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: rgba(2, 6, 23, 0.06) transparent;
+    /* thumb, track */
+}
+
+.admin-main::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.admin-main::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.admin-main::-webkit-scrollbar-thumb {
+    background-color: rgba(2, 6, 23, 0.06);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.admin-main::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(2, 6, 23, 0.12);
+}

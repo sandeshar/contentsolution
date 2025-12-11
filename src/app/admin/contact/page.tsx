@@ -292,35 +292,28 @@ export default function ContactAdminPage() {
 
                         {/* Modal Content */}
                         <div className="flex-1 overflow-y-auto p-6">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs font-medium text-slate-500">Name</label>
-                                    <p className="text-sm text-slate-900 mt-1">{selected.name}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-slate-500">Email</label>
-                                    <p className="text-sm text-slate-900 mt-1">{selected.email}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-slate-500">Phone</label>
-                                    <p className="text-sm text-slate-900 mt-1">{selected.phone || '—'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-slate-500">Service</label>
-                                    <p className="text-sm text-slate-900 mt-1">{selected.service || selected.subject || '—'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-slate-500">Status</label>
-                                    <p className="text-sm text-slate-900 mt-1">{selected.status.charAt(0).toUpperCase() + selected.status.slice(1)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-slate-500">Date</label>
-                                    <p className="text-sm text-slate-900 mt-1">{formatDate(selected.createdAt)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-slate-500">Message</label>
-                                    <p className="text-sm text-slate-900 mt-1 whitespace-pre-wrap">{selected.message}</p>
-                                </div>
+                            <div className="space-y-6">
+                                {/* Contact Info */}
+                                <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-slate-200 pb-4">
+                                    <DetailField label="Name" value={selected.name} />
+                                    <DetailField label="Email" value={selected.email} />
+                                    <DetailField label="Phone" value={selected.phone || '—'} />
+                                    <DetailField label="Service" value={selected.service || selected.subject || '—'} />
+                                </section>
+
+                                {/* Message Content */}
+                                <section>
+                                    <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Message</p>
+                                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-md">
+                                        <p className="text-sm text-slate-900 whitespace-pre-wrap wrap-break-word">{selected.message}</p>
+                                    </div>
+                                </section>
+
+                                {/* Meta Info */}
+                                <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-200 pt-4">
+                                    <DetailField label="Status" value={selected.status.charAt(0).toUpperCase() + selected.status.slice(1)} />
+                                    <DetailField label="Date" value={formatDate(selected.createdAt)} />
+                                </section>
                             </div>
                         </div>
 
@@ -397,7 +390,7 @@ function DetailField({ label, value }: { label: string; value: string }) {
     return (
         <div>
             <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">{label}</p>
-            <p className="text-sm font-medium text-slate-900 break-word">{value}</p>
+            <p className="text-sm font-medium text-slate-900 wrap-break-word">{value}</p>
         </div>
     );
 }

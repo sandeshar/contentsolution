@@ -204,7 +204,7 @@ export default function CategoriesManagerPage() {
     }
 
     return (
-        <div className="flex-1 overflow-y-auto bg-slate-50">
+        <div className="flex-1 overflow-y-auto bg-slate-50 h-screen">
             {/* Header */}
             <div className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
                 <div className="px-6 py-4">
@@ -220,8 +220,8 @@ export default function CategoriesManagerPage() {
                         <button
                             onClick={() => setActiveTab("categories")}
                             className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 ${activeTab === "categories"
-                                    ? "bg-gray-900 text-white shadow-md"
-                                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                                ? "bg-gray-900 text-white shadow-md"
+                                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                                 }`}
                         >
                             <span className="material-symbols-outlined text-[18px]">category</span>
@@ -230,8 +230,8 @@ export default function CategoriesManagerPage() {
                         <button
                             onClick={() => setActiveTab("subcategories")}
                             className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 ${activeTab === "subcategories"
-                                    ? "bg-gray-900 text-white shadow-md"
-                                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                                ? "bg-gray-900 text-white shadow-md"
+                                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                                 }`}
                         >
                             <span className="material-symbols-outlined text-[18px]">subdirectory_arrow_right</span>

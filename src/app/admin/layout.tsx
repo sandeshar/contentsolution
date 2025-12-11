@@ -34,9 +34,9 @@ export default async function DashboardLayout({
 }) {
 
     return (
-        <div className="flex">
+        <div className="min-h-screen flex">
             <SideBar />
-            {children}
+            <main className="admin-main flex-1 min-w-0">{children}</main>
         </div>
 
     )

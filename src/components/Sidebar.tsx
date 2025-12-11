@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 const SideBar = () => {
-    const [isUIOpen, setIsUIOpen] = useState(true);
+    const [isUIOpen, setIsUIOpen] = useState(false);
     const [isSEOOpen, setIsSEOOpen] = useState(false);
     const [siteName, setSiteName] = useState('Admin Panel');
 
@@ -30,7 +30,7 @@ const SideBar = () => {
         { name: 'Testimonials', icon: 'reviews', href: '/admin/testimonials' },
         { name: 'Services Manager', icon: 'service_toolbox', href: '/admin/services/manager' },
         { name: 'Category Manager', icon: 'category', href: '/admin/categories' },
-        { name: 'Navbar Manager', icon: 'menu', href: '/admin/navbar' },
+        // Navbar moved to UI Elements
         { name: 'Contact', icon: 'contact_mail', href: '/admin/contact' },
         { name: 'Store Setting', icon: 'settings', href: '/admin/store-setting' },
     ];
@@ -46,10 +46,11 @@ const SideBar = () => {
         { name: 'FaQ', icon: 'help_outline', href: '/admin/ui/faq' },
         { name: 'About', icon: 'info', href: '/admin/ui/about' },
         { name: 'Terms and Conditions', icon: 'description', href: '/admin/ui/termsandconditions' },
+        { name: 'Navbar', icon: 'menu', href: '/admin/navbar' },
     ];
 
     return (
-        <aside className="sticky top-0 flex h-screen w-64 min-w-64 shrink-0 flex-col justify-between border-r border-gray-700 bg-gray-900 p-4 shadow-sm">
+        <aside className="admin-sidebar sticky top-0 flex h-screen max-h-screen w-64 min-w-64 shrink-0 flex-col justify-between border-r border-gray-700 bg-gray-900 p-4 shadow-sm overflow-y-auto overflow-x-hidden">
             <div className="flex flex-col gap-8">
                 <div className="flex items-center gap-3 px-2">
                     <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-white">

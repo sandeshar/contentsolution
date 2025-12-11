@@ -159,7 +159,7 @@ export default function NavbarManagerPage() {
             {/* Header */}
             <div className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
                 <div className="px-6 py-4">
-                    <h1 className="text-2xl font-bold text-slate-900">Navbar Manager</h1>
+                    <h1 className="text-2xl font-bold text-slate-900">Navbar</h1>
                     <p className="text-sm text-slate-500 mt-1">Manage navigation menu items</p>
                 </div>
             </div>
