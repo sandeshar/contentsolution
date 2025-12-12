@@ -30,6 +30,26 @@ export async function POST() {
         await db.delete(servicesPageProcessSteps);
         await db.delete(servicesPageCTA);
 
+        // Ensure essential resources exist so this seeder can run independently
+        const existingUsers = await db.select().from(users).limit(1);
+        if (!existingUsers || existingUsers.length === 0) {
+            const { hashPassword } = await import('@/utils/authHelper');
+            await db.insert(users).values({
+                name: 'Super Admin',
+                email: 'admin@contentsolution.np',
+                password: await hashPassword('password123'),
+                role: 'superadmin',
+            });
+        }
+        const existingStatuses = await db.select().from(status).limit(1);
+        if (!existingStatuses || existingStatuses.length === 0) {
+            await db.insert(status).values([
+                { name: 'draft' },
+                { name: 'published' },
+                { name: 'in-review' },
+            ]);
+        }
+
         const [firstUser] = await db.select().from(users).limit(1);
         const [publishedStatus] = await db.select().from(status).limit(1);
 

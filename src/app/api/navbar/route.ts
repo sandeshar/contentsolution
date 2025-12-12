@@ -16,22 +16,46 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { label, href, order, parent_id, is_button, is_active } = body;
+        const { label, href, order, parent_id, is_button, is_active, is_dropdown } = body;
 
         if (!label || !href) {
             return NextResponse.json({ error: "Label and href are required" }, { status: 400 });
         }
 
-        const result = await db.insert(navbarItems).values({
-            label,
-            href,
-            order: order || 0,
-            parent_id: parent_id || null,
-            is_button: is_button || 0,
-            is_active: is_active !== undefined ? is_active : 1,
-        });
+        // Check for duplicate by href and parent_id to avoid duplicate creation
+        const [existing] = await db
+            .select()
+            .from(navbarItems)
+            .where(
+                eq(navbarItems.href, href),
+                eq(navbarItems.parent_id, parent_id || null),
+                eq(navbarItems.is_button, is_button || 0)
+            )
+            .limit(1);
 
-        return NextResponse.json({ id: result[0].insertId, message: "Navbar item created successfully" });
+        if (existing) {
+            return NextResponse.json({ id: existing.id, message: "Navbar item already exists", existing: true }, { status: 200 });
+        }
+
+        try {
+            const result = await db.insert(navbarItems).values({
+                label,
+                href,
+                order: order || 0,
+                parent_id: parent_id || null,
+                is_button: is_button || 0,
+                is_active: is_active !== undefined ? is_active : 1,
+                is_dropdown: is_dropdown || 0,
+            });
+            return NextResponse.json({ id: result[0].insertId, message: "Navbar item created successfully" }, { status: 201 });
+        } catch (err: any) {
+            // If DB reports duplicate key, return 409
+            const code = err?.cause?.errno || err?.errno || err?.code;
+            if (code === 'ER_DUP_ENTRY' || code === 1062) {
+                return NextResponse.json({ error: 'Duplicate navbar item', details: String(err?.message || err) }, { status: 409 });
+            }
+            throw err;
+        }
     } catch (error) {
         console.error("Error creating navbar item:", error);
         return NextResponse.json({ error: "Failed to create navbar item" }, { status: 500 });
@@ -41,7 +65,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const body = await request.json();
-        const { id, label, href, order, parent_id, is_button, is_active } = body;
+        const { id, label, href, order, parent_id, is_button, is_active, is_dropdown } = body;
 
         if (!id) {
             return NextResponse.json({ error: "ID is required" }, { status: 400 });
@@ -55,6 +79,7 @@ export async function PUT(request: Request) {
                 parent_id: parent_id || null,
                 is_button,
                 is_active,
+                is_dropdown,
                 updated_at: new Date(),
             })
             .where(eq(navbarItems.id, id));

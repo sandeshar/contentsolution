@@ -629,7 +629,6 @@ export async function POST(request: Request) {
             for (const category of categories) {
                 const result = await db.insert(faqCategories).values(category);
                 // drizzle returns insertId on MySQL drivers
-                // @ts-expect-error driver insert metadata
                 categoryIds.push(result[0].insertId);
             }
 
@@ -930,12 +929,14 @@ export async function POST(request: Request) {
 
                 // Seed main navbar items
                 const homeResult = await db.insert(navbarItems).values({ label: 'Home', href: '/', order: 0, is_button: 0, is_active: 1 });
-                const servicesResult = await db.insert(navbarItems).values({ label: 'Services', href: '/services', order: 1, is_button: 0, is_active: 1 });
+                const servicesResult = await db.insert(navbarItems).values({ label: 'Services', href: '/services', order: 1, is_button: 0, is_active: 1, is_dropdown: 1 });
 
                 // Add service categories as dropdown items (parent_id = services item id)
                 if (categories.length > 0) {
                     const servicesId = servicesResult[0].insertId;
                     for (let i = 0; i < categories.length; i++) {
+                        const [catSubs] = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.category_id, categories[i].id)).limit(1);
+                        const isDropdown = !!catSubs ? 1 : 0;
                         await db.insert(navbarItems).values({
                             label: categories[i].name,
                             href: `/services?category=${categories[i].slug}`,
@@ -943,6 +944,7 @@ export async function POST(request: Request) {
                             parent_id: servicesId,
                             is_button: 0,
                             is_active: 1,
+                            is_dropdown: isDropdown,
                         });
                     }
                 }

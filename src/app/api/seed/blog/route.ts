@@ -24,6 +24,26 @@ export async function POST() {
             button_text: "Subscribe"
         });
 
+        // Ensure users and statuses exist so this seeder can run independently
+        const existingUsers = await db.select().from(users).limit(1);
+        if (!existingUsers || existingUsers.length === 0) {
+            const { hashPassword } = await import('@/utils/authHelper');
+            await db.insert(users).values({
+                name: 'Super Admin',
+                email: 'admin@contentsolution.np',
+                password: await hashPassword('password123'),
+                role: 'superadmin',
+            });
+        }
+        const existingStatuses = await db.select().from(status).limit(1);
+        if (!existingStatuses || existingStatuses.length === 0) {
+            await db.insert(status).values([
+                { name: 'draft' },
+                { name: 'published' },
+                { name: 'in-review' },
+            ]);
+        }
+
         // Create a set of realistic, long blog posts
         const [firstUser] = await db.select().from(users).limit(1);
         const [publishedStatus] = await db.select().from(status).limit(1);

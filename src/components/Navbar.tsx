@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
 
 interface NavBarProps {
     storeName: string;
@@ -13,14 +14,34 @@ type NavbarItem = {
     parent_id?: number | null;
     is_button: number;
     is_active: number;
+    is_dropdown?: number;
 };
+
+
+/**
+ * Dropdown layout configuration
+ * - ITEMS_PER_COLUMN: max items per child column (adjust to change number of columns)
+ * - CHILD_COLUMN_WIDTH: width in px of each child column
+ * - GRANDCHILD_COLUMN_WIDTH: width in px of the right-most grandchildren column
+ * - DROPDOWN_MIN_WIDTH: minimum width in px for the overall dropdown container
+ */
+export const ITEMS_PER_COLUMN = 8; // max items per child column
+export const CHILD_COLUMN_WIDTH = 220; // px, width for each child column
+export const GRANDCHILD_COLUMN_WIDTH = 220; // px for right-most grandchildren column
+export const DROPDOWN_MIN_WIDTH = 360; // minimum px for dropdown container
+export const CLOSE_DELAY_MS = 200;
+export const CHILD_CLOSE_DELAY_MS = 150;
 
 const NavBar = ({ storeName }: NavBarProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [navLinks, setNavLinks] = useState<NavbarItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+    const [openChildDropdown, setOpenChildDropdown] = useState<number | null>(null);
+    const closeTimerRef = useRef<number | null>(null);
+    const childCloseTimerRef = useRef<number | null>(null);
     const [mobileOpenDropdown, setMobileOpenDropdown] = useState<number | null>(null);
+    const [mobileOpenChild, setMobileOpenChild] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchNavItems = async () => {
@@ -74,16 +95,27 @@ const NavBar = ({ storeName }: NavBarProps) => {
                     <nav className="flex items-center gap-9">
                         {navLinks.filter(link => link.is_button === 0 && !link.parent_id).map((link) => {
                             const children = getChildren(link.id);
-                            const hasDropdown = children.length > 0;
+                            const colCount = Math.max(1, Math.ceil(children.length / ITEMS_PER_COLUMN));
+                            const containerMinWidth = Math.max(DROPDOWN_MIN_WIDTH, colCount * CHILD_COLUMN_WIDTH + GRANDCHILD_COLUMN_WIDTH);
+                            const hasDropdown = link.is_dropdown === 1 && children.length > 0;
 
                             return (
                                 <div
                                     key={link.id}
                                     className="relative"
-                                    onMouseEnter={() => hasDropdown && setOpenDropdown(link.id)}
-                                    onMouseLeave={() => setOpenDropdown(null)}
+                                    onMouseEnter={() => {
+                                        if (closeTimerRef.current) {
+                                            window.clearTimeout(closeTimerRef.current);
+                                            closeTimerRef.current = null;
+                                        }
+                                        hasDropdown && setOpenDropdown(link.id);
+                                    }}
+                                    onMouseLeave={() => {
+                                        // brief delay before closing to allow cursor to move into dropdown area
+                                        closeTimerRef.current = window.setTimeout(() => setOpenDropdown(null), CLOSE_DELAY_MS);
+                                    }}
                                 >
-                                    <a
+                                    <Link
                                         className="text-sm font-medium leading-normal text-slate-700 hover:text-primary transition-colors flex items-center gap-1"
                                         href={link.href}
                                     >
@@ -91,19 +123,107 @@ const NavBar = ({ storeName }: NavBarProps) => {
                                         {hasDropdown && (
                                             <span className="material-symbols-outlined text-sm">expand_more</span>
                                         )}
-                                    </a>
-
+                                    </Link>
                                     {hasDropdown && openDropdown === link.id && (
-                                        <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50">
-                                            {children.map((child) => (
-                                                <a
-                                                    key={child.id}
-                                                    href={child.href}
-                                                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-primary transition-colors"
-                                                >
-                                                    {child.label}
-                                                </a>
-                                            ))}
+                                        <div
+                                            className="absolute top-full left-0 translate-y-0 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-60 pointer-events-auto flex"
+                                            style={{ minWidth: `${containerMinWidth}px`, position: 'absolute' }}
+                                            style={{ minWidth: `${containerMinWidth}px` }}
+                                            onMouseEnter={() => {
+                                                if (closeTimerRef.current) {
+                                                    window.clearTimeout(closeTimerRef.current);
+                                                    closeTimerRef.current = null;
+                                                }
+                                                setOpenDropdown(link.id);
+                                            }}
+                                            onMouseLeave={() => {
+                                                closeTimerRef.current = window.setTimeout(() => setOpenDropdown(null), CLOSE_DELAY_MS);
+                                            }}
+                                        >
+                                            <div className={`flex-1 px-0 py-1 flex gap-0`}>
+                                                {
+                                                    (() => {
+                                                        // chunk children into columns using ITEMS_PER_COLUMN
+                                                        const perCol = ITEMS_PER_COLUMN;
+                                                        const cols: any[] = [];
+                                                        for (let i = 0; i < children.length; i += perCol) {
+                                                            cols.push(children.slice(i, i + perCol));
+                                                        }
+                                                        return cols.map((col, colIdx) => (
+                                                            <div key={`col-${colIdx}`} className="flex flex-col p-1 gap-0" style={{ width: CHILD_COLUMN_WIDTH }} onMouseEnter={() => setOpenDropdown(link.id)}>
+                                                                {col.map((child) => {
+                                                                    const grandchildren = getChildren(child.id);
+                                                                    const childHasDesc = grandchildren.length > 0;
+                                                                    return (
+                                                                        <div
+                                                                            key={child.id}
+                                                                            className="relative"
+                                                                            onMouseEnter={() => {
+                                                                                if (childCloseTimerRef.current) {
+                                                                                    window.clearTimeout(childCloseTimerRef.current);
+                                                                                    childCloseTimerRef.current = null;
+                                                                                }
+                                                                                childHasDesc && setOpenChildDropdown(child.id);
+                                                                            }}
+                                                                            onMouseLeave={() => {
+                                                                                if (childCloseTimerRef.current) window.clearTimeout(childCloseTimerRef.current);
+                                                                                childCloseTimerRef.current = window.setTimeout(() => setOpenChildDropdown(null), CHILD_CLOSE_DELAY_MS);
+                                                                            }}
+                                                                        >
+                                                                            <Link
+                                                                                href={child.href}
+                                                                                className="px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-primary transition-colors flex items-center justify-between"
+                                                                            >
+                                                                                <span>{child.label}</span>
+                                                                                {childHasDesc && (
+                                                                                    <span className="material-symbols-outlined text-xs">chevron_right</span>
+                                                                                )}
+                                                                            </Link>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        ));
+                                                    })()
+                                                }
+                                            </div>
+                                            <div
+                                                className="border-l border-slate-100"
+                                                style={{ width: `${GRANDCHILD_COLUMN_WIDTH}px` }}
+                                                onMouseEnter={() => {
+                                                    if (childCloseTimerRef.current) {
+                                                        window.clearTimeout(childCloseTimerRef.current);
+                                                        childCloseTimerRef.current = null;
+                                                    }
+                                                    setOpenDropdown(link.id);
+                                                }}
+                                                onMouseLeave={() => {
+                                                    if (childCloseTimerRef.current) window.clearTimeout(childCloseTimerRef.current);
+                                                    childCloseTimerRef.current = window.setTimeout(() => setOpenChildDropdown(null), CHILD_CLOSE_DELAY_MS);
+                                                }}
+                                            >
+                                                {children.map((child) => {
+                                                    const grandchildren = getChildren(child.id);
+                                                    if (!grandchildren.length) return null;
+                                                    return (
+                                                        <div
+                                                            key={`col-${child.id}`}
+                                                            onMouseEnter={() => setOpenChildDropdown(child.id)}
+                                                            className={`py-1 ${openChildDropdown === child.id ? 'block' : 'hidden'}`}
+                                                        >
+                                                            {grandchildren.map((gc) => (
+                                                                <Link
+                                                                    key={gc.id}
+                                                                    href={gc.href}
+                                                                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-primary transition-colors"
+                                                                >
+                                                                    {gc.label}
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -122,7 +242,14 @@ const NavBar = ({ storeName }: NavBarProps) => {
                 </div>
                 <div className="md:hidden">
                     <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        onClick={() => {
+                            const willOpen = !isMenuOpen;
+                            setIsMenuOpen(willOpen);
+                            if (!willOpen) {
+                                setMobileOpenDropdown(null);
+                                setMobileOpenChild(null);
+                            }
+                        }}
                         className="flex items-center justify-center p-2 rounded-lg hover:bg-slate-200 transition-colors"
                         aria-label="Toggle menu"
                     >
@@ -139,8 +266,9 @@ const NavBar = ({ storeName }: NavBarProps) => {
                     <nav className="flex flex-col px-4 py-4 gap-1">
                         {navLinks.filter(link => link.is_button === 0 && !link.parent_id).map((link) => {
                             const children = getChildren(link.id);
-                            const hasDropdown = children.length > 0;
+                            const hasDropdown = link.is_dropdown === 1 && children.length > 0;
                             const isExpanded = mobileOpenDropdown === link.id;
+
 
                             return (
                                 <div key={link.id}>
@@ -165,16 +293,47 @@ const NavBar = ({ storeName }: NavBarProps) => {
                                     </div>
                                     {hasDropdown && isExpanded && (
                                         <div className="pl-4 mt-1 flex flex-col gap-1">
-                                            {children.map((child) => (
-                                                <a
-                                                    key={child.id}
-                                                    href={child.href}
-                                                    className="text-sm text-slate-600 hover:text-primary hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors"
-                                                    onClick={() => setIsMenuOpen(false)}
-                                                >
-                                                    {child.label}
-                                                </a>
-                                            ))}
+                                            {children.map((child) => {
+                                                const grandchildren = getChildren(child.id);
+                                                const childOpen = mobileOpenChild === child.id;
+                                                return (
+                                                    <div key={`m-${child.id}`}>
+                                                        <div className="flex items-center justify-between">
+                                                            <a
+                                                                href={child.href}
+                                                                className="text-sm text-slate-600 hover:text-primary hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors flex-1"
+                                                                onClick={() => setIsMenuOpen(false)}
+                                                            >
+                                                                {child.label}
+                                                            </a>
+                                                            {grandchildren.length > 0 && (
+                                                                <button
+                                                                    onClick={() => setMobileOpenChild(childOpen ? null : child.id)}
+                                                                    className="px-2 py-2 text-slate-700 hover:text-primary"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-sm">
+                                                                        {childOpen ? 'expand_less' : 'expand_more'}
+                                                                    </span>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        {grandchildren.length > 0 && childOpen && (
+                                                            <div className="pl-4 mt-1 flex flex-col gap-1">
+                                                                {grandchildren.map((gc) => (
+                                                                    <a
+                                                                        key={`g-${gc.id}`}
+                                                                        href={gc.href}
+                                                                        className="text-sm text-slate-600 hover:text-primary hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors"
+                                                                        onClick={() => setIsMenuOpen(false)}
+                                                                    >
+                                                                        {gc.label}
+                                                                    </a>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
