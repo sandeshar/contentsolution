@@ -317,7 +317,8 @@ export async function POST(request: Request) {
         // 5. Seed Services
         try {
             const [firstUser] = await db.select().from(users).limit(1);
-            const [publishedStatus] = await db.select().from(status).limit(1);
+            const statusRows = await db.select().from(status);
+            const publishedStatus = statusRows.find((s: any) => (s.name || '').toLowerCase() === 'published') || statusRows[0];
 
             // Clean up services
             try {
@@ -476,8 +477,6 @@ export async function POST(request: Request) {
 
                     const postVariants = [
                         { suffix: 'guide', paragraphs: 8 },
-                        { suffix: 'advanced-techniques', paragraphs: 10 },
-                        { suffix: 'case-study', paragraphs: 6 },
                     ];
 
                     for (const [vIndex, variant] of postVariants.entries()) {
@@ -779,7 +778,8 @@ export async function POST(request: Request) {
             await db.delete(blogPageCTA);
             await db.delete(blogPosts);
             const [firstUser] = await db.select().from(users).limit(1);
-            const [publishedStatus] = await db.select().from(status).limit(1);
+            const statusRows = await db.select().from(status);
+            const publishedStatus = statusRows.find((s: any) => (s.name || '').toLowerCase() === 'published') || statusRows[0];
 
             await db.insert(blogPageHero).values({
                 title: 'The Content Solution Blog',

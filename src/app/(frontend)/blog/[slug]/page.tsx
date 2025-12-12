@@ -40,11 +40,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     // Get category from tags for breadcrumb
     const category = post.tags ? post.tags.split(',')[0]?.trim() : 'Blog';
 
-    // Fetch related articles (same category, exclude current post)
+    // Fetch related articles (same category, exclude current post) ordered by newest first
     const relatedPosts = await db
         .select()
         .from(blogPosts)
         .where(eq(blogPosts.status, 2))
+        .orderBy(desc(blogPosts.createdAt))
         .limit(3);
 
     const relatedFiltered = relatedPosts

@@ -17,7 +17,7 @@ const SeedRunner = () => {
     const [error, setError] = useState<string | null>(null);
     const [individualLoading, setIndividualLoading] = useState<string | null>(null);
     const [individualResults, setIndividualResults] = useState<SeedResults>({});
-    const [individualOptions, setIndividualOptions] = useState<Record<string, { clean?: boolean }>>({ navbar: { clean: true } });
+    const [individualOptions, setIndividualOptions] = useState<Record<string, { clean?: boolean }>>({});
 
     const seedTargets = [
         { key: "status", label: "Status (Required First)", priority: true },
@@ -50,17 +50,11 @@ const SeedRunner = () => {
         }
     };
 
-    const runIndividualSeed = async (key: string, opts?: { clean?: boolean }) => {
+    const runIndividualSeed = async (key: string) => {
         setIndividualLoading(key);
         setError(null);
         try {
-            let url = `/api/seed/${key}`;
-            if (opts) {
-                const qs = new URLSearchParams();
-                if (opts.clean) qs.append('clean', 'true');
-                const qsStr = qs.toString();
-                if (qsStr) url = `${url}?${qsStr}`;
-            }
+            const url = `/api/seed/${key}`;
             const res = await fetch(url, { method: "POST" });
             const data: SeedResponse = await res.json();
             const success = res.ok;
@@ -152,7 +146,7 @@ const SeedRunner = () => {
                                     {/* Navbar is cleaned by default; no UI option required */}
                                     <button
                                         type="button"
-                                        onClick={() => runIndividualSeed(key, key === 'navbar' ? { clean: true } : individualOptions[key])}
+                                        onClick={() => runIndividualSeed(key)}
                                         disabled={individualLoading === key}
                                         className="inline-flex h-9 items-center justify-center rounded-lg border border-primary px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                                     >

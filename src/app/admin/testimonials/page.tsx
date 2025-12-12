@@ -31,25 +31,22 @@ function ViewModal({ testimonial, onClose, serviceMap }: { testimonial: Testimon
         .filter(Boolean);
 
     const renderStars = (rating: number) => {
-        const filledStars = Array.from({ length: rating }).map((_, index) => (
+        const r = Math.max(0, Math.min(5, Number(rating) || 0));
+        const filledStars = Array.from({ length: r }).map((_, index) => (
             <span
                 key={`filled-${index}`}
-                className="material-symbols-outlined text-2xl text-yellow-400"
-                style={{
-                    fontVariationSettings: "'FILL' 1, 'wght' 400"
-                }}
+                className="material-symbols text-2xl text-yellow-400"
+                style={{ fontVariationSettings: "'FILL' 1, 'wght' 400" }}
             >
                 star
             </span>
         ));
 
-        const emptyStars = Array.from({ length: 5 - rating }).map((_, index) => (
+        const emptyStars = Array.from({ length: 5 - r }).map((_, index) => (
             <span
                 key={`empty-${index}`}
-                className="material-symbols-outlined text-2xl text-gray-300"
-                style={{
-                    fontVariationSettings: "'FILL' 0, 'wght' 400"
-                }}
+                className="material-symbols text-2xl text-gray-300"
+                style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}
             >
                 star
             </span>
@@ -322,28 +319,32 @@ export default function TestimonialPage() {
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                                         <div className="flex gap-1">
-                                            {Array.from({ length: testimonial.rating }).map((_, index) => (
-                                                <span
-                                                    key={`filled-${index}`}
-                                                    className="material-symbols-outlined text-sm text-yellow-400"
-                                                    style={{
-                                                        fontVariationSettings: "'FILL' 1, 'wght' 400"
-                                                    }}
-                                                >
-                                                    star
-                                                </span>
-                                            ))}
-                                            {Array.from({ length: 5 - testimonial.rating }).map((_, index) => (
-                                                <span
-                                                    key={`empty-${index}`}
-                                                    className="material-symbols-outlined text-sm text-gray-300"
-                                                    style={{
-                                                        fontVariationSettings: "'FILL' 0, 'wght' 400"
-                                                    }}
-                                                >
-                                                    star
-                                                </span>
-                                            ))}
+                                            {(() => {
+                                                const r = Math.max(0, Math.min(5, Number(testimonial.rating) || 0));
+                                                return (
+                                                    <>
+                                                        {Array.from({ length: r }).map((_, index) => (
+                                                            <svg
+                                                                key={index}
+                                                                className={`h-5 w-5 ${index < r ? 'text-yellow-400' : 'text-slate-300'}`}
+                                                                fill="currentColor"
+                                                                viewBox="0 0 20 20"
+                                                            >
+                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.39 2.455a1 1 0 00-.364 1.118l1.287 3.973c.3.922-.755 1.688-1.54 1.118l-3.39-2.454a1 1 0 00-1.175 0l-3.39 2.454c-.784.57-1.838-.196-1.539-1.118l1.286-3.973a1 1 0 00-.364-1.118L2.23 9.401c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69l1.286-3.974z" />
+                                                            </svg>
+                                                        ))}
+                                                        {Array.from({ length: 5 - r }).map((_, index) => (
+                                                            <span
+                                                                key={`empty-${index}`}
+                                                                className="material-symbols text-sm text-gray-300"
+                                                                style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}
+                                                            >
+                                                                star
+                                                            </span>
+                                                        ))}
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">

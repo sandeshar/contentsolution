@@ -44,6 +44,14 @@ export default function SitemapPage() {
         }
     };
 
+    // Prefer a server-configured BASE URL so SSR and client output match.
+    const defaultBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || '';
+    const [baseUrl, setBaseUrl] = useState<string>(defaultBaseUrl);
+
+    useEffect(() => {
+        if (!defaultBaseUrl && typeof window !== 'undefined') setBaseUrl(window.location.origin);
+    }, []);
+
     return (
         <main className="flex-1 flex flex-col">
             <div className="flex-1 p-8 overflow-y-auto">
@@ -73,7 +81,7 @@ export default function SitemapPage() {
                             </div>
                             {lastGenerated && (
                                 <div className="mt-4 text-sm text-slate-500">
-                                    Last generated: {new Date(lastGenerated).toLocaleString()}
+                                    Last generated: {new Date(lastGenerated).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                 </div>
                             )}
                         </div>
@@ -114,7 +122,7 @@ export default function SitemapPage() {
                                         to Google Search Console and other search engines for better indexing.
                                     </p>
                                     <p className="text-sm text-blue-800 mt-2">
-                                        <strong>Sitemap URL:</strong> <code className="bg-white px-2 py-1 rounded">{typeof window !== 'undefined' ? window.location.origin : ''}/sitemap.xml</code>
+                                        <strong>Sitemap URL:</strong> <code className="bg-white px-2 py-1 rounded">{baseUrl ? `${baseUrl}/sitemap.xml` : '/sitemap.xml'}</code>
                                     </p>
                                 </div>
                             </div>

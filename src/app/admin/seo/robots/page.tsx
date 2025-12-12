@@ -7,6 +7,8 @@ export default function RobotsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
+    const defaultBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || '';
+
     useEffect(() => {
         const load = async () => {
             try {
@@ -46,12 +48,8 @@ export default function RobotsPage() {
     };
 
     const handleReset = () => {
-        const defaultRobots = `User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /api/
-
-Sitemap: ${window.location.origin}/sitemap.xml`;
+        const base = defaultBaseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+        const defaultRobots = `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nSitemap: ${base}/sitemap.xml`;
         setContent(defaultRobots);
     };
 

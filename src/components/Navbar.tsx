@@ -17,18 +17,13 @@ type NavbarItem = {
     is_dropdown?: number;
 };
 
-
-/**
- * Dropdown layout configuration
- * - ITEMS_PER_COLUMN: max items per child column (adjust to change number of columns)
- * - CHILD_COLUMN_WIDTH: width in px of each child column
- * - GRANDCHILD_COLUMN_WIDTH: width in px of the right-most grandchildren column
- * - DROPDOWN_MIN_WIDTH: minimum width in px for the overall dropdown container
- */
-export const ITEMS_PER_COLUMN = 8; // max items per child column
-export const CHILD_COLUMN_WIDTH = 220; // px, width for each child column
-export const GRANDCHILD_COLUMN_WIDTH = 220; // px for right-most grandchildren column
-export const DROPDOWN_MIN_WIDTH = 360; // minimum px for dropdown container
+/* Layout constants (unchanged) */
+export const ITEMS_PER_COLUMN = 8;
+export const CHILD_COLUMN_WIDTH = 260;
+export const GRANDCHILD_COLUMN_WIDTH = 320;
+export const SERVICE_COLUMN_WIDTH = 420;
+export const DROPDOWN_MIN_WIDTH = 420;
+export const MAX_SERVICES_PREVIEW = 4;
 export const CLOSE_DELAY_MS = 200;
 export const CHILD_CLOSE_DELAY_MS = 150;
 
@@ -38,199 +33,345 @@ const NavBar = ({ storeName }: NavBarProps) => {
     const [loading, setLoading] = useState(true);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
     const [openChildDropdown, setOpenChildDropdown] = useState<number | null>(null);
-    const closeTimerRef = useRef<number | null>(null);
-    const childCloseTimerRef = useRef<number | null>(null);
+
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const childCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const serviceCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearAllCloseTimers = () => {
+        if (closeTimerRef.current) {
+            clearTimeout(closeTimerRef.current);
+            closeTimerRef.current = null;
+        }
+        if (childCloseTimerRef.current) {
+            clearTimeout(childCloseTimerRef.current);
+            childCloseTimerRef.current = null;
+        }
+        if (serviceCloseTimerRef.current) {
+            clearTimeout(serviceCloseTimerRef.current);
+            serviceCloseTimerRef.current = null;
+        }
+    };
+
     const [mobileOpenDropdown, setMobileOpenDropdown] = useState<number | null>(null);
     const [mobileOpenChild, setMobileOpenChild] = useState<number | null>(null);
+    const [subServices, setSubServices] = useState<Record<string, any[]>>({});
+    const [hoveredSubSlug, setHoveredSubSlug] = useState<string | null>(null);
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchNavItems = async () => {
             try {
                 const response = await fetch('/api/navbar');
                 if (response.ok) {
                     const items = await response.json();
-                    // Filter only active items and sort by order
+                    if (!Array.isArray(items)) throw new Error('Invalid navbar data');
                     const activeItems = items
                         .filter((item: NavbarItem) => item.is_active === 1)
                         .sort((a: NavbarItem, b: NavbarItem) => a.order - b.order);
-                    setNavLinks(activeItems);
+                    if (isMounted) setNavLinks(activeItems);
+                } else {
+                    throw new Error('Failed to fetch navbar');
                 }
             } catch (error) {
                 console.error('Error fetching navbar items:', error);
-                // Fallback to default links if fetch fails
-                setNavLinks([
-                    { id: 1, label: 'Home', href: '/', order: 0, is_button: 0, is_active: 1 },
-                    { id: 2, label: 'Services', href: '/services', order: 1, is_button: 0, is_active: 1 },
-                    { id: 3, label: 'About Us', href: '/about', order: 2, is_button: 0, is_active: 1 },
-                    { id: 4, label: 'Blog', href: '/blog', order: 3, is_button: 0, is_active: 1 },
-                    { id: 5, label: 'FAQ', href: '/faq', order: 4, is_button: 0, is_active: 1 },
-                    { id: 6, label: 'Contact', href: '/contact', order: 5, is_button: 0, is_active: 1 },
-                ]);
+                if (isMounted) {
+                    setNavLinks([
+                        { id: 1, label: 'Home', href: '/', order: 0, is_button: 0, is_active: 1 },
+                        { id: 2, label: 'Services', href: '/services', order: 1, is_button: 0, is_active: 1 },
+                        { id: 3, label: 'About Us', href: '/about', order: 2, is_button: 0, is_active: 1 },
+                        { id: 4, label: 'Blog', href: '/blog', order: 3, is_button: 0, is_active: 1 },
+                        { id: 5, label: 'FAQ', href: '/faq', order: 4, is_button: 0, is_active: 1 },
+                        { id: 6, label: 'Contact', href: '/contact', order: 5, is_button: 0, is_active: 1 },
+                    ]);
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
+
         fetchNavItems();
+
+        return () => {
+            isMounted = false;
+            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+            if (childCloseTimerRef.current) clearTimeout(childCloseTimerRef.current);
+            if (serviceCloseTimerRef.current) clearTimeout(serviceCloseTimerRef.current);
+        };
     }, []);
 
-    // Get children for a parent item
+    // When a desktop dropdown closes, clear the dependent right-panel state.
+    useEffect(() => {
+        if (openDropdown === null) {
+            setOpenChildDropdown(null);
+            setHoveredSubSlug(null);
+        }
+    }, [openDropdown]);
+
+    // Helpers
     const getChildren = (parentId: number) => {
-        return navLinks.filter(item => item.parent_id === parentId && item.is_button === 0);
+        return navLinks.filter((item) => Number(item.parent_id ?? 0) === parentId && item.is_button === 0);
     };
 
-    // Check if item has children
-    const hasChildren = (itemId: number) => {
-        return navLinks.some(item => item.parent_id === itemId);
+    const hasChildren = (itemId: number) => navLinks.some((item) => Number(item.parent_id ?? 0) === itemId);
+
+    const safeParseSubcategoryFromHref = (href: string): string | null => {
+        try {
+            // if href is relative, new URL with origin works
+            const url = new URL(href, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+            return url.searchParams.get('subcategory') || null;
+        } catch (err) {
+            return null;
+        }
+    };
+
+    // fetch subServices for a subSlug if needed
+    const fetchSubServicesIfNeeded = (subSlug: string) => {
+        if (!subServices[subSlug]) {
+            fetch(`/api/services?subcategory=${encodeURIComponent(subSlug)}&status=2&limit=${MAX_SERVICES_PREVIEW}`)
+                .then((r) => (r.ok ? r.json() : []))
+                .then((data) => setSubServices((prev) => ({ ...prev, [subSlug]: Array.isArray(data) ? data : [] })))
+                .catch((err) => console.error('Failed to fetch subcategory services', err));
+        }
+    };
+
+    const initDesktopRightPanels = (children: NavbarItem[]) => {
+        const firstChild = children.find((c) => getChildren(c.id).length > 0) ?? children[0];
+        if (!firstChild) {
+            setOpenChildDropdown(null);
+            setHoveredSubSlug(null);
+            return;
+        }
+
+        setOpenChildDropdown(firstChild.id);
+
+        const grandchildren = getChildren(firstChild.id);
+        const firstSubSlug = grandchildren.map((gc) => safeParseSubcategoryFromHref(gc.href)).find(Boolean) ?? null;
+        if (firstSubSlug) {
+            setHoveredSubSlug(firstSubSlug);
+            fetchSubServicesIfNeeded(firstSubSlug);
+        } else {
+            setHoveredSubSlug(null);
+        }
     };
 
     return (
-        <header
-            className="sticky top-0 z-50 flex items-center justify-center border-b border-solid border-slate-200/80 bg-background-light/80 backdrop-blur-sm">
+        <header className="sticky top-0 z-50 flex items-center justify-center border-b border-solid border-slate-200/80 bg-background-light/80 backdrop-blur-sm">
             <div className="flex items-center justify-between whitespace-nowrap px-4 sm:px-6 lg:px-8 py-3 w-full max-w-7xl">
                 <a href="/" className="flex items-center gap-4 text-slate-900 hover:opacity-90 transition-opacity">
                     <span className="material-symbols-outlined text-primary text-3xl">hub</span>
                     <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">{storeName}</h2>
                 </a>
+
                 <div className="hidden md:flex flex-1 justify-end gap-8">
                     <nav className="flex items-center gap-9">
-                        {navLinks.filter(link => link.is_button === 0 && !link.parent_id).map((link) => {
-                            const children = getChildren(link.id);
-                            const colCount = Math.max(1, Math.ceil(children.length / ITEMS_PER_COLUMN));
-                            const containerMinWidth = Math.max(DROPDOWN_MIN_WIDTH, colCount * CHILD_COLUMN_WIDTH + GRANDCHILD_COLUMN_WIDTH);
-                            const hasDropdown = link.is_dropdown === 1 && children.length > 0;
+                        {navLinks
+                            .filter((link) => link.is_button === 0 && (link.parent_id == null || link.parent_id === 0))
+                            .map((link) => {
+                                const children = getChildren(link.id);
+                                const colCount = Math.max(1, Math.ceil(children.length / ITEMS_PER_COLUMN));
+                                const containerMinWidth = Math.max(
+                                    DROPDOWN_MIN_WIDTH,
+                                    colCount * CHILD_COLUMN_WIDTH + GRANDCHILD_COLUMN_WIDTH + SERVICE_COLUMN_WIDTH
+                                );
+                                const hasDropdown = link.is_dropdown === 1 && children.length > 0;
 
-                            return (
-                                <div
-                                    key={link.id}
-                                    className="relative"
-                                    onMouseEnter={() => {
-                                        if (closeTimerRef.current) {
-                                            window.clearTimeout(closeTimerRef.current);
-                                            closeTimerRef.current = null;
-                                        }
-                                        hasDropdown && setOpenDropdown(link.id);
-                                    }}
-                                    onMouseLeave={() => {
-                                        // brief delay before closing to allow cursor to move into dropdown area
-                                        closeTimerRef.current = window.setTimeout(() => setOpenDropdown(null), CLOSE_DELAY_MS);
-                                    }}
-                                >
-                                    <Link
-                                        className="text-sm font-medium leading-normal text-slate-700 hover:text-primary transition-colors flex items-center gap-1"
-                                        href={link.href}
-                                    >
-                                        {link.label}
-                                        {hasDropdown && (
-                                            <span className="material-symbols-outlined text-sm">expand_more</span>
-                                        )}
-                                    </Link>
-                                    {hasDropdown && openDropdown === link.id && (
-                                        <div
-                                            className="absolute top-full left-0 translate-y-0 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-60 pointer-events-auto flex"
-                                            style={{ minWidth: `${containerMinWidth}px`, position: 'absolute' }}
-                                            style={{ minWidth: `${containerMinWidth}px` }}
-                                            onMouseEnter={() => {
-                                                if (closeTimerRef.current) {
-                                                    window.clearTimeout(closeTimerRef.current);
-                                                    closeTimerRef.current = null;
+                                return (
+                                    <div
+                                        key={link.id}
+                                        className="static"
+                                        onMouseEnter={() => {
+                                            clearAllCloseTimers();
+                                            if (hasDropdown) {
+                                                if (openDropdown !== link.id) {
+                                                    initDesktopRightPanels(children);
                                                 }
                                                 setOpenDropdown(link.id);
-                                            }}
-                                            onMouseLeave={() => {
-                                                closeTimerRef.current = window.setTimeout(() => setOpenDropdown(null), CLOSE_DELAY_MS);
-                                            }}
+                                            }
+                                        }}
+                                        onMouseLeave={() => {
+                                            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+                                            closeTimerRef.current = setTimeout(() => setOpenDropdown(null), CLOSE_DELAY_MS);
+                                        }}
+                                    >
+                                        <Link
+                                            href={link.href}
+                                            className="text-sm font-medium leading-normal text-slate-700 hover:text-primary transition-colors flex items-center gap-1"
                                         >
-                                            <div className={`flex-1 px-0 py-1 flex gap-0`}>
-                                                {
-                                                    (() => {
-                                                        // chunk children into columns using ITEMS_PER_COLUMN
-                                                        const perCol = ITEMS_PER_COLUMN;
-                                                        const cols: any[] = [];
-                                                        for (let i = 0; i < children.length; i += perCol) {
-                                                            cols.push(children.slice(i, i + perCol));
-                                                        }
-                                                        return cols.map((col, colIdx) => (
-                                                            <div key={`col-${colIdx}`} className="flex flex-col p-1 gap-0" style={{ width: CHILD_COLUMN_WIDTH }} onMouseEnter={() => setOpenDropdown(link.id)}>
-                                                                {col.map((child) => {
-                                                                    const grandchildren = getChildren(child.id);
-                                                                    const childHasDesc = grandchildren.length > 0;
-                                                                    return (
-                                                                        <div
-                                                                            key={child.id}
-                                                                            className="relative"
-                                                                            onMouseEnter={() => {
-                                                                                if (childCloseTimerRef.current) {
-                                                                                    window.clearTimeout(childCloseTimerRef.current);
-                                                                                    childCloseTimerRef.current = null;
-                                                                                }
-                                                                                childHasDesc && setOpenChildDropdown(child.id);
-                                                                            }}
-                                                                            onMouseLeave={() => {
-                                                                                if (childCloseTimerRef.current) window.clearTimeout(childCloseTimerRef.current);
-                                                                                childCloseTimerRef.current = window.setTimeout(() => setOpenChildDropdown(null), CHILD_CLOSE_DELAY_MS);
-                                                                            }}
-                                                                        >
-                                                                            <Link
-                                                                                href={child.href}
-                                                                                className="px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-primary transition-colors flex items-center justify-between"
-                                                                            >
-                                                                                <span>{child.label}</span>
-                                                                                {childHasDesc && (
-                                                                                    <span className="material-symbols-outlined text-xs">chevron_right</span>
-                                                                                )}
-                                                                            </Link>
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        ));
-                                                    })()
-                                                }
-                                            </div>
+                                            {link.label}
+                                            {hasDropdown && <span className="material-symbols-outlined text-sm">expand_more</span>}
+                                        </Link>
+
+                                        {hasDropdown && openDropdown === link.id && (
                                             <div
-                                                className="border-l border-slate-100"
-                                                style={{ width: `${GRANDCHILD_COLUMN_WIDTH}px` }}
+                                                className="absolute top-full left-0 right-0 w-full bg-white shadow-lg border-b border-slate-200 py-2 z-60 pointer-events-auto"
                                                 onMouseEnter={() => {
-                                                    if (childCloseTimerRef.current) {
-                                                        window.clearTimeout(childCloseTimerRef.current);
-                                                        childCloseTimerRef.current = null;
-                                                    }
+                                                    clearAllCloseTimers();
                                                     setOpenDropdown(link.id);
                                                 }}
                                                 onMouseLeave={() => {
-                                                    if (childCloseTimerRef.current) window.clearTimeout(childCloseTimerRef.current);
-                                                    childCloseTimerRef.current = window.setTimeout(() => setOpenChildDropdown(null), CHILD_CLOSE_DELAY_MS);
+                                                    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+                                                    if (childCloseTimerRef.current) clearTimeout(childCloseTimerRef.current);
+                                                    if (serviceCloseTimerRef.current) clearTimeout(serviceCloseTimerRef.current);
+                                                    closeTimerRef.current = setTimeout(() => setOpenDropdown(null), CLOSE_DELAY_MS);
                                                 }}
                                             >
-                                                {children.map((child) => {
-                                                    const grandchildren = getChildren(child.id);
-                                                    if (!grandchildren.length) return null;
-                                                    return (
-                                                        <div
-                                                            key={`col-${child.id}`}
-                                                            onMouseEnter={() => setOpenChildDropdown(child.id)}
-                                                            className={`py-1 ${openChildDropdown === child.id ? 'block' : 'hidden'}`}
-                                                        >
-                                                            {grandchildren.map((gc) => (
-                                                                <Link
-                                                                    key={gc.id}
-                                                                    href={gc.href}
-                                                                    className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-primary transition-colors"
-                                                                >
-                                                                    {gc.label}
-                                                                </Link>
-                                                            ))}
+                                                <div className="mx-auto w-full max-w-7xl px-4">
+                                                    <div className="flex gap-0 flex-nowrap overflow-x-auto" style={{ minWidth: `${containerMinWidth}px` }}>
+                                                        <div className="flex-1 px-0 py-1 flex gap-0 flex-nowrap">
+                                                            {(() => {
+                                                                const perCol = ITEMS_PER_COLUMN;
+                                                                const cols: NavbarItem[][] = [];
+                                                                for (let i = 0; i < children.length; i += perCol) {
+                                                                    cols.push(children.slice(i, i + perCol));
+                                                                }
+                                                                return cols.map((col, colIdx) => (
+                                                                    <div
+                                                                        key={`col-${colIdx}`}
+                                                                        className="flex flex-1 flex-col p-1 gap-0"
+                                                                        style={{ minWidth: `${CHILD_COLUMN_WIDTH}px` }}
+                                                                        onMouseEnter={() => { clearAllCloseTimers(); setOpenDropdown(link.id); }}
+                                                                    >
+                                                                        {col.map((child) => {
+                                                                            const grandchildren = getChildren(child.id);
+                                                                            const childHasDesc = grandchildren.length > 0;
+                                                                            return (
+                                                                                <div
+                                                                                    key={child.id}
+                                                                                    className="relative"
+                                                                                    onMouseEnter={() => {
+                                                                                        clearAllCloseTimers();
+                                                                                        setOpenChildDropdown(child.id);
+                                                                                        setOpenDropdown(link.id);
+                                                                                    }}
+                                                                                    onMouseLeave={() => {
+                                                                                        if (childCloseTimerRef.current) clearTimeout(childCloseTimerRef.current);
+                                                                                        childCloseTimerRef.current = setTimeout(() => setOpenChildDropdown(null), CHILD_CLOSE_DELAY_MS);
+                                                                                    }}
+                                                                                >
+                                                                                    <Link
+                                                                                        href={child.href}
+                                                                                        className="px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-primary transition-colors flex items-center justify-between"
+                                                                                        onMouseEnter={() => {
+                                                                                            clearAllCloseTimers();
+                                                                                            setOpenDropdown(link.id);
+                                                                                            setOpenChildDropdown(child.id);
+                                                                                            const sub = safeParseSubcategoryFromHref(child.href);
+                                                                                            if (sub) {
+                                                                                                setHoveredSubSlug(sub);
+                                                                                                fetchSubServicesIfNeeded(sub);
+                                                                                            }
+                                                                                        }}
+                                                                                    >
+                                                                                        <span>{child.label}</span>
+                                                                                        {childHasDesc && <span className="material-symbols-outlined text-xs">chevron_right</span>}
+                                                                                    </Link>
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                ));
+                                                            })()}
                                                         </div>
-                                                    );
-                                                })}
+
+                                                        <div
+                                                            className="border-l border-slate-100 flex-none overflow-y-auto max-h-[420px]"
+                                                            style={{ width: `${GRANDCHILD_COLUMN_WIDTH}px` }}
+                                                            onMouseEnter={() => {
+                                                                clearAllCloseTimers();
+                                                                setOpenDropdown(link.id);
+                                                            }}
+                                                            onMouseLeave={() => {
+                                                                if (childCloseTimerRef.current) clearTimeout(childCloseTimerRef.current);
+                                                                childCloseTimerRef.current = setTimeout(() => setOpenChildDropdown(null), CHILD_CLOSE_DELAY_MS);
+                                                            }}
+                                                        >
+                                                            {children.map((child) => {
+                                                                const grandchildren = getChildren(child.id);
+                                                                if (!grandchildren.length) return null;
+                                                                return (
+                                                                    <div
+                                                                        key={`col-${child.id}`}
+                                                                        onMouseEnter={() => setOpenChildDropdown(child.id)}
+                                                                        className={`py-1 ${openChildDropdown === child.id ? 'block' : 'hidden'}`}
+                                                                    >
+                                                                        {grandchildren.map((gc) => {
+                                                                            const subSlug = safeParseSubcategoryFromHref(gc.href);
+                                                                            return (
+                                                                                <div key={`g-${gc.id}`}>
+                                                                                    <Link
+                                                                                        href={gc.href}
+                                                                                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-primary transition-colors"
+                                                                                        onMouseEnter={() => {
+                                                                                            clearAllCloseTimers();
+                                                                                            setOpenDropdown(link.id);
+                                                                                            setOpenChildDropdown(child.id);
+                                                                                            if (subSlug) {
+                                                                                                setHoveredSubSlug(subSlug);
+                                                                                                fetchSubServicesIfNeeded(subSlug);
+                                                                                            }
+                                                                                        }}
+                                                                                        onMouseLeave={() => {
+                                                                                            if (serviceCloseTimerRef.current) clearTimeout(serviceCloseTimerRef.current);
+                                                                                            serviceCloseTimerRef.current = setTimeout(() => setHoveredSubSlug((prev) => (prev === subSlug ? null : prev)), CHILD_CLOSE_DELAY_MS);
+                                                                                        }}
+                                                                                    >
+                                                                                        {gc.label}
+                                                                                    </Link>
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+
+                                                        <div
+                                                            className="border-l border-slate-100 bg-white flex-none overflow-y-auto max-h-[420px]"
+                                                            style={{ width: `${SERVICE_COLUMN_WIDTH}px` }}
+                                                            onMouseEnter={() => {
+                                                                clearAllCloseTimers();
+                                                                setOpenDropdown(link.id);
+                                                            }}
+                                                            onMouseLeave={() => {
+                                                                if (serviceCloseTimerRef.current) clearTimeout(serviceCloseTimerRef.current);
+                                                                serviceCloseTimerRef.current = setTimeout(() => setHoveredSubSlug(null), CHILD_CLOSE_DELAY_MS);
+                                                            }}
+                                                        >
+                                                            <div className="py-2 px-3">
+                                                                {hoveredSubSlug && subServices[hoveredSubSlug] && subServices[hoveredSubSlug].length > 0 ? (
+                                                                    <div className="space-y-2">
+                                                                        {subServices[hoveredSubSlug].map((s) => (
+                                                                            <Link key={s.id} href={`/services/${s.slug}`} className="flex items-center gap-3 hover:bg-slate-50 px-2 py-2 rounded">
+                                                                                {s.thumbnail ? (
+                                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                                    <img src={s.thumbnail} alt={s.title} className="w-12 h-8 object-cover rounded" />
+                                                                                ) : (
+                                                                                    <span className="rounded w-12 h-8 bg-slate-100 block" />
+                                                                                )}
+                                                                                <div className="flex-1">
+                                                                                    <div className="text-sm font-medium text-slate-800 truncate">{s.title}</div>
+                                                                                    <div className="text-xs text-slate-500 truncate">{s.excerpt}</div>
+                                                                                </div>
+                                                                            </Link>
+                                                                        ))}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="text-sm text-slate-400">Hover a subcategory to preview services</div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                        )}
+                                    </div>
+                                );
+                            })}
                     </nav>
-                    {navLinks.filter(link => link.is_button === 1).map((link) => (
+
+                    {navLinks.filter((link) => link.is_button === 1).map((link) => (
                         <a
                             key={link.id}
                             href={link.href}
@@ -240,6 +381,7 @@ const NavBar = ({ storeName }: NavBarProps) => {
                         </a>
                     ))}
                 </div>
+
                 <div className="md:hidden">
                     <button
                         onClick={() => {
@@ -253,9 +395,7 @@ const NavBar = ({ storeName }: NavBarProps) => {
                         className="flex items-center justify-center p-2 rounded-lg hover:bg-slate-200 transition-colors"
                         aria-label="Toggle menu"
                     >
-                        <span className="material-symbols-outlined text-slate-800">
-                            {isMenuOpen ? 'close' : 'menu'}
-                        </span>
+                        <span className="material-symbols-outlined text-slate-800">{isMenuOpen ? 'close' : 'menu'}</span>
                     </button>
                 </div>
             </div>
@@ -264,11 +404,10 @@ const NavBar = ({ storeName }: NavBarProps) => {
             {isMenuOpen && (
                 <div className="md:hidden absolute top-full left-0 right-0 bg-background-light/95 backdrop-blur-sm border-b border-slate-200/80 shadow-lg">
                     <nav className="flex flex-col px-4 py-4 gap-1">
-                        {navLinks.filter(link => link.is_button === 0 && !link.parent_id).map((link) => {
+                        {navLinks.filter((link) => link.is_button === 0 && (link.parent_id == null || link.parent_id === 0)).map((link) => {
                             const children = getChildren(link.id);
                             const hasDropdown = link.is_dropdown === 1 && children.length > 0;
                             const isExpanded = mobileOpenDropdown === link.id;
-
 
                             return (
                                 <div key={link.id}>
@@ -281,16 +420,12 @@ const NavBar = ({ storeName }: NavBarProps) => {
                                             {link.label}
                                         </a>
                                         {hasDropdown && (
-                                            <button
-                                                onClick={() => setMobileOpenDropdown(isExpanded ? null : link.id)}
-                                                className="px-2 py-3 text-slate-700 hover:text-primary"
-                                            >
-                                                <span className="material-symbols-outlined text-sm">
-                                                    {isExpanded ? 'expand_less' : 'expand_more'}
-                                                </span>
+                                            <button onClick={() => setMobileOpenDropdown(isExpanded ? null : link.id)} className="px-2 py-3 text-slate-700 hover:text-primary">
+                                                <span className="material-symbols-outlined text-sm">{isExpanded ? 'expand_less' : 'expand_more'}</span>
                                             </button>
                                         )}
                                     </div>
+
                                     {hasDropdown && isExpanded && (
                                         <div className="pl-4 mt-1 flex flex-col gap-1">
                                             {children.map((child) => {
@@ -307,16 +442,12 @@ const NavBar = ({ storeName }: NavBarProps) => {
                                                                 {child.label}
                                                             </a>
                                                             {grandchildren.length > 0 && (
-                                                                <button
-                                                                    onClick={() => setMobileOpenChild(childOpen ? null : child.id)}
-                                                                    className="px-2 py-2 text-slate-700 hover:text-primary"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-sm">
-                                                                        {childOpen ? 'expand_less' : 'expand_more'}
-                                                                    </span>
+                                                                <button onClick={() => setMobileOpenChild(childOpen ? null : child.id)} className="px-2 py-2 text-slate-700 hover:text-primary">
+                                                                    <span className="material-symbols-outlined text-sm">{childOpen ? 'expand_less' : 'expand_more'}</span>
                                                                 </button>
                                                             )}
                                                         </div>
+
                                                         {grandchildren.length > 0 && childOpen && (
                                                             <div className="pl-4 mt-1 flex flex-col gap-1">
                                                                 {grandchildren.map((gc) => (
@@ -339,7 +470,8 @@ const NavBar = ({ storeName }: NavBarProps) => {
                                 </div>
                             );
                         })}
-                        {navLinks.filter(link => link.is_button === 1).map((link) => (
+
+                        {navLinks.filter((link) => link.is_button === 1).map((link) => (
                             <a
                                 key={link.id}
                                 href={link.href}

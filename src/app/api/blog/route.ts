@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
+import { eq, desc, asc } from 'drizzle-orm';
 import { db } from '@/db';
 import { blogPosts } from '@/db/schema';
 import { getUserIdFromToken } from '@/utils/authHelper';
@@ -114,9 +114,13 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(post[0]);
         }
 
-        // Get all posts
+        // Get all posts (default to date descending)
         console.log('Fetching all posts');
-        const posts = await db.select().from(blogPosts);
+        const sort = searchParams.get('sort') || 'newest';
+        let query = db.select().from(blogPosts);
+        if (sort === 'oldest') query = query.orderBy(asc(blogPosts.createdAt)) as any;
+        else query = query.orderBy(desc(blogPosts.createdAt)) as any;
+        const posts = await query;
         console.log('Found posts:', posts.length);
         return NextResponse.json(posts);
     } catch (error: any) {

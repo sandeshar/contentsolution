@@ -46,7 +46,8 @@ export async function POST() {
 
         // Create a set of realistic, long blog posts
         const [firstUser] = await db.select().from(users).limit(1);
-        const [publishedStatus] = await db.select().from(status).limit(1);
+        const statusRows = await db.select().from(status);
+        const publishedStatus = statusRows.find((s: any) => (s.name || '').toLowerCase() === 'published') || statusRows[0];
 
         if (firstUser && publishedStatus) {
             const generateLongContent = (title: string, paragraphs = 20) => {

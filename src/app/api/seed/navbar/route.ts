@@ -6,14 +6,8 @@ import { eq } from 'drizzle-orm';
 
 export async function POST(request: Request) {
     try {
-        // Don't read existing here - we will handle clean/no-clean below
-        const url = new URL(request.url);
-        // Clean is true by default; pass clean=false to skip deletion.
-        const clean = url.searchParams.get('clean') !== 'false';
-        if (clean) {
-            // Delete everything - reset navbar
-            await db.delete(navbarItems);
-        }
+        // Always clean the navbar items before seeding
+        await db.delete(navbarItems);
 
         // Seed default navbar items
         const defaultItems = [
@@ -26,118 +20,68 @@ export async function POST(request: Request) {
             { label: 'Get a Quote', href: '/contact', order: 6, is_button: 1, is_active: 1 },
         ];
 
-        if (clean) {
-            // Table is cleared; insert defaults unconditionally
-            for (const item of defaultItems) {
-                await db.insert(navbarItems).values(item);
-            }
-        } else {
-            // Insert missing defaults if not present
-            for (const item of defaultItems) {
-                const [found] = await db
-                    .select()
-                    .from(navbarItems)
-                    .where(eq(navbarItems.href, item.href), eq(navbarItems.parent_id, null), eq(navbarItems.is_button, item.is_button || 0))
-                    .limit(1);
-                if (!found) {
-                    await db.insert(navbarItems).values(item);
-                }
-            }
+        // Insert defaults
+        for (let i = 0; i < defaultItems.length; i++) {
+            const item = defaultItems[i];
+            await db.insert(navbarItems).values({ ...item, order: i });
         }
-
-        // Note: default items were already handled above; do not insert them again here.
 
         // Attach service categories as dropdown children under Services.
         const categories = await db.select().from(serviceCategories);
-        if (categories.length === 0) {
-            // Not seeding categories automatically — return helpful message
+        if (!categories || categories.length === 0) {
             return NextResponse.json({ message: 'No service categories found. Run /api/seed/services first' }, { status: 200 });
         }
-        if (categories.length > 0) {
-            // Get the services item id
-            const servicesRow = await db.select().from(navbarItems).where(eq(navbarItems.href, '/services')).limit(1);
-            const servicesId = servicesRow[0]?.id;
-            if (servicesId) {
-                // If not clean and children already exist, skip adding children
-                if (!clean) {
-                    const existingChildren = await db.select().from(navbarItems).where(eq(navbarItems.parent_id, servicesId));
-                    if (existingChildren.length > 0) {
-                        return NextResponse.json({ message: 'Navbar items already seeded' });
-                    }
-                }
 
-                for (let i = 0; i < categories.length; i++) {
-                    const cat = categories[i];
-                    const catHasSub = (await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.category_id, cat.id)).limit(1)).length > 0;
-                    // Avoid duplicates for category children under services
-                    const [existingChild] = await db
-                        .select()
-                        .from(navbarItems)
-                        .where(eq(navbarItems.href, `/services?category=${cat.slug}`), eq(navbarItems.parent_id, servicesId), eq(navbarItems.is_button, 0))
-                        .limit(1);
-                    if (!existingChild) {
+        // Get the Services main nav ID
+        const serviceNavRow = await db.select().from(navbarItems).where(eq(navbarItems.href, '/services')).limit(1);
+        const servicesId = serviceNavRow[0]?.id;
+        if (!servicesId) {
+            return NextResponse.json({ error: 'Services nav item not found' }, { status: 500 });
+        }
+
+        // Insert each category under Services
+        for (let i = 0; i < categories.length; i++) {
+            const cat = categories[i];
+            const subs = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.category_id, cat.id));
+            const catHasSub = Array.isArray(subs) && subs.length > 0;
+
+            const [existingChild] = await db.select().from(navbarItems).where(eq(navbarItems.href, `/services?category=${cat.slug}`), eq(navbarItems.parent_id, servicesId)).limit(1);
+            let catNavId = undefined as number | undefined;
+            if (!existingChild) {
+                await db.insert(navbarItems).values({
+                    label: cat.name,
+                    href: `/services?category=${cat.slug}`,
+                    order: i,
+                    parent_id: servicesId,
+                    is_button: 0,
+                    is_active: 1,
+                    is_dropdown: catHasSub ? 1 : 0,
+                });
+                const created = await db.select().from(navbarItems).where(eq(navbarItems.href, `/services?category=${cat.slug}`), eq(navbarItems.parent_id, servicesId)).limit(1);
+                catNavId = created[0]?.id;
+            } else {
+                catNavId = existingChild.id;
+                // Update dropdown flag if it has subs
+                if (catHasSub && existingChild.is_dropdown !== 1) {
+                    await db.update(navbarItems).set({ is_dropdown: 1 }).where(eq(navbarItems.id, existingChild.id));
+                }
+            }
+
+            if (catHasSub && catNavId) {
+                const subsList = subs;
+                for (let si = 0; si < subsList.length; si++) {
+                    const sub = subsList[si];
+                    const [existingSub] = await db.select().from(navbarItems).where(eq(navbarItems.href, `/services?category=${cat.slug}&subcategory=${sub.slug}`), eq(navbarItems.parent_id, catNavId)).limit(1);
+                    if (!existingSub) {
                         await db.insert(navbarItems).values({
-                            label: cat.name,
-                            href: `/services?category=${cat.slug}`,
-                            order: i,
-                            parent_id: servicesId,
+                            label: sub.name,
+                            href: `/services?category=${cat.slug}&subcategory=${sub.slug}`,
+                            order: si,
+                            parent_id: catNavId,
                             is_button: 0,
                             is_active: 1,
-                            is_dropdown: catHasSub ? 1 : 0,
+                            is_dropdown: 0,
                         });
-                        // after creating the category nav item, create subcategories under it
-                        if (catHasSub) {
-                            // get the newly created nav id
-                            const catInsertResult = await db.select().from(navbarItems).where(eq(navbarItems.href, `/services?category=${cat.slug}`), eq(navbarItems.parent_id, servicesId)).limit(1);
-                            const catNavId = catInsertResult[0]?.id;
-                            if (catNavId) {
-                                const subs = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.category_id, cat.id));
-                                for (let si = 0; si < subs.length; si++) {
-                                    const sub = subs[si];
-                                    const [existingSub] = await db
-                                        .select()
-                                        .from(navbarItems)
-                                        .where(eq(navbarItems.href, `/services?category=${cat.slug}&subcategory=${sub.slug}`), eq(navbarItems.parent_id, catNavId), eq(navbarItems.is_button, 0))
-                                        .limit(1);
-                                    if (!existingSub) {
-                                        await db.insert(navbarItems).values({
-                                            label: sub.name,
-                                            href: `/services?category=${cat.slug}&subcategory=${sub.slug}`,
-                                            order: si,
-                                            parent_id: catNavId,
-                                            is_button: 0,
-                                            is_active: 1,
-                                            is_dropdown: 0,
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // existing category nav found - still create any missing subcategories under it
-                        const catNavId = existingChild.id;
-                        if (catHasSub && catNavId) {
-                            const subs = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.category_id, cat.id));
-                            for (let si = 0; si < subs.length; si++) {
-                                const sub = subs[si];
-                                const [existingSub] = await db
-                                    .select()
-                                    .from(navbarItems)
-                                    .where(eq(navbarItems.href, `/services?category=${cat.slug}&subcategory=${sub.slug}`), eq(navbarItems.parent_id, catNavId), eq(navbarItems.is_button, 0))
-                                    .limit(1);
-                                if (!existingSub) {
-                                    await db.insert(navbarItems).values({
-                                        label: sub.name,
-                                        href: `/services?category=${cat.slug}&subcategory=${sub.slug}`,
-                                        order: si,
-                                        parent_id: catNavId,
-                                        is_button: 0,
-                                        is_active: 1,
-                                        is_dropdown: 0,
-                                    });
-                                }
-                            }
-                        }
                     }
                 }
             }

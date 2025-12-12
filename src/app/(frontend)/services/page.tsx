@@ -6,6 +6,7 @@ import TestimonialSlider from "@/components/shared/TestimonialSlider";
 import { db } from "@/db";
 import { servicePosts } from "@/db/servicePostsSchema";
 import { desc, eq } from "drizzle-orm";
+import { status } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -67,8 +68,6 @@ function mergeServiceDetailsWithPosts(details: any[], posts: any[]) {
     );
 
     const fallbackFromPosts = (posts || [])
-        // Keep only published/active posts (statusId 2 is "Published")
-        .filter((p) => p.statusId === 2)
         // Avoid duplicating services that already have page details
         .filter((p) => !existingSlugs.has((p.slug || '').toLowerCase()))
         .map((p, idx) => ({
@@ -94,11 +93,16 @@ function mergeServiceDetailsWithPosts(details: any[], posts: any[]) {
 
 async function getServicePosts() {
     try {
+        const statusRows = await db.select().from(status);
+        // const publishedStatus = statusRows.find((s: any) => (s.name || '').toLowerCase() === 'published');
+        // const publishedId = publishedStatus ? publishedStatus.id : 2;
+
         const posts = await db
             .select()
             .from(servicePosts)
-            .where(eq(servicePosts.statusId, 2))
-            .orderBy(desc(servicePosts.createdAt));
+            .orderBy(desc(servicePosts.createdAt))
+        // .where(eq(servicePosts.statusId, publishedId))
+        // .orderBy(desc(servicePosts.createdAt));
         return posts;
     } catch (error) {
         console.error('Error fetching service posts:', error);

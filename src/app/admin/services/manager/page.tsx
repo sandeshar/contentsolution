@@ -97,6 +97,7 @@ export default function ServicesManagerPage() {
                     statusId: post?.statusId || 1,
                     metaTitle: post?.meta_title || s.title,
                     metaDescription: post?.meta_description || s.description,
+                    createdAt: post?.createdAt || null,
                     category_id: post?.category_id,
                     subcategory_id: post?.subcategory_id,
                     price: post?.price,
@@ -129,7 +130,78 @@ export default function ServicesManagerPage() {
                 }
             });
 
-            setServicesList(mergedServices);
+            // De-duplicate services by slug (or key) — merge entries and prefer linked posts and detailed records.
+            const dedupedMap = new Map<string, any>();
+            const titleMap = new Map<string, string>(); // maps normalized title to slug in dedupedMap
+            const canonicalSlug = (svc: any) => ((svc.slug || svc.key || '') as string).toLowerCase();
+            const normalizeTitle = (t?: string) => (t || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+            for (const svc of mergedServices) {
+                const slug = canonicalSlug(svc);
+                if (!slug) {
+                    // try to dedupe by normalized title if slug missing
+                    const normTitle = normalizeTitle(svc.title);
+                    if (normTitle && titleMap.has(normTitle)) {
+                        const existingSlug = titleMap.get(normTitle)!;
+                        const existing = dedupedMap.get(existingSlug);
+                        // merge into existing
+                        const merged = { ...existing };
+                        if (!merged.postId && svc.postId) merged.postId = svc.postId;
+                        merged.title = merged.title || svc.title;
+                        merged.description = merged.description || svc.description || svc.excerpt;
+                        merged.excerpt = merged.excerpt || svc.excerpt;
+                        merged.content = merged.content || svc.content;
+                        merged.thumbnail = merged.thumbnail || svc.thumbnail || svc.image;
+                        merged.statusId = merged.statusId || svc.statusId || 1;
+                        merged.metaTitle = merged.metaTitle || svc.metaTitle;
+                        merged.metaDescription = merged.metaDescription || svc.metaDescription;
+                        merged.category_id = merged.category_id || svc.category_id;
+                        merged.subcategory_id = merged.subcategory_id || svc.subcategory_id;
+                        merged.key = merged.key || svc.key;
+                        merged.slug = merged.slug || svc.slug || svc.key;
+                        dedupedMap.set(existingSlug, merged);
+                    } else {
+                        // create a temporary key for entries without slug
+                        const tmpKey = `__no_slug__${Math.random()}`;
+                        dedupedMap.set(tmpKey, svc);
+                        if (svc.title) titleMap.set(normalizeTitle(svc.title), tmpKey);
+                    }
+                    continue;
+                }
+
+                const existing = dedupedMap.get(slug);
+                if (!existing) {
+                    dedupedMap.set(slug, { ...svc });
+                    continue;
+                }
+
+                // Merge fields: prefer existing's detailed data, fall back to svc; prefer postId when present
+                const merged = { ...existing };
+                if (!merged.postId && svc.postId) merged.postId = svc.postId;
+                merged.title = merged.title || svc.title;
+                merged.description = merged.description || svc.description || svc.excerpt;
+                merged.excerpt = merged.excerpt || svc.excerpt;
+                merged.content = merged.content || svc.content;
+                merged.thumbnail = merged.thumbnail || svc.thumbnail || svc.image;
+                merged.statusId = merged.statusId || svc.statusId || 1;
+                merged.metaTitle = merged.metaTitle || svc.metaTitle;
+                merged.metaDescription = merged.metaDescription || svc.metaDescription;
+                merged.category_id = merged.category_id || svc.category_id;
+                merged.subcategory_id = merged.subcategory_id || svc.subcategory_id;
+                merged.key = merged.key || svc.key;
+                merged.slug = merged.slug || svc.slug || svc.key;
+
+                dedupedMap.set(slug, merged);
+                if (merged.title) titleMap.set(normalizeTitle(merged.title), slug);
+            }
+            // Convert deduped map to array and sort by createdAt desc (recent first)
+            const servicesArray = Array.from(dedupedMap.values());
+            servicesArray.sort((a: any, b: any) => {
+                const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return bDate - aDate;
+            });
+            setServicesList(servicesArray);
             setHeroData(heroRes.ok ? await heroRes.json() : {});
             setProcessSection(procSecRes.ok ? await procSecRes.json() : {});
             setProcessSteps(procStepsRes.ok ? await procStepsRes.json() : []);
@@ -279,22 +351,19 @@ export default function ServicesManagerPage() {
 
         setSaving(true);
         try {
-            if (selectedService.postId) {
-                const postRes = await fetch('/api/services', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: selectedService.postId }),
-                });
-                if (!postRes.ok) throw new Error('Failed to delete service post');
-            }
-
+            // Delete service detail first (if any), then delete the post to avoid FK conflicts
             if (selectedService.id) {
-                const detailRes = await fetch('/api/pages/services/details', {
+                const detailRes = await fetch(`/api/pages/services/details?id=${selectedService.id}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: selectedService.id }),
                 });
                 if (!detailRes.ok) throw new Error('Failed to delete service detail');
+            }
+
+            if (selectedService.postId) {
+                const postRes = await fetch(`/api/services?id=${selectedService.postId}`, {
+                    method: 'DELETE',
+                });
+                if (!postRes.ok) throw new Error('Failed to delete service post');
             }
 
             alert('Service deleted successfully!');

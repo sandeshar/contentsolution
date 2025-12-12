@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@/db';
 import { servicePosts } from '@/db/servicePostsSchema';
-import { getUserIdFromToken } from '@/utils/authHelper';
+import { reviewTestimonialServices } from '@/db/reviewTestimonialServicesSchema';
+import { reviewTestimonials } from '@/db/reviewSchema';
+import { getUserIdFromToken, returnRole } from '@/utils/authHelper';
 
 // GET - Fetch service posts
 export async function GET(request: NextRequest) {
@@ -11,6 +13,9 @@ export async function GET(request: NextRequest) {
         const id = searchParams.get('id');
         const slug = searchParams.get('slug');
         const featured = searchParams.get('featured');
+        const category = searchParams.get('category');
+        const subcategory = searchParams.get('subcategory');
+        const limit = searchParams.get('limit');
         const status = searchParams.get('status');
 
         if (id) {
@@ -43,7 +48,33 @@ export async function GET(request: NextRequest) {
             query = query.where(eq(servicePosts.statusId, parseInt(status))) as any;
         }
 
-        const posts = await query.orderBy(desc(servicePosts.createdAt));
+        // Filter by category slug or id
+        if (category) {
+            const catId = parseInt(category);
+            if (!isNaN(catId)) {
+                query = query.where(eq(servicePosts.category_id, catId)) as any;
+            } else {
+                // If category is a slug, find id by slug
+                const { serviceCategories } = await import('@/db/serviceCategoriesSchema');
+                const catRow = await db.select().from(serviceCategories).where(eq(serviceCategories.slug, category)).limit(1);
+                if (catRow.length) query = query.where(eq(servicePosts.category_id, catRow[0].id)) as any;
+            }
+        }
+
+        // Filter by subcategory slug or id
+        if (subcategory) {
+            const subId = parseInt(subcategory);
+            if (!isNaN(subId)) {
+                query = query.where(eq(servicePosts.subcategory_id, subId)) as any;
+            } else {
+                const { serviceSubcategories } = await import('@/db/serviceCategoriesSchema');
+                const subRow = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.slug, subcategory)).limit(1);
+                if (subRow.length) query = query.where(eq(servicePosts.subcategory_id, subRow[0].id)) as any;
+            }
+        }
+
+        const ordered = query.orderBy(desc(servicePosts.createdAt));
+        const posts = limit && !isNaN(parseInt(limit)) ? await ordered.limit(parseInt(limit)) : await ordered;
 
         return NextResponse.json(posts);
     } catch (error) {
@@ -160,14 +191,74 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete service post
 export async function DELETE(request: NextRequest) {
     try {
+        // Require authentication for delete operations
+        const token = request.cookies.get('admin_auth')?.value;
+        if (!token) {
+            return NextResponse.json({ error: 'Unauthorized - missing token' }, { status: 401 });
+        }
+        const userId = getUserIdFromToken(token);
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 });
+        }
+        const role = returnRole(token);
+        // optionally check role (superadmin required for some endpoints); allow deletion for any valid role here
         const searchParams = request.nextUrl.searchParams;
-        const id = searchParams.get('id');
-
-        if (!id) {
-            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        let id = searchParams.get('id');
+        let slug = searchParams.get('slug');
+        if (!id && !slug) {
+            try {
+                const body = await request.json();
+                if (body && (body.id || body.slug)) {
+                    id = body.id ? String(body.id) : undefined as any;
+                    slug = body.slug ? String(body.slug) : undefined as any;
+                }
+            } catch (err) {
+                // ignore JSON parse errors
+            }
         }
 
-        await db.delete(servicePosts).where(eq(servicePosts.id, parseInt(id)));
+        if (!id && !slug) {
+            return NextResponse.json({ error: 'ID or slug is required' }, { status: 400 });
+        }
+
+        // Resolve slug to id if necessary
+        let postId = id ? parseInt(id) : null;
+        if (!postId && slug) {
+            const postRow = await db.select().from(servicePosts).where(eq(servicePosts.slug, slug)).limit(1);
+            if (!postRow || postRow.length === 0) {
+                return NextResponse.json({ error: 'Service post not found' }, { status: 404 });
+            }
+            postId = postRow[0].id;
+        }
+
+        if (!postId) {
+            return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+        }
+
+        // Check existence
+        const existing = await db.select().from(servicePosts).where(eq(servicePosts.id, postId)).limit(1);
+        if (!existing || existing.length === 0) {
+            return NextResponse.json({ error: 'Service post not found' }, { status: 404 });
+        }
+
+        // Attempts to delete dependent rows first to avoid FK issues (be defensive)
+        try {
+            await db.delete(reviewTestimonialServices).where(eq(reviewTestimonialServices.serviceId, postId as number));
+        } catch (err) {
+            // ignore
+        }
+        try {
+            await db.delete(reviewTestimonials).where(eq(reviewTestimonials.service, postId as number));
+        } catch (err) {
+            // ignore
+        }
+
+        try {
+            await db.delete(servicePosts).where(eq(servicePosts.id, postId as number));
+        } catch (err: any) {
+            console.error('Deletion failed:', err);
+            return NextResponse.json({ error: 'Failed to delete service post', details: err.message || String(err) }, { status: 500 });
+        }
 
         return NextResponse.json({ success: true, message: 'Service post deleted successfully' });
     } catch (error) {
