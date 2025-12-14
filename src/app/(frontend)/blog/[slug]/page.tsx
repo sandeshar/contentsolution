@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { db } from '@/db';
 import { blogPosts, storeSettings } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import ShareButtons from '@/components/BlogPage/ShareButtons';
 
 interface BlogPostPageProps {

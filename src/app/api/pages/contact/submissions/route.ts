@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@/db';
 import { contactFormSubmissions } from '@/db/contactPageSchema';
+import { storeSettings } from '@/db/schema';
+import { sendMail } from '@/utils/mailer';
 
 // GET - Fetch form submissions
 export async function GET(request: NextRequest) {
@@ -57,6 +59,36 @@ export async function POST(request: NextRequest) {
             message,
             status,
         });
+
+        // Send notification emails (non-blocking): admin + submitter
+        (async () => {
+            try {
+                const rows = await db.select().from(storeSettings).limit(1);
+                const adminEmail = rows.length ? rows[0].contact_email : (process.env.ADMIN_EMAIL || 'admin@contentsolution.np');
+
+                const adminSubject = `New contact form submission from ${name}`;
+                const adminHtml = `<p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
+                    <p><strong>Service:</strong> ${service || 'N/A'}</p>
+                    <p><strong>Subject:</strong> ${subject || 'N/A'}</p>
+                    <p><strong>Message:</strong></p>
+                    <p>${message.replace(/\n/g, '<br/>')}</p>`;
+
+                await sendMail({ to: adminEmail, subject: adminSubject, html: adminHtml });
+
+                const userSubject = `Thanks for contacting ${process.env.NEXT_PUBLIC_SITE_TITLE || 'Our Team'}`;
+                const userHtml = `<p>Hi ${name},</p>
+                    <p>Thanks for reaching out. We've received your message and will get back to you shortly.</p>
+                    <p><strong>Your message:</strong></p>
+                    <p>${message.replace(/\n/g, '<br/>')}</p>
+                    <p>— ${process.env.NEXT_PUBLIC_SITE_TITLE || 'The Team'}</p>`;
+
+                await sendMail({ to: email, subject: userSubject, html: userHtml });
+            } catch (err) {
+                console.error('Error sending contact submission emails:', err);
+            }
+        })();
 
         return NextResponse.json(
             { success: true, message: 'Submission created successfully', id: result[0].insertId },

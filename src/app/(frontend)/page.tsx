@@ -4,20 +4,18 @@ import Hero from "@/components/Homepage/Hero";
 import Trust from "@/components/Homepage/Trust";
 import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
 
 async function getHomepageData() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     try {
         const [heroRes, trustSectionRes, trustLogosRes, expertiseSectionRes, expertiseItemsRes, contactSectionRes] = await Promise.all([
-            fetch(`${baseUrl}/api/pages/homepage/hero`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/homepage/trust-section`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/homepage/trust-logos`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/homepage/expertise-section`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/homepage/expertise-items`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/homepage/contact-section`, { cache: 'no-store' }),
+            fetch(`${baseUrl}/api/pages/homepage/hero`, { next: { tags: ['homepage-hero'] } }),
+            fetch(`${baseUrl}/api/pages/homepage/trust-section`, { next: { tags: ['homepage-trust-section'] } }),
+            fetch(`${baseUrl}/api/pages/homepage/trust-logos`, { next: { tags: ['homepage-trust-logos'] } }),
+            fetch(`${baseUrl}/api/pages/homepage/expertise-section`, { next: { tags: ['homepage-expertise-section'] } }),
+            fetch(`${baseUrl}/api/pages/homepage/expertise-items`, { next: { tags: ['homepage-expertise-items'] } }),
+            fetch(`${baseUrl}/api/pages/homepage/contact-section`, { next: { tags: ['homepage-contact-section'] } }),
         ]);
 
         const hero = heroRes.ok ? await heroRes.json() : {};

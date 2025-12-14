@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { homepageContactSection } from '@/db/homepageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch contact section
 export async function GET(request: NextRequest) {
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
             submit_button_text,
             is_active,
         });
+        revalidateTag('homepage-contact-section', 'max');
 
         return NextResponse.json(
             { success: true, message: 'Contact section created successfully', id: result[0].insertId },
@@ -87,7 +89,7 @@ export async function PUT(request: NextRequest) {
         if (is_active !== undefined) updateData.is_active = is_active;
 
         await db.update(homepageContactSection).set(updateData).where(eq(homepageContactSection.id, id));
-
+        revalidateTag('homepage-contact-section', 'max');
         return NextResponse.json({ success: true, message: 'Contact section updated successfully' });
     } catch (error) {
         console.error('Error updating contact section:', error);
@@ -106,6 +108,7 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(homepageContactSection).where(eq(homepageContactSection.id, parseInt(id)));
+        revalidateTag('homepage-contact-section', 'max');
 
         return NextResponse.json({ success: true, message: 'Contact section deleted successfully' });
     } catch (error) {

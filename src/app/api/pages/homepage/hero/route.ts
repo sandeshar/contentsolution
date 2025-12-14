@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { homepageHero } from '@/db/homepageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch hero section
 export async function GET(request: NextRequest) {
@@ -56,6 +57,8 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
+        revalidateTag('homepage-hero', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Hero section created successfully', id: result[0].insertId },
             { status: 201 }
@@ -85,7 +88,7 @@ export async function PUT(request: NextRequest) {
         if (is_active !== undefined) updateData.is_active = is_active;
 
         await db.update(homepageHero).set(updateData).where(eq(homepageHero.id, id));
-
+        revalidateTag('homepage-hero', 'max');
         return NextResponse.json({ success: true, message: 'Hero section updated successfully' });
     } catch (error) {
         console.error('Error updating hero section:', error);
@@ -104,7 +107,7 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(homepageHero).where(eq(homepageHero.id, parseInt(id)));
-
+        revalidateTag("homepage-hero", 'max');
         return NextResponse.json({ success: true, message: 'Hero section deleted successfully' });
     } catch (error) {
         console.error('Error deleting hero section:', error);

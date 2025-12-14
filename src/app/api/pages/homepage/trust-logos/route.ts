@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, asc } from 'drizzle-orm';
 import { db } from '@/db';
 import { homepageTrustLogos } from '@/db/homepageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch trust logos
 export async function GET(request: NextRequest) {
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
             display_order,
             is_active,
         });
+        revalidateTag('homepage-trust-logos', 'max');
 
         return NextResponse.json(
             { success: true, message: 'Trust logo created successfully', id: result[0].insertId },
@@ -80,6 +82,7 @@ export async function PUT(request: NextRequest) {
         if (is_active !== undefined) updateData.is_active = is_active;
 
         await db.update(homepageTrustLogos).set(updateData).where(eq(homepageTrustLogos.id, id));
+        revalidateTag('homepage-trust-logos', 'max');
 
         return NextResponse.json({ success: true, message: 'Trust logo updated successfully' });
     } catch (error) {
@@ -99,6 +102,7 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(homepageTrustLogos).where(eq(homepageTrustLogos.id, parseInt(id)));
+        revalidateTag('homepage-trust-logos', 'max');
 
         return NextResponse.json({ success: true, message: 'Trust logo deleted successfully' });
     } catch (error) {

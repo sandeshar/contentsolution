@@ -25,7 +25,7 @@ export const servicePosts = mysqlTable("service_posts", {
     currency: varchar("currency", { length: 10 }).default("USD"), // Currency code like USD, EUR, GBP
 
     authorId: int("author_id").references(() => users.id).notNull(),
-    // statusId: int("status_id").references(() => status.id).notNull(),
+    statusId: int("status_id").references(() => status.id).notNull(),
     meta_title: varchar("meta_title", { length: 256 }),
     meta_description: varchar("meta_description", { length: 512 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),

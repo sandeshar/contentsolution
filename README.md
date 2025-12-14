@@ -46,6 +46,18 @@ Create a file named `.env.local` in the project root and populate it with requir
 DATABASE_URL="mysql://<user>:<password>@<host>:<port>/<database>"
 NEXT_PUBLIC_API_BASE_URL="http://localhost:3000"
 NEXT_PUBLIC_ANALYTICS_KEY=""
+```
+
+Email / SMTP (for contact form notifications):
+```
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_smtp_username
+SMTP_PASS=your_smtp_password
+FROM_EMAIL=no-reply@example.com
+ADMIN_EMAIL=admin@example.com
+```
+If `SMTP_*` variables are set, the app will send an admin notification and an acknowledgement email to submitters when a new contact form submission is received. Admin email is read from `store settings` (`contactEmail`) or the `ADMIN_EMAIL` env var as a fallback.
 
 Uploads configuration:
 

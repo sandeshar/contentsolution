@@ -5,8 +5,6 @@ import TeamSection from "@/components/AboutPage/TeamSection";
 import AboutCTA from "@/components/AboutPage/AboutCTA";
 import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
 
 async function getAboutPageData() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -23,15 +21,15 @@ async function getAboutPageData() {
             teamMembersRes,
             ctaRes
         ] = await Promise.all([
-            fetch(`${baseUrl}/api/pages/about/hero`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/about/journey`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/about/stats`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/about/features`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/about/philosophy`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/about/principles`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/about/team-section`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/about/team-members`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/about/cta`, { cache: 'no-store' }),
+            fetch(`${baseUrl}/api/pages/about/hero`, { next: { tags: ['about-hero'] } }),
+            fetch(`${baseUrl}/api/pages/about/journey`, { next: { tags: ['about-journey'] } }),
+            fetch(`${baseUrl}/api/pages/about/stats`, { next: { tags: ['about-stats'] } }),
+            fetch(`${baseUrl}/api/pages/about/features`, { next: { tags: ['about-features'] } }),
+            fetch(`${baseUrl}/api/pages/about/philosophy`, { next: { tags: ['about-philosophy'] } }),
+            fetch(`${baseUrl}/api/pages/about/principles`, { next: { tags: ['about-principles'] } }),
+            fetch(`${baseUrl}/api/pages/about/team-section`, { next: { tags: ['about-team-section'] } }),
+            fetch(`${baseUrl}/api/pages/about/team-members`, { next: { tags: ['about-team-members'] } }),
+            fetch(`${baseUrl}/api/pages/about/cta`, { next: { tags: ['about-cta'] } }),
         ]);
 
         const hero = heroRes.ok ? await heroRes.json() : null;

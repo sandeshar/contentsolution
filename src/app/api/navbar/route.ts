@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { navbarItems } from "@/db/navbarSchema";
-import { eq, asc } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 
 export async function GET() {
     try {
@@ -27,9 +27,11 @@ export async function POST(request: Request) {
             .select()
             .from(navbarItems)
             .where(
-                eq(navbarItems.href, href),
-                eq(navbarItems.parent_id, parent_id || null),
-                eq(navbarItems.is_button, is_button || 0)
+                and(
+                    eq(navbarItems.href, href),
+                    eq(navbarItems.parent_id, parent_id || null),
+                    eq(navbarItems.is_button, is_button || 0)
+                )
             )
             .limit(1);
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { navbarItems } from "@/db/navbarSchema";
 import { serviceCategories, serviceSubcategories } from '@/db/serviceCategoriesSchema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export async function POST(request: Request) {
     try {
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
             const subs = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.category_id, cat.id));
             const catHasSub = Array.isArray(subs) && subs.length > 0;
 
-            const [existingChild] = await db.select().from(navbarItems).where(eq(navbarItems.href, `/services?category=${cat.slug}`), eq(navbarItems.parent_id, servicesId)).limit(1);
+            const [existingChild] = await db.select().from(navbarItems).where(and(eq(navbarItems.href, `/services?category=${cat.slug}`), eq(navbarItems.parent_id, servicesId))).limit(1);
             let catNavId = undefined as number | undefined;
             if (!existingChild) {
                 await db.insert(navbarItems).values({
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
                     is_active: 1,
                     is_dropdown: catHasSub ? 1 : 0,
                 });
-                const created = await db.select().from(navbarItems).where(eq(navbarItems.href, `/services?category=${cat.slug}`), eq(navbarItems.parent_id, servicesId)).limit(1);
+                const created = await db.select().from(navbarItems).where(and(eq(navbarItems.href, `/services?category=${cat.slug}`), eq(navbarItems.parent_id, servicesId))).limit(1);
                 catNavId = created[0]?.id;
             } else {
                 catNavId = existingChild.id;
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
                 const subsList = subs;
                 for (let si = 0; si < subsList.length; si++) {
                     const sub = subsList[si];
-                    const [existingSub] = await db.select().from(navbarItems).where(eq(navbarItems.href, `/services?category=${cat.slug}&subcategory=${sub.slug}`), eq(navbarItems.parent_id, catNavId)).limit(1);
+                    const [existingSub] = await db.select().from(navbarItems).where(and(eq(navbarItems.href, `/services?category=${cat.slug}&subcategory=${sub.slug}`), eq(navbarItems.parent_id, catNavId))).limit(1);
                     if (!existingSub) {
                         await db.insert(navbarItems).values({
                             label: sub.name,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { homepageExpertiseSection } from '@/db/homepageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch expertise section
 export async function GET(request: NextRequest) {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
         }
 
         const result = await db.insert(homepageExpertiseSection).values({ title, description, is_active });
-
+        revalidateTag('homepage-expertise-items', 'max');
         return NextResponse.json(
             { success: true, message: 'Expertise section created successfully', id: result[0].insertId },
             { status: 201 }
@@ -71,6 +72,7 @@ export async function PUT(request: NextRequest) {
         if (is_active !== undefined) updateData.is_active = is_active;
 
         await db.update(homepageExpertiseSection).set(updateData).where(eq(homepageExpertiseSection.id, id));
+        revalidateTag('homepage-expertise-items', 'max');
 
         return NextResponse.json({ success: true, message: 'Expertise section updated successfully' });
     } catch (error) {
@@ -90,6 +92,7 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(homepageExpertiseSection).where(eq(homepageExpertiseSection.id, parseInt(id)));
+        revalidateTag('homepage-expertise-items', 'max');
 
         return NextResponse.json({ success: true, message: 'Expertise section deleted successfully' });
     } catch (error) {

@@ -51,7 +51,7 @@ export async function PUT(request: Request) {
                 name,
                 slug,
                 description: description || null,
-                updated_at: new Date(),
+                updatedAt: new Date(),
             })
             .where(eq(serviceSubcategories.id, id));
 

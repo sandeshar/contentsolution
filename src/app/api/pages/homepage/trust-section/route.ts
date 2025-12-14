@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { homepageTrustSection } from '@/db/homepageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch trust section
 export async function GET(request: NextRequest) {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
         }
 
         const result = await db.insert(homepageTrustSection).values({ heading, is_active });
-
+        revalidateTag('homepage-trust-section', 'max');
         return NextResponse.json(
             { success: true, message: 'Trust section created successfully', id: result[0].insertId },
             { status: 201 }
@@ -70,6 +71,7 @@ export async function PUT(request: NextRequest) {
         if (is_active !== undefined) updateData.is_active = is_active;
 
         await db.update(homepageTrustSection).set(updateData).where(eq(homepageTrustSection.id, id));
+        revalidateTag('homepage-trust-section', 'max');
 
         return NextResponse.json({ success: true, message: 'Trust section updated successfully' });
     } catch (error) {
@@ -89,6 +91,7 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(homepageTrustSection).where(eq(homepageTrustSection.id, parseInt(id)));
+        revalidateTag('homepage-trust-section', 'max');
 
         return NextResponse.json({ success: true, message: 'Trust section deleted successfully' });
     } catch (error) {
