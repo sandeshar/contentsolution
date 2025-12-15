@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { contactPageFormConfig } from '@/db/contactPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch form config
 export async function GET(request: NextRequest) {
@@ -54,6 +55,8 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
+        revalidateTag('contact-form-config', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Form config created successfully', id: result[0].insertId },
             { status: 201 }
@@ -87,6 +90,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(contactPageFormConfig).set(updateData).where(eq(contactPageFormConfig.id, id));
 
+        revalidateTag('contact-form-config', 'max');
+
         return NextResponse.json({ success: true, message: 'Form config updated successfully' });
     } catch (error) {
         console.error('Error updating form config:', error);
@@ -105,6 +110,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(contactPageFormConfig).where(eq(contactPageFormConfig.id, parseInt(id)));
+
+        revalidateTag('contact-form-config', 'max');
 
         return NextResponse.json({ success: true, message: 'Form config deleted successfully' });
     } catch (error) {

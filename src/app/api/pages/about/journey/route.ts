@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { aboutPageJourney } from '@/db/aboutPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch journey section
 export async function GET(request: NextRequest) {
@@ -80,7 +81,7 @@ export async function PUT(request: NextRequest) {
         if (is_active !== undefined) updateData.is_active = is_active;
 
         await db.update(aboutPageJourney).set(updateData).where(eq(aboutPageJourney.id, id));
-
+        revalidateTag('about-journey', 'max');
         return NextResponse.json({ success: true, message: 'Journey section updated successfully' });
     } catch (error) {
         console.error('Error updating journey section:', error);

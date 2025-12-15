@@ -3,10 +3,6 @@ import ServiceDetails from "@/components/ServicesPage/ServiceDetails";
 import ProcessSection from "@/components/ServicesPage/ProcessSection";
 import CTASection from "@/components/ServicesPage/CTASection";
 import TestimonialSlider from "@/components/shared/TestimonialSlider";
-import { db } from "@/db";
-import { servicePosts } from "@/db/servicePostsSchema";
-import { desc, eq } from "drizzle-orm";
-import { status } from '@/db/schema';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -22,11 +18,11 @@ async function getServicesPageData() {
             processStepsRes,
             ctaRes
         ] = await Promise.all([
-            fetch(`${baseUrl}/api/pages/services/hero`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/services/details`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/services/process-section`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/services/process-steps`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/services/cta`, { cache: 'no-store' }),
+            fetch(`/api/pages/services/hero`, { next: { tags: ['services-hero'] } }),
+            fetch(`/api/pages/services/details`, { next: { tags: ['services-details'] } }),
+            fetch(`/api/pages/services/process-section`, { next: { tags: ['services-process-section'] } }),
+            fetch(`/api/pages/services/process-steps`, { next: { tags: ['services-process-steps'] } }),
+            fetch(`/api/pages/services/cta`, { next: { tags: ['services-cta'] } }),
         ]);
 
         const hero = heroRes.ok ? await heroRes.json() : null;
@@ -93,17 +89,8 @@ function mergeServiceDetailsWithPosts(details: any[], posts: any[]) {
 
 async function getServicePosts() {
     try {
-        const statusRows = await db.select().from(status);
-        // const publishedStatus = statusRows.find((s: any) => (s.name || '').toLowerCase() === 'published');
-        // const publishedId = publishedStatus ? publishedStatus.id : 2;
-
-        const posts = await db
-            .select()
-            .from(servicePosts)
-            .orderBy(desc(servicePosts.createdAt))
-        // .where(eq(servicePosts.statusId, publishedId))
-        // .orderBy(desc(servicePosts.createdAt));
-        return posts;
+        const res = await fetch('/api/services', { next: { tags: ['services'] } });
+        return res.ok ? await res.json() : [];
     } catch (error) {
         console.error('Error fetching service posts:', error);
         return [];

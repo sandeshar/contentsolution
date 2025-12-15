@@ -3,8 +3,6 @@ interface TermsHeaderData {
     last_updated: string;
 }
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
 
 interface TermsSectionData {
     id: number;
@@ -19,8 +17,8 @@ async function getTermsData() {
 
     try {
         const [headerRes, sectionsRes] = await Promise.all([
-            fetch(`${baseUrl}/api/pages/terms/header`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/terms/sections`, { cache: 'no-store' })
+            fetch(`${baseUrl}/api/pages/terms/header`, { next: { tags: ['terms-header'] } }),
+            fetch(`${baseUrl}/api/pages/terms/sections`, { next: { tags: ['terms-sections'] } })
         ]);
 
         const headerData = await headerRes.json();

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, desc, asc } from 'drizzle-orm';
+import { eq, desc, asc, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { blogPosts } from '@/db/schema';
 import { getUserIdFromToken } from '@/utils/authHelper';
+import { revalidateTag } from 'next/cache';
 
 export async function POST(request: NextRequest) {
     try {
@@ -50,6 +51,9 @@ export async function POST(request: NextRequest) {
             status: statusId,
         });
 
+        // Revalidate blog post lists and related caches
+        try { revalidateTag('blog-posts', 'max'); } catch (e) { /* ignore */ }
+
         return NextResponse.json(
             {
                 success: true,
@@ -81,6 +85,11 @@ export async function GET(request: NextRequest) {
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
         const slug = searchParams.get('slug');
+        const limit = searchParams.get('limit');
+        const offset = searchParams.get('offset');
+        const search = searchParams.get('search');
+        const category = searchParams.get('category');
+        const meta = searchParams.get('meta');
 
         console.log('GET request - id:', id, 'slug:', slug);
 
@@ -114,13 +123,48 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(post[0]);
         }
 
-        // Get all posts (default to date descending)
-        console.log('Fetching all posts');
+        // Get posts with optional search, category and pagination
+        console.log('Fetching all posts via API');
         const sort = searchParams.get('sort') || 'newest';
-        let query = db.select().from(blogPosts);
+        let query: any = db.select().from(blogPosts).where(eq(blogPosts.status, 2)); // default to published
+
+        if (search) {
+            // search across title, content, tags
+            const { or, like } = await import('drizzle-orm');
+            query = query.where(
+                or(
+                    like(blogPosts.title, `%${search}%`),
+                    like(blogPosts.content, `%${search}%`),
+                    like(blogPosts.tags, `%${search}%`)
+                )!
+            ) as any;
+        }
+
+        if (category) {
+            const { like } = await import('drizzle-orm');
+            query = query.where(like(blogPosts.tags, `%${category}%`)) as any;
+        }
+
         if (sort === 'oldest') query = query.orderBy(asc(blogPosts.createdAt)) as any;
         else query = query.orderBy(desc(blogPosts.createdAt)) as any;
-        const posts = await query;
+
+        // total count
+        const countResult = await db.select({ count: sql<number>`count(*)` }).from(blogPosts).where(eq(blogPosts.status, 2));
+        const total = Number(countResult[0]?.count || 0);
+
+        // pagination
+        let posts: any[];
+        if (limit && !isNaN(parseInt(limit))) {
+            const l = parseInt(limit);
+            const o = offset && !isNaN(parseInt(offset)) ? parseInt(offset) : 0;
+            posts = await query.limit(l).offset(o);
+            if (meta === 'true') {
+                return NextResponse.json({ posts, total });
+            }
+            return NextResponse.json(posts);
+        }
+
+        posts = await query;
         console.log('Found posts:', posts.length);
         return NextResponse.json(posts);
     } catch (error: any) {
@@ -185,6 +229,10 @@ export async function PUT(request: NextRequest) {
             .set(updateData)
             .where(eq(blogPosts.slug, slug));
 
+        try { revalidateTag('blog-posts', 'max'); } catch (e) { /* ignore */ }
+        try { if (newSlug) revalidateTag(`blog-post-${newSlug}`, 'max'); } catch (e) { /* ignore */ }
+        try { revalidateTag(`blog-post-${slug}`, 'max'); } catch (e) { /* ignore */ }
+
         return NextResponse.json(
             {
                 success: true,
@@ -241,6 +289,8 @@ export async function DELETE(request: NextRequest) {
 
         // Delete blog post
         await db.delete(blogPosts).where(eq(blogPosts.id, parseInt(id)));
+
+        try { revalidateTag('blog-posts', 'max'); } catch (e) { /* ignore */ }
 
         return NextResponse.json(
             {

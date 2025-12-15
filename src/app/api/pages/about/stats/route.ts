@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, asc } from 'drizzle-orm';
 import { db } from '@/db';
 import { aboutPageStats } from '@/db/aboutPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch stats
 export async function GET(request: NextRequest) {
@@ -42,6 +43,8 @@ export async function POST(request: NextRequest) {
 
         const result = await db.insert(aboutPageStats).values({ label, value, display_order, is_active });
 
+        revalidateTag('about-stats', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Stat created successfully', id: result[0].insertId },
             { status: 201 }
@@ -70,6 +73,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(aboutPageStats).set(updateData).where(eq(aboutPageStats.id, id));
 
+        revalidateTag('about-stats', 'max');
+
         return NextResponse.json({ success: true, message: 'Stat updated successfully' });
     } catch (error) {
         console.error('Error updating stat:', error);
@@ -88,6 +93,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(aboutPageStats).where(eq(aboutPageStats.id, parseInt(id)));
+
+        revalidateTag('about-stats', 'max');
 
         return NextResponse.json({ success: true, message: 'Stat deleted successfully' });
     } catch (error) {

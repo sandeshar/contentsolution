@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { faqPageHeader } from '@/db/faqPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch header section
 export async function GET(request: NextRequest) {
@@ -44,6 +45,8 @@ export async function POST(request: NextRequest) {
 
         const result = await db.insert(faqPageHeader).values({ title, description, search_placeholder, is_active });
 
+        revalidateTag('faq-header', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Header section created successfully', id: result[0].insertId },
             { status: 201 }
@@ -72,6 +75,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(faqPageHeader).set(updateData).where(eq(faqPageHeader.id, id));
 
+        revalidateTag('faq-header', 'max');
+
         return NextResponse.json({ success: true, message: 'Header section updated successfully' });
     } catch (error) {
         console.error('Error updating header section:', error);
@@ -90,6 +95,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(faqPageHeader).where(eq(faqPageHeader.id, parseInt(id)));
+
+        revalidateTag('faq-header', 'max');
 
         return NextResponse.json({ success: true, message: 'Header section deleted successfully' });
     } catch (error) {

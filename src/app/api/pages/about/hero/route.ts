@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { aboutPageHero } from '@/db/aboutPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch hero section
 export async function GET(request: NextRequest) {
@@ -54,6 +55,8 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
+        revalidateTag('about-hero', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Hero section created successfully', id: result[0].insertId },
             { status: 201 }
@@ -87,6 +90,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(aboutPageHero).set(updateData).where(eq(aboutPageHero.id, id));
 
+        revalidateTag('about-hero', 'max');
+
         return NextResponse.json({ success: true, message: 'Hero section updated successfully' });
     } catch (error) {
         console.error('Error updating hero section:', error);
@@ -105,6 +110,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(aboutPageHero).where(eq(aboutPageHero.id, parseInt(id)));
+
+        revalidateTag('about-hero', 'max');
 
         return NextResponse.json({ success: true, message: 'Hero section deleted successfully' });
     } catch (error) {

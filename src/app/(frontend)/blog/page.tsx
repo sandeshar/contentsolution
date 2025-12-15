@@ -3,9 +3,7 @@ import BlogSearch from "@/components/BlogPage/BlogSearch";
 import BlogGrid from "@/components/BlogPage/BlogGrid";
 import BlogPagination from "@/components/BlogPage/BlogPagination";
 import BlogCTA from "@/components/BlogPage/BlogCTA";
-import { db } from "@/db";
-import { blogPosts, storeSettings } from "@/db/schema";
-import { desc, eq, sql, like, and, or } from "drizzle-orm";
+import { storeSettings } from "@/db/schema";
 import type { Metadata } from "next";
 
 export const dynamic = 'force-dynamic';
@@ -14,9 +12,8 @@ export const fetchCache = 'force-no-store';
 const POSTS_PER_PAGE = 6;
 
 async function getBlogHeroData() {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     try {
-        const res = await fetch(`${baseUrl}/api/pages/blog/hero`, { cache: 'no-store' });
+        const res = await fetch(`/api/pages/blog/hero`, { next: { tags: ['blog-hero'] } });
         return await res.json();
     } catch (error) {
         console.error('Error fetching blog hero:', error);
@@ -59,55 +56,27 @@ export default async function BlogPage({
     const categoryFilter = params.category?.trim() || '';
     const offset = (currentPage - 1) * POSTS_PER_PAGE;
 
-    // Build where conditions
-    const conditions = [eq(blogPosts.status, 2)];
+    // Call blog API with search, category and pagination
+    const q = new URLSearchParams();
+    q.set('limit', String(POSTS_PER_PAGE));
+    q.set('offset', String(offset));
+    if (searchQuery) q.set('search', searchQuery);
+    if (categoryFilter && categoryFilter !== 'All') q.set('category', categoryFilter);
+    q.set('meta', 'true');
 
-    // Add search filter (search in title, content, and tags)
-    if (searchQuery) {
-        conditions.push(
-            or(
-                like(blogPosts.title, `%${searchQuery}%`),
-                like(blogPosts.content, `%${searchQuery}%`),
-                like(blogPosts.tags, `%${searchQuery}%`)
-            )!
-        );
-    }
-
-    // Add category filter (search in tags)
-    if (categoryFilter && categoryFilter !== 'All') {
-        conditions.push(like(blogPosts.tags, `%${categoryFilter}%`));
-    }
-
-    const whereClause = and(...conditions);
-
-    // Fetch published blog posts with pagination and filters
-    const posts = await db
-        .select()
-        .from(blogPosts)
-        .where(whereClause)
-        .orderBy(desc(blogPosts.createdAt))
-        .limit(POSTS_PER_PAGE)
-        .offset(offset);
-
-    // Get total count for pagination
-    const countResult = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(blogPosts)
-        .where(whereClause);
-
-    const totalPosts = Number(countResult[0]?.count || 0);
+    const res = await fetch(`/api/blog?${q.toString()}`, { next: { tags: ['blog-posts'] } });
+    const body = await res.json();
+    const posts = Array.isArray(body) ? body : body.posts || [];
+    const totalPosts = Array.isArray(body) ? body.length : Number(body.total || 0);
     const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
 
-    // Get all unique categories from tags
-    const allPosts = await db
-        .select({ tags: blogPosts.tags })
-        .from(blogPosts)
-        .where(eq(blogPosts.status, 2));
-
+    // Get all unique categories from tags (fallback to fetching all posts)
+    const allRes = await fetch('/api/blog', { next: { tags: ['blog-posts'] } });
+    const allPosts = allRes.ok ? await allRes.json() : [];
     const categoriesSet = new Set<string>();
-    allPosts.forEach(post => {
+    (allPosts || []).forEach((post: any) => {
         if (post.tags) {
-            post.tags.split(',').forEach(tag => {
+            post.tags.split(',').forEach((tag: string) => {
                 const trimmed = tag.trim();
                 if (trimmed) categoriesSet.add(trimmed);
             });
@@ -147,20 +116,25 @@ export default async function BlogPage({
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-    const [store] = await db.select().from(storeSettings).limit(1);
-    const siteName = store?.store_name || "Content Store";
-    const title = `Blog | ${siteName}`;
-    const description = store?.meta_description || store?.store_description || "Read the latest articles.";
-    return {
-        title,
-        description,
-        creator: siteName,
-        publisher: siteName,
-        openGraph: {
-            type: "website",
-            siteName,
+    try {
+        const res = await fetch('/api/store-settings', { cache: 'no-store' });
+        const [store] = res.ok ? await res.json() : [null];
+        const siteName = store?.store_name || "Content Store";
+        const title = `Blog | ${siteName}`;
+        const description = store?.meta_description || store?.store_description || "Read the latest articles.";
+        return {
             title,
             description,
-        },
-    };
+            creator: siteName,
+            publisher: siteName,
+            openGraph: {
+                type: "website",
+                siteName,
+                title,
+                description,
+            },
+        };
+    } catch (error) {
+        return { title: 'Blog' };
+    }
 }

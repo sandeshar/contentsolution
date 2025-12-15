@@ -1,14 +1,7 @@
 
 import { notFound } from "next/navigation";
-import { db } from "@/db";
-import { servicePosts } from "@/db/servicePostsSchema";
-import { servicesPageDetails } from "@/db/servicesPageSchema";
-import { eq } from "drizzle-orm";
 import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
-// Ensure Node runtime (needed for mysql2)
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 type ServiceRecord = {
     id?: number;
@@ -37,55 +30,32 @@ type ServicePostPageProps = {
 };
 
 async function getServicePost(slug: string): Promise<ServiceRecord | null> {
-    // 1) Primary: service_posts
-    const post = await db
-        .select()
-        .from(servicePosts)
-        .where(eq(servicePosts.slug, slug))
-        .limit(1);
+    try {
+        // Try primary source: /api/services by slug
+        const res = await fetch(`/api/services?slug=${encodeURIComponent(slug)}`, { next: { tags: ['services'] } });
+        if (res.ok) {
+            const post = await res.json();
+            if (post && post.id) return post as ServiceRecord;
+        }
 
-    if (post.length) {
-        const p = post[0];
-        return {
-            id: p.id,
-            slug: p.slug,
-            title: p.title,
-            excerpt: p.excerpt,
-            content: p.content,
-            thumbnail: p.thumbnail,
-            icon: p.icon,
-            meta_title: p.meta_title,
-            meta_description: p.meta_description,
-            price: p.price,
-            price_type: p.price_type,
-            price_label: p.price_label,
-            price_description: p.price_description,
-        };
+        // Fallback: services page details by slug or key
+        const detailRes = await fetch(`/api/pages/services/details?slug=${encodeURIComponent(slug)}`, { next: { tags: ['services-details'] } });
+        if (detailRes.ok) {
+            const detail = await detailRes.json();
+            if (detail && detail.id) return normalizeDetail(detail, slug);
+        }
+
+        const detailKeyRes = await fetch(`/api/pages/services/details?key=${encodeURIComponent(slug)}`, { next: { tags: ['services-details'] } });
+        if (detailKeyRes.ok) {
+            const detail = await detailKeyRes.json();
+            if (detail && detail.id) return normalizeDetail(detail, slug);
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error fetching service post via API:', error);
+        return null;
     }
-
-    // 2) Fallback: services_page_details by slug
-    const detailBySlug = await db
-        .select()
-        .from(servicesPageDetails)
-        .where(eq(servicesPageDetails.slug, slug))
-        .limit(1);
-
-    if (detailBySlug.length) {
-        return normalizeDetail(detailBySlug[0], slug);
-    }
-
-    // 3) Fallback: services_page_details by key
-    const detailByKey = await db
-        .select()
-        .from(servicesPageDetails)
-        .where(eq(servicesPageDetails.key, slug))
-        .limit(1);
-
-    if (detailByKey.length) {
-        return normalizeDetail(detailByKey[0], slug);
-    }
-
-    return null;
 }
 
 function normalizeDetail(detail: any, fallbackSlug: string): ServiceRecord {
@@ -104,31 +74,17 @@ function normalizeDetail(detail: any, fallbackSlug: string): ServiceRecord {
 async function getServiceDetailBySlug(slug: string): Promise<ServiceDetail | null> {
     try {
         // Try to find by slug first
-        const detailBySlug = await db
-            .select({
-                title: servicesPageDetails.title,
-                bullets: servicesPageDetails.bullets,
-            })
-            .from(servicesPageDetails)
-            .where(eq(servicesPageDetails.slug, slug))
-            .limit(1);
-
-        if (detailBySlug.length) {
-            return detailBySlug[0];
+        const detailRes = await fetch(`/api/pages/services/details?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
+        if (detailRes.ok) {
+            const detail = await detailRes.json();
+            if (detail && detail.title !== undefined) return detail as ServiceDetail;
         }
 
         // Fallback to key
-        const detailByKey = await db
-            .select({
-                title: servicesPageDetails.title,
-                bullets: servicesPageDetails.bullets,
-            })
-            .from(servicesPageDetails)
-            .where(eq(servicesPageDetails.key, slug))
-            .limit(1);
-
-        if (detailByKey.length) {
-            return detailByKey[0];
+        const detailKeyRes = await fetch(`/api/pages/services/details?key=${encodeURIComponent(slug)}`, { cache: 'no-store' });
+        if (detailKeyRes.ok) {
+            const detail = await detailKeyRes.json();
+            if (detail && detail.title !== undefined) return detail as ServiceDetail;
         }
 
         return null;

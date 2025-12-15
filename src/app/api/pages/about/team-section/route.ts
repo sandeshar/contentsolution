@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { aboutPageTeamSection } from '@/db/aboutPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch team section
 export async function GET(request: NextRequest) {
@@ -44,6 +45,8 @@ export async function POST(request: NextRequest) {
 
         const result = await db.insert(aboutPageTeamSection).values({ title, description, is_active });
 
+        revalidateTag('about-team-section', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Team section created successfully', id: result[0].insertId },
             { status: 201 }
@@ -71,6 +74,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(aboutPageTeamSection).set(updateData).where(eq(aboutPageTeamSection.id, id));
 
+        revalidateTag('about-team-section', 'max');
+
         return NextResponse.json({ success: true, message: 'Team section updated successfully' });
     } catch (error) {
         console.error('Error updating team section:', error);
@@ -89,6 +94,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(aboutPageTeamSection).where(eq(aboutPageTeamSection.id, parseInt(id)));
+
+        revalidateTag('about-team-section', 'max');
 
         return NextResponse.json({ success: true, message: 'Team section deleted successfully' });
     } catch (error) {

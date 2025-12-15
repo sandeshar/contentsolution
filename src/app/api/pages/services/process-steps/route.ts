@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, asc } from 'drizzle-orm';
 import { db } from '@/db';
 import { servicesPageProcessSteps } from '@/db/servicesPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch process steps
 export async function GET(request: NextRequest) {
@@ -51,6 +52,8 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
+        revalidateTag('services-process-steps', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Process step created successfully', id: result[0].insertId },
             { status: 201 }
@@ -80,6 +83,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(servicesPageProcessSteps).set(updateData).where(eq(servicesPageProcessSteps.id, id));
 
+        revalidateTag('services-process-steps', 'max');
+
         return NextResponse.json({ success: true, message: 'Process step updated successfully' });
     } catch (error) {
         console.error('Error updating process step:', error);
@@ -98,6 +103,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(servicesPageProcessSteps).where(eq(servicesPageProcessSteps.id, parseInt(id)));
+
+        revalidateTag('services-process-steps', 'max');
 
         return NextResponse.json({ success: true, message: 'Process step deleted successfully' });
     } catch (error) {

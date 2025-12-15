@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { aboutPageCTA } from '@/db/aboutPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch CTA section
 export async function GET(request: NextRequest) {
@@ -53,6 +54,8 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
+        revalidateTag('about-cta', 'max');
+
         return NextResponse.json(
             { success: true, message: 'CTA section created successfully', id: result[0].insertId },
             { status: 201 }
@@ -85,6 +88,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(aboutPageCTA).set(updateData).where(eq(aboutPageCTA.id, id));
 
+        revalidateTag('about-cta', 'max');
+
         return NextResponse.json({ success: true, message: 'CTA section updated successfully' });
     } catch (error) {
         console.error('Error updating CTA section:', error);
@@ -104,6 +109,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(aboutPageCTA).where(eq(aboutPageCTA.id, parseInt(id)));
+
+        revalidateTag('about-cta', 'max');
 
         return NextResponse.json({ success: true, message: 'CTA section deleted successfully' });
     } catch (error) {

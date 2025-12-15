@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, asc } from 'drizzle-orm';
 import { db } from '@/db';
 import { aboutPagePrinciples } from '@/db/aboutPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch principles
 export async function GET(request: NextRequest) {
@@ -42,6 +43,8 @@ export async function POST(request: NextRequest) {
 
         const result = await db.insert(aboutPagePrinciples).values({ title, description, display_order, is_active });
 
+        revalidateTag('about-principles', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Principle created successfully', id: result[0].insertId },
             { status: 201 }
@@ -70,6 +73,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(aboutPagePrinciples).set(updateData).where(eq(aboutPagePrinciples.id, id));
 
+        revalidateTag('about-principles', 'max');
+
         return NextResponse.json({ success: true, message: 'Principle updated successfully' });
     } catch (error) {
         console.error('Error updating principle:', error);
@@ -88,6 +93,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(aboutPagePrinciples).where(eq(aboutPagePrinciples.id, parseInt(id)));
+
+        revalidateTag('about-principles', 'max');
 
         return NextResponse.json({ success: true, message: 'Principle deleted successfully' });
     } catch (error) {

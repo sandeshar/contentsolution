@@ -5,6 +5,7 @@ import { servicePosts } from '@/db/servicePostsSchema';
 import { reviewTestimonialServices } from '@/db/reviewTestimonialServicesSchema';
 import { reviewTestimonials } from '@/db/reviewSchema';
 import { getUserIdFromToken, returnRole } from '@/utils/authHelper';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch service posts
 export async function GET(request: NextRequest) {
@@ -130,6 +131,8 @@ export async function POST(request: NextRequest) {
             meta_description: metaDescription || null,
         });
 
+        try { revalidateTag('services', 'max'); } catch (e) { /* ignore */ }
+
         return NextResponse.json(
             { success: true, message: 'Service post created successfully', id: result[0].insertId },
             { status: 201 }
@@ -180,6 +183,9 @@ export async function PUT(request: NextRequest) {
         if (metaDescription !== undefined) updateData.metaDescription = metaDescription;
 
         await db.update(servicePosts).set(updateData).where(eq(servicePosts.id, id));
+
+        try { revalidateTag('services', 'max'); } catch (e) { /* ignore */ }
+        try { revalidateTag(`service-${id}`, 'max'); } catch (e) { /* ignore */ }
 
         return NextResponse.json({ success: true, message: 'Service post updated successfully' });
     } catch (error) {
@@ -259,6 +265,8 @@ export async function DELETE(request: NextRequest) {
             console.error('Deletion failed:', err);
             return NextResponse.json({ error: 'Failed to delete service post', details: err.message || String(err) }, { status: 500 });
         }
+
+        try { revalidateTag('services', 'max'); } catch (e) { /* ignore */ }
 
         return NextResponse.json({ success: true, message: 'Service post deleted successfully' });
     } catch (error) {

@@ -7,9 +7,9 @@ import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
 
 async function getAboutPageData() {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
         const [
             heroRes,
             journeyRes,

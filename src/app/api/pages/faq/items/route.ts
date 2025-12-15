@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, asc, and } from 'drizzle-orm';
 import { db } from '@/db';
 import { faqItems } from '@/db/faqPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch FAQ items
 export async function GET(request: NextRequest) {
@@ -63,6 +64,8 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
+        revalidateTag('faq-items', 'max');
+
         return NextResponse.json(
             { success: true, message: 'FAQ item created successfully', id: result[0].insertId },
             { status: 201 }
@@ -92,6 +95,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(faqItems).set(updateData).where(eq(faqItems.id, id));
 
+        revalidateTag('faq-items', 'max');
+
         return NextResponse.json({ success: true, message: 'FAQ item updated successfully' });
     } catch (error) {
         console.error('Error updating FAQ item:', error);
@@ -110,6 +115,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(faqItems).where(eq(faqItems.id, parseInt(id)));
+
+        revalidateTag('faq-items', 'max');
 
         return NextResponse.json({ success: true, message: 'FAQ item deleted successfully' });
     } catch (error) {

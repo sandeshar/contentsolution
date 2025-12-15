@@ -2,8 +2,6 @@ import ContactHero from "@/components/ContactPage/ContactHero";
 import ContactInfo from "@/components/ContactPage/ContactInfo";
 import ContactForm from "@/components/ContactPage/ContactForm";
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
 
 interface ContactHeroData {
     tagline: string;
@@ -34,9 +32,9 @@ async function getContactData() {
 
     try {
         const [heroRes, infoRes, formConfigRes] = await Promise.all([
-            fetch(`${baseUrl}/api/pages/contact/hero`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/contact/info`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/contact/form-config`, { cache: 'no-store' })
+            fetch(`${baseUrl}/api/pages/contact/hero`, { next: { tags: ['contact-hero'] } }),
+            fetch(`${baseUrl}/api/pages/contact/info`, { next: { tags: ['contact-info'] } }),
+            fetch(`${baseUrl}/api/pages/contact/form-config`, { next: { tags: ['contact-form-config'] } })
         ]);
 
         const heroData = await heroRes.json();

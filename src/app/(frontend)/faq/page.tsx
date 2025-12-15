@@ -2,9 +2,6 @@ import CTAButton from '@/components/shared/CTAButton';
 import FAQSection from '@/components/FAQPage/FAQSection';
 import Link from 'next/link';
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-
 interface FAQHeaderData {
     title: string;
     description: string;
@@ -31,14 +28,14 @@ interface FAQCTAData {
 }
 
 async function getFAQData() {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
     try {
         const [headerRes, categoriesRes, itemsRes, ctaRes] = await Promise.all([
-            fetch(`${baseUrl}/api/pages/faq/header`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/faq/categories`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/faq/items`, { cache: 'no-store' }),
-            fetch(`${baseUrl}/api/pages/faq/cta`, { cache: 'no-store' })
+            fetch(`${baseUrl}/api/pages/faq/header`, { next: { tags: ['faq-header'] } }),
+            fetch(`${baseUrl}/api/pages/faq/categories`, { next: { tags: ['faq-categories'] } }),
+            fetch(`${baseUrl}/api/pages/faq/items`, { next: { tags: ['faq-items'] } }),
+            fetch(`${baseUrl}/api/pages/faq/cta`, { next: { tags: ['faq-cta'] } })
         ]);
 
         const headerData = await headerRes.json();

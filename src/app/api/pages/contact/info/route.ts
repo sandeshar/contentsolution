@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { contactPageInfo } from '@/db/contactPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch info section
 export async function GET(request: NextRequest) {
@@ -50,6 +51,8 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
+        revalidateTag('contact-info', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Info section created successfully', id: result[0].insertId },
             { status: 201 }
@@ -79,6 +82,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(contactPageInfo).set(updateData).where(eq(contactPageInfo.id, id));
 
+        revalidateTag('contact-info', 'max');
+
         return NextResponse.json({ success: true, message: 'Info section updated successfully' });
     } catch (error) {
         console.error('Error updating info section:', error);
@@ -97,6 +102,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(contactPageInfo).where(eq(contactPageInfo.id, parseInt(id)));
+
+        revalidateTag('contact-info', 'max');
 
         return NextResponse.json({ success: true, message: 'Info section deleted successfully' });
     } catch (error) {

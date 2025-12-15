@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, asc } from 'drizzle-orm';
 import { db } from '@/db';
 import { aboutPageFeatures } from '@/db/aboutPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch features
 export async function GET(request: NextRequest) {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
         }
 
         const result = await db.insert(aboutPageFeatures).values({ title, description, display_order, is_active });
-
+        revalidateTag('about-features', 'max');
         return NextResponse.json(
             { success: true, message: 'Feature created successfully', id: result[0].insertId },
             { status: 201 }
@@ -70,6 +71,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(aboutPageFeatures).set(updateData).where(eq(aboutPageFeatures.id, id));
 
+        revalidateTag('about-features', 'max');
+
         return NextResponse.json({ success: true, message: 'Feature updated successfully' });
     } catch (error) {
         console.error('Error updating feature:', error);
@@ -88,6 +91,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(aboutPageFeatures).where(eq(aboutPageFeatures.id, parseInt(id)));
+
+        revalidateTag('about-features', 'max');
 
         return NextResponse.json({ success: true, message: 'Feature deleted successfully' });
     } catch (error) {

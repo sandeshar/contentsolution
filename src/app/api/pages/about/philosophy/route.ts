@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { aboutPagePhilosophy } from '@/db/aboutPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch philosophy section
 export async function GET(request: NextRequest) {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
         }
 
         const result = await db.insert(aboutPagePhilosophy).values({ title, description, is_active });
-
+        revalidateTag('about-philosophy', 'max');
         return NextResponse.json(
             { success: true, message: 'Philosophy section created successfully', id: result[0].insertId },
             { status: 201 }
@@ -71,6 +72,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(aboutPagePhilosophy).set(updateData).where(eq(aboutPagePhilosophy.id, id));
 
+        revalidateTag('about-philosophy', 'max');
+
         return NextResponse.json({ success: true, message: 'Philosophy section updated successfully' });
     } catch (error) {
         console.error('Error updating philosophy section:', error);
@@ -89,6 +92,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(aboutPagePhilosophy).where(eq(aboutPagePhilosophy.id, parseInt(id)));
+
+        revalidateTag('about-philosophy', 'max');
 
         return NextResponse.json({ success: true, message: 'Philosophy section deleted successfully' });
     } catch (error) {

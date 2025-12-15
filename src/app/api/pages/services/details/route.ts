@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, asc } from 'drizzle-orm';
 import { db } from '@/db';
 import { servicesPageDetails } from '@/db/servicesPageSchema';
+import { revalidateTag } from 'next/cache';
 
 // GET - Fetch service details
 export async function GET(request: NextRequest) {
@@ -78,6 +79,8 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
+        revalidateTag('services-details', 'max');
+
         return NextResponse.json(
             { success: true, message: 'Service detail created successfully', id: result[0].insertId },
             { status: 201 }
@@ -117,6 +120,8 @@ export async function PUT(request: NextRequest) {
 
         await db.update(servicesPageDetails).set(updateData).where(eq(servicesPageDetails.id, id));
 
+        revalidateTag('services-details', 'max');
+
         return NextResponse.json({ success: true, message: 'Service detail updated successfully' });
     } catch (error: any) {
         console.error('Error updating service detail:', error);
@@ -140,6 +145,8 @@ export async function DELETE(request: NextRequest) {
         }
 
         await db.delete(servicesPageDetails).where(eq(servicesPageDetails.id, parseInt(id)));
+
+        revalidateTag('services-details', 'max');
 
         return NextResponse.json({ success: true, message: 'Service detail deleted successfully' });
     } catch (error) {

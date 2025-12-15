@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { db } from '@/db';
 import { storeSettings } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -79,6 +80,7 @@ export async function PUT(request: NextRequest) {
         await db.update(storeSettings).set(update).where(eq(storeSettings.id, id));
 
         const updated = await db.select().from(storeSettings).where(eq(storeSettings.id, id)).limit(1);
+        try { revalidateTag('store-settings', 'max'); } catch (e) { /* ignore */ }
         return NextResponse.json({ success: true, message: 'Store settings updated', data: fromDb(updated[0]) });
     } catch (error) {
         console.error('PUT /api/store-settings error', error);
