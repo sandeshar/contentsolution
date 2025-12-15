@@ -125,6 +125,13 @@ This project uses the App Router (`src/app`) rather than the legacy `pages` dire
 ### Hosting
 - Recommended: Vercel (native Next.js support)
 - Alternative: Node.js server with `npm run start`
+- cPanel: Use the included `server.js` to run a Node server. Typical steps on the cPanel Node.js app setup:
+
+  1. `npm install`
+  2. `npm run build`
+  3. `npm start`  # runs `node server.js` which uses `process.env.PORT`
+
+  Make sure the cPanel Node.js app points to `npm start` as the startup command and exposes the correct `PORT` environment variable.
 
 ### Environments
 - Staging: TBD
