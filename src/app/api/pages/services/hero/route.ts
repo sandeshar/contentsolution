@@ -37,13 +37,51 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { tagline, title, description, is_active = 1 } = body;
+        const {
+            tagline,
+            title,
+            description,
+            badge_text = '',
+            highlight_text = '',
+            primary_cta_text = '',
+            primary_cta_link = '',
+            secondary_cta_text = '',
+            secondary_cta_link = '',
+            background_image = '',
+            hero_image_alt = '',
+            stat1_value = '',
+            stat1_label = '',
+            stat2_value = '',
+            stat2_label = '',
+            stat3_value = '',
+            stat3_label = '',
+            is_active = 1,
+        } = body;
 
         if (!tagline || !title || !description) {
             return NextResponse.json({ error: 'Tagline, title, and description are required' }, { status: 400 });
         }
 
-        const result = await db.insert(servicesPageHero).values({ tagline, title, description, is_active });
+        const result = await db.insert(servicesPageHero).values({
+            tagline,
+            title,
+            description,
+            badge_text,
+            highlight_text,
+            primary_cta_text,
+            primary_cta_link,
+            secondary_cta_text,
+            secondary_cta_link,
+            background_image,
+            hero_image_alt,
+            stat1_value,
+            stat1_label,
+            stat2_value,
+            stat2_label,
+            stat3_value,
+            stat3_label,
+            is_active,
+        });
 
         revalidateTag('services-hero', 'max');
 
@@ -61,7 +99,27 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, tagline, title, description, is_active } = body;
+        const {
+            id,
+            tagline,
+            title,
+            description,
+            badge_text,
+            highlight_text,
+            primary_cta_text,
+            primary_cta_link,
+            secondary_cta_text,
+            secondary_cta_link,
+            background_image,
+            hero_image_alt,
+            stat1_value,
+            stat1_label,
+            stat2_value,
+            stat2_label,
+            stat3_value,
+            stat3_label,
+            is_active,
+        } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -71,6 +129,20 @@ export async function PUT(request: NextRequest) {
         if (tagline !== undefined) updateData.tagline = tagline;
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
+        if (badge_text !== undefined) updateData.badge_text = badge_text;
+        if (highlight_text !== undefined) updateData.highlight_text = highlight_text;
+        if (primary_cta_text !== undefined) updateData.primary_cta_text = primary_cta_text;
+        if (primary_cta_link !== undefined) updateData.primary_cta_link = primary_cta_link;
+        if (secondary_cta_text !== undefined) updateData.secondary_cta_text = secondary_cta_text;
+        if (secondary_cta_link !== undefined) updateData.secondary_cta_link = secondary_cta_link;
+        if (background_image !== undefined) updateData.background_image = background_image;
+        if (hero_image_alt !== undefined) updateData.hero_image_alt = hero_image_alt;
+        if (stat1_value !== undefined) updateData.stat1_value = stat1_value;
+        if (stat1_label !== undefined) updateData.stat1_label = stat1_label;
+        if (stat2_value !== undefined) updateData.stat2_value = stat2_value;
+        if (stat2_label !== undefined) updateData.stat2_label = stat2_label;
+        if (stat3_value !== undefined) updateData.stat3_value = stat3_value;
+        if (stat3_label !== undefined) updateData.stat3_label = stat3_label;
         if (is_active !== undefined) updateData.is_active = is_active;
 
         await db.update(servicesPageHero).set(updateData).where(eq(servicesPageHero.id, id));

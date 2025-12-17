@@ -39,11 +39,24 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { title, subtitle, cta_text, cta_link, background_image, is_active = 1 } = body;
+        const {
+            title,
+            subtitle,
+            cta_text,
+            cta_link,
+            background_image,
+            hero_image_alt = '',
+            badge_text = '',
+            highlight_text = '',
+            secondary_cta_text = '',
+            secondary_cta_link = '',
+            rating_text = '',
+            is_active = 1,
+        } = body;
 
         if (!title || !subtitle || !cta_text || !cta_link || !background_image) {
             return NextResponse.json(
-                { error: 'All fields are required' },
+                { error: 'Required fields missing (title, subtitle, cta_text, cta_link, background_image)' },
                 { status: 400 }
             );
         }
@@ -54,6 +67,12 @@ export async function POST(request: NextRequest) {
             cta_text,
             cta_link,
             background_image,
+            hero_image_alt,
+            badge_text,
+            highlight_text,
+            secondary_cta_text,
+            secondary_cta_link,
+            rating_text,
             is_active,
         });
 
@@ -73,7 +92,21 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, title, subtitle, cta_text, cta_link, background_image, is_active } = body;
+        const {
+            id,
+            title,
+            subtitle,
+            cta_text,
+            cta_link,
+            background_image,
+            hero_image_alt,
+            badge_text,
+            highlight_text,
+            secondary_cta_text,
+            secondary_cta_link,
+            rating_text,
+            is_active,
+        } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -85,6 +118,12 @@ export async function PUT(request: NextRequest) {
         if (cta_text !== undefined) updateData.cta_text = cta_text;
         if (cta_link !== undefined) updateData.cta_link = cta_link;
         if (background_image !== undefined) updateData.background_image = background_image;
+        if (hero_image_alt !== undefined) updateData.hero_image_alt = hero_image_alt;
+        if (badge_text !== undefined) updateData.badge_text = badge_text;
+        if (highlight_text !== undefined) updateData.highlight_text = highlight_text;
+        if (secondary_cta_text !== undefined) updateData.secondary_cta_text = secondary_cta_text;
+        if (secondary_cta_link !== undefined) updateData.secondary_cta_link = secondary_cta_link;
+        if (rating_text !== undefined) updateData.rating_text = rating_text;
         if (is_active !== undefined) updateData.is_active = is_active;
 
         await db.update(homepageHero).set(updateData).where(eq(homepageHero.id, id));

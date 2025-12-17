@@ -181,13 +181,24 @@ export default function HomePageUI() {
                                     Hero Configuration
                                 </h2>
                                 <div className="space-y-5">
+                                    <InputGroup label="Badge Text" value={heroData.badge_text || ''} onChange={(v) => setHeroData({ ...heroData, badge_text: v })} />
                                     <InputGroup label="Title" value={heroData.title || ''} onChange={(v) => setHeroData({ ...heroData, title: v })} />
                                     <TextAreaGroup label="Subtitle" value={heroData.subtitle || ''} onChange={(v) => setHeroData({ ...heroData, subtitle: v })} />
+                                    <InputGroup label="Highlight Text (substring to emphasize)" value={heroData.highlight_text || ''} onChange={(v) => setHeroData({ ...heroData, highlight_text: v })} />
+
                                     <div className="grid grid-cols-2 gap-5">
-                                        <InputGroup label="CTA Text" value={heroData.cta_text || ''} onChange={(v) => setHeroData({ ...heroData, cta_text: v })} />
-                                        <InputGroup label="CTA Link" value={heroData.cta_link || ''} onChange={(v) => setHeroData({ ...heroData, cta_link: v })} />
+                                        <InputGroup label="Primary CTA Text" value={heroData.cta_text || ''} onChange={(v) => setHeroData({ ...heroData, cta_text: v })} />
+                                        <InputGroup label="Primary CTA Link" value={heroData.cta_link || ''} onChange={(v) => setHeroData({ ...heroData, cta_link: v })} />
                                     </div>
+
+                                    <div className="grid grid-cols-2 gap-5">
+                                        <InputGroup label="Secondary CTA Text" value={heroData.secondary_cta_text || ''} onChange={(v) => setHeroData({ ...heroData, secondary_cta_text: v })} />
+                                        <InputGroup label="Secondary CTA Link" value={heroData.secondary_cta_link || ''} onChange={(v) => setHeroData({ ...heroData, secondary_cta_link: v })} />
+                                    </div>
+
                                     <InputGroup label="Background Image URL" value={heroData.background_image || ''} onChange={(v) => setHeroData({ ...heroData, background_image: v })} />
+                                    <InputGroup label="Background Image Alt Text" value={heroData.hero_image_alt || ''} onChange={(v) => setHeroData({ ...heroData, hero_image_alt: v })} />
+                                    <InputGroup label="Rating / Trust Text" value={heroData.rating_text || ''} onChange={(v) => setHeroData({ ...heroData, rating_text: v })} />
 
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>

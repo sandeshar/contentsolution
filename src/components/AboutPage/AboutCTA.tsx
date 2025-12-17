@@ -34,7 +34,7 @@ const AboutCTA = ({ data }: AboutCTAProps) => {
                             {data.description}
                         </p>
                         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                            <CTAButton text={data.primary_button_text} variant="primary" className="bg-white text-primary hover:bg-white/90 shadow-xl" />
+                            <CTAButton text={data.primary_button_text} variant="primary" className="bg-white/60 text-blue-700 hover:bg-white/90 shadow-xl" />
                             <CTAButton text={data.secondary_button_text} variant="outline" className="border-white text-white hover:bg-white hover:text-primary" />
                         </div>
                     </div>

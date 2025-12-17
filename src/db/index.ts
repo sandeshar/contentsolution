@@ -18,7 +18,7 @@ import * as navbarSchema from './navbarSchema';
 const globalForDb = global as unknown as { conn: Pool | undefined };
 
 const pool = globalForDb.conn ?? createPool({
-    uri: process.env.DATABASE_URL!,
+    uri: process.env.NODE_ENV === 'production' ? process.env.P_DB_URL! : process.env.DATABASE_URL!,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

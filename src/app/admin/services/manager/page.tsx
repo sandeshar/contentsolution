@@ -645,14 +645,33 @@ export default function ServicesManagerPage() {
                     {/* HERO SECTION */}
                     {activeTab === "hero" && (
                         <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <InputGroup label="Badge Text" value={heroData.badge_text || ''} onChange={(v: string) => setHeroData({ ...heroData, badge_text: v })} />
                             <InputGroup label="Tagline" value={heroData.tagline || ''} onChange={(v: string) => setHeroData({ ...heroData, tagline: v })} />
                             <InputGroup label="Title" value={heroData.title || ''} onChange={(v: string) => setHeroData({ ...heroData, title: v })} />
                             <TextAreaGroup label="Description" value={heroData.description || ''} onChange={(v: string) => setHeroData({ ...heroData, description: v })} />
+                            <InputGroup label="Highlight Text (substring to emphasize)" value={heroData.highlight_text || ''} onChange={(v: string) => setHeroData({ ...heroData, highlight_text: v })} />
+
                             <div className="grid grid-cols-2 gap-5">
-                                <InputGroup label="Button Text" value={heroData.button_text || ''} onChange={(v: string) => setHeroData({ ...heroData, button_text: v })} />
-                                <InputGroup label="Button Link" value={heroData.button_link || ''} onChange={(v: string) => setHeroData({ ...heroData, button_link: v })} />
+                                <InputGroup label="Primary CTA Text" value={heroData.primary_cta_text || ''} onChange={(v: string) => setHeroData({ ...heroData, primary_cta_text: v })} />
+                                <InputGroup label="Primary CTA Link" value={heroData.primary_cta_link || ''} onChange={(v: string) => setHeroData({ ...heroData, primary_cta_link: v })} />
                             </div>
-                            <InputGroup label="Background Image URL" value={heroData.bg_image || ''} onChange={(v: string) => setHeroData({ ...heroData, bg_image: v })} />
+
+                            <div className="grid grid-cols-2 gap-5">
+                                <InputGroup label="Secondary CTA Text" value={heroData.secondary_cta_text || ''} onChange={(v: string) => setHeroData({ ...heroData, secondary_cta_text: v })} />
+                                <InputGroup label="Secondary CTA Link" value={heroData.secondary_cta_link || ''} onChange={(v: string) => setHeroData({ ...heroData, secondary_cta_link: v })} />
+                            </div>
+
+                            <InputGroup label="Background Image URL" value={heroData.background_image || ''} onChange={(v: string) => setHeroData({ ...heroData, background_image: v })} />
+                            <InputGroup label="Background Image Alt Text" value={heroData.hero_image_alt || ''} onChange={(v: string) => setHeroData({ ...heroData, hero_image_alt: v })} />
+
+                            <div className="grid grid-cols-3 gap-5">
+                                <InputGroup label="Stat 1 Value" value={heroData.stat1_value || ''} onChange={(v: string) => setHeroData({ ...heroData, stat1_value: v })} />
+                                <InputGroup label="Stat 1 Label" value={heroData.stat1_label || ''} onChange={(v: string) => setHeroData({ ...heroData, stat1_label: v })} />
+                                <InputGroup label="Stat 2 Value" value={heroData.stat2_value || ''} onChange={(v: string) => setHeroData({ ...heroData, stat2_value: v })} />
+                                <InputGroup label="Stat 2 Label" value={heroData.stat2_label || ''} onChange={(v: string) => setHeroData({ ...heroData, stat2_label: v })} />
+                                <InputGroup label="Stat 3 Value" value={heroData.stat3_value || ''} onChange={(v: string) => setHeroData({ ...heroData, stat3_value: v })} />
+                                <InputGroup label="Stat 3 Label" value={heroData.stat3_label || ''} onChange={(v: string) => setHeroData({ ...heroData, stat3_label: v })} />
+                            </div>
 
                             <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                 <span className="text-sm font-medium text-gray-700">Enable Section</span>

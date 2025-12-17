@@ -51,8 +51,22 @@ export async function POST() {
 
         await db.insert(servicesPageHero).values({
             tagline: 'OUR SERVICES',
-            title: 'Content Solutions That Drive Results',
-            description: 'Comprehensive content services designed to help your business grow.',
+            title: 'Strategic Content That Converts',
+            description: "We don't just write words; we craft experiences. Elevate your brand with data-driven content strategies designed to captivate your audience and drive meaningful growth.",
+            badge_text: 'Premier Content Agency',
+            highlight_text: 'That Converts',
+            primary_cta_text: 'Get Started Now',
+            primary_cta_link: '/contact',
+            secondary_cta_text: 'View Our Work',
+            secondary_cta_link: '/work',
+            background_image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCFR7tIGeKNlooQKoKzI99ZmhdAiYEeN7-W0VuqKkzn5_LkeWBmDZuWq2D1sKPTZW8vgWE1MvRe4iQHi9_Cley5gsMoFI7WJk7Oot3IO0kSVaiD0P5Gc0exZJ4CefO_K6hXJHRaHpWDvobpNb7rOeFCulKjyIwwaecQGDoo9nq5Aulw1jqloMBd1rvSNYcd0KVkIvmBdnXtBXr7_zQgUXnqHwROX0L36QjKYpwBnJflSI6CLCBY_AcCn8G29HBQPOlh3GMuTSz5KKw',
+            hero_image_alt: 'Team collaborating on content strategy',
+            stat1_value: '500+',
+            stat1_label: 'Clients Served',
+            stat2_value: '98%',
+            stat2_label: 'Satisfaction Rate',
+            stat3_value: '10k+',
+            stat3_label: 'Articles Written',
             is_active: 1,
         });
 
@@ -120,21 +134,26 @@ export async function POST() {
         const subcategoryMap: Record<string, number> = {};
 
         for (const [index, s] of serviceData.entries()) {
-            await db.insert(serviceSubcategories).values({
-                category_id: category?.id as number,
-                name: s.title,
-                slug: s.key,
-                description: s.description,
-                icon: s.icon,
-                thumbnail: s.image,
-                display_order: index + 1,
-                is_active: 1,
-                meta_title: s.title,
-                meta_description: s.description,
-            });
-
-            const [subcat] = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.slug, s.key)).limit(1);
-            if (subcat?.id) subcategoryMap[s.key] = subcat.id as number;
+            // Avoid duplicate slug insertion by checking for existing subcategory
+            const [existingSub] = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.slug, s.key)).limit(1);
+            if (!existingSub) {
+                await db.insert(serviceSubcategories).values({
+                    category_id: category?.id as number,
+                    name: s.title,
+                    slug: s.key,
+                    description: s.description,
+                    icon: s.icon,
+                    thumbnail: s.image,
+                    display_order: index + 1,
+                    is_active: 1,
+                    meta_title: s.title,
+                    meta_description: s.description,
+                });
+                const [subcat] = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.slug, s.key)).limit(1);
+                if (subcat?.id) subcategoryMap[s.key] = subcat.id as number;
+            } else {
+                subcategoryMap[s.key] = existingSub.id as number;
+            }
         }
 
         for (const [index, s] of serviceData.entries()) {

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { title, description, button1_text, button1_link, button2_text, button2_link, hero_image, hero_image_alt, is_active = 1 } = body;
+        const { title, description, button1_text, button1_link, button2_text, button2_link, background_image, hero_image, hero_image_alt, badge_text = '', highlight_text = '', rating_text = '', is_active = 1 } = body;
 
         if (!title || !description || !button1_text || !button1_link || !button2_text || !button2_link || !hero_image || !hero_image_alt) {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
@@ -50,8 +50,12 @@ export async function POST(request: NextRequest) {
             button1_link,
             button2_text,
             button2_link,
+            background_image,
             hero_image,
             hero_image_alt,
+            badge_text,
+            highlight_text,
+            rating_text,
             is_active,
         });
 
@@ -71,7 +75,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, title, description, button1_text, button1_link, button2_text, button2_link, hero_image, hero_image_alt, is_active } = body;
+        const { id, title, description, button1_text, button1_link, button2_text, button2_link, background_image, badge_text, highlight_text, rating_text, hero_image, hero_image_alt, is_active } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -84,6 +88,10 @@ export async function PUT(request: NextRequest) {
         if (button1_link !== undefined) updateData.button1_link = button1_link;
         if (button2_text !== undefined) updateData.button2_text = button2_text;
         if (button2_link !== undefined) updateData.button2_link = button2_link;
+        if (background_image !== undefined) updateData.background_image = background_image;
+        if (badge_text !== undefined) updateData.badge_text = badge_text;
+        if (highlight_text !== undefined) updateData.highlight_text = highlight_text;
+        if (rating_text !== undefined) updateData.rating_text = rating_text;
         if (hero_image !== undefined) updateData.hero_image = hero_image;
         if (hero_image_alt !== undefined) updateData.hero_image_alt = hero_image_alt;
         if (is_active !== undefined) updateData.is_active = is_active;

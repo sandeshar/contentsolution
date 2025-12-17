@@ -120,7 +120,7 @@ export default function AboutPageUI() {
 
             alert("Settings saved successfully!");
             // Optionally refetch data to get new IDs for created items
-            window.location.reload(); 
+            window.location.reload();
 
         } catch (error) {
             console.error("Error saving settings:", error);
@@ -145,7 +145,7 @@ export default function AboutPageUI() {
         // Or just filter by object reference?
         // Let's assume we pass the index for removal if ID is missing.
         // But wait, the UI maps by index or ID.
-        
+
         // Better approach:
         // If item has a real ID (from DB), add to deletedList.
         // Remove from list state.
@@ -223,6 +223,11 @@ export default function AboutPageUI() {
                                     <TextAreaGroup label="Description" value={heroData.description || ''} onChange={(v) => setHeroData({ ...heroData, description: v })} />
 
                                     <div className="grid grid-cols-2 gap-5">
+                                        <InputGroup label="Badge Text" value={heroData.badge_text || ''} onChange={(v) => setHeroData({ ...heroData, badge_text: v })} />
+                                        <InputGroup label="Highlight Text (substring to emphasize)" value={heroData.highlight_text || ''} onChange={(v) => setHeroData({ ...heroData, highlight_text: v })} />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-5">
                                         <InputGroup label="Primary Button Text" value={heroData.button1_text || ''} onChange={(v) => setHeroData({ ...heroData, button1_text: v })} />
                                         <InputGroup label="Primary Button Link" value={heroData.button1_link || ''} onChange={(v) => setHeroData({ ...heroData, button1_link: v })} />
                                     </div>
@@ -231,8 +236,10 @@ export default function AboutPageUI() {
                                         <InputGroup label="Secondary Button Link" value={heroData.button2_link || ''} onChange={(v) => setHeroData({ ...heroData, button2_link: v })} />
                                     </div>
 
+                                    <ImageUploader label="Background Image" value={heroData.background_image || ''} onChange={(v) => setHeroData({ ...heroData, background_image: v })} folder="about" />
                                     <ImageUploader label="Hero Image" value={heroData.hero_image || ''} onChange={(v) => setHeroData({ ...heroData, hero_image: v })} folder="about" />
                                     <InputGroup label="Hero Image Alt Text" value={heroData.hero_image_alt || ''} onChange={(v) => setHeroData({ ...heroData, hero_image_alt: v })} />
+                                    <InputGroup label="Rating / Trust Text" value={heroData.rating_text || ''} onChange={(v) => setHeroData({ ...heroData, rating_text: v })} />
 
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
@@ -271,11 +278,11 @@ export default function AboutPageUI() {
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (stat.id) setDeletedStats([...deletedStats, stat.id]);
                                                         setStats(stats.filter((_, i) => i !== idx));
-                                                    }} 
+                                                    }}
                                                     className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
                                                 >
                                                     <span className="material-symbols-outlined">delete</span>
@@ -307,7 +314,7 @@ export default function AboutPageUI() {
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (feature.id) setDeletedFeatures([...deletedFeatures, feature.id]);
                                                         setFeatures(features.filter((_, i) => i !== idx));
@@ -359,7 +366,7 @@ export default function AboutPageUI() {
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (p.id) setDeletedPrinciples([...deletedPrinciples, p.id]);
                                                         setPrinciples(principles.filter((_, i) => i !== idx));
@@ -411,7 +418,7 @@ export default function AboutPageUI() {
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (member.id) setDeletedTeamMembers([...deletedTeamMembers, member.id]);
                                                         setTeamMembers(teamMembers.filter((_, i) => i !== idx));

@@ -10,7 +10,11 @@ export const aboutPageHero = mysqlTable("about_page_hero", {
     button2_text: varchar("button2_text", { length: 100 }).notNull(),
     button2_link: varchar("button2_link", { length: 512 }).notNull(),
     hero_image: varchar("hero_image", { length: 512 }).notNull(),
+    background_image: varchar("background_image", { length: 512 }).notNull().default(''),
     hero_image_alt: varchar("hero_image_alt", { length: 256 }).notNull(),
+    badge_text: varchar("badge_text", { length: 128 }).notNull().default(''),
+    highlight_text: varchar("highlight_text", { length: 256 }).notNull().default(''),
+    rating_text: varchar("rating_text", { length: 128 }).notNull().default(''),
     is_active: int("is_active").default(1).notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });

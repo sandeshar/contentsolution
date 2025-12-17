@@ -7,6 +7,10 @@ import TestimonialSlider from "@/components/shared/TestimonialSlider";
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
+// Use an absolute base URL for server-side fetches. In server environments
+// relative URLs like `/api/...` can cause "Failed to parse URL" errors.
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
 async function getServicesPageData() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -18,11 +22,11 @@ async function getServicesPageData() {
             processStepsRes,
             ctaRes
         ] = await Promise.all([
-            fetch(`/api/pages/services/hero`, { next: { tags: ['services-hero'] } }),
-            fetch(`/api/pages/services/details`, { next: { tags: ['services-details'] } }),
-            fetch(`/api/pages/services/process-section`, { next: { tags: ['services-process-section'] } }),
-            fetch(`/api/pages/services/process-steps`, { next: { tags: ['services-process-steps'] } }),
-            fetch(`/api/pages/services/cta`, { next: { tags: ['services-cta'] } }),
+            fetch(`${API_BASE}/api/pages/services/hero`, { next: { tags: ['services-hero'] } }),
+            fetch(`${API_BASE}/api/pages/services/details`, { next: { tags: ['services-details'] } }),
+            fetch(`${API_BASE}/api/pages/services/process-section`, { next: { tags: ['services-process-section'] } }),
+            fetch(`${API_BASE}/api/pages/services/process-steps`, { next: { tags: ['services-process-steps'] } }),
+            fetch(`${API_BASE}/api/pages/services/cta`, { next: { tags: ['services-cta'] } }),
         ]);
 
         const hero = heroRes.ok ? await heroRes.json() : null;
@@ -39,7 +43,10 @@ async function getServicesPageData() {
             cta,
         };
     } catch (error) {
-        console.error('Error fetching services page data:', error);
+        // Log only the error message to avoid printing full Error objects which can
+        // trigger source-map parsing in the server dev bundle and produce confusing
+        // "Invalid source map" messages.
+        console.error('Error fetching services page data:', (error as Error)?.message || String(error));
         return {
             hero: null,
             details: [],
@@ -89,10 +96,17 @@ function mergeServiceDetailsWithPosts(details: any[], posts: any[]) {
 
 async function getServicePosts() {
     try {
-        const res = await fetch('/api/services', { next: { tags: ['services'] } });
+        const url = `${API_BASE}/api/services`;
+        const res = await fetch(url, { next: { tags: ['services'] } });
+        if (!res.ok) {
+            console.error('Error fetching service posts: non-OK response from ' + url + ' status=' + res.status);
+            return [];
+        }
         return res.ok ? await res.json() : [];
     } catch (error) {
-        console.error('Error fetching service posts:', error);
+        // Avoid passing the whole Error object to console to prevent the runtime
+        // from attempting to parse source maps for stack frames.
+        console.error('Error fetching service posts:', (error as Error)?.message || String(error));
         return [];
     }
 }

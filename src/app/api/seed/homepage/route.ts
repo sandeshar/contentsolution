@@ -26,6 +26,12 @@ export async function POST() {
             cta_text: 'Schedule a Free Consultation',
             cta_link: '/contact',
             background_image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB_ntBsh0ac8NNu4CDZ0OwptNX4TckC0Vk370Stu-5ncnvdbLPszfUWx1G4Vbyynsp7G1IukNqM2ARj6R242IPtABbGqsoHea3IRXWJjfZy8v0YwvghTSdy3UYS0ViJGsCxmB3Jua3jm3Nmz5ZA2yh5p70-qFmtfPdmvtc7WyY0gauc1eQ0Hc20w96-OEQp1WkX_IMlpkYEhv___4podpWVNeJtiFPjhpMwNu1nIMzW0bcH_-R-luLL4KVRpHNF93ktX31uFGTKMXk',
+            hero_image_alt: 'Hero background showing team collaboration',
+            badge_text: 'Accepting new projects',
+            highlight_text: 'Powerful Content',
+            secondary_cta_text: 'View Our Work',
+            secondary_cta_link: '/work',
+            rating_text: 'Trusted by modern teams',
             is_active: 1,
         });
 

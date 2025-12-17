@@ -8,6 +8,12 @@ export const homepageHero = mysqlTable("homepage_hero", {
     cta_text: varchar("cta_text", { length: 100 }).notNull(),
     cta_link: varchar("cta_link", { length: 512 }).notNull(),
     background_image: varchar("background_image", { length: 512 }).notNull(),
+    hero_image_alt: varchar("hero_image_alt", { length: 256 }).notNull().default(''),
+    badge_text: varchar("badge_text", { length: 128 }).notNull().default(''),
+    highlight_text: varchar("highlight_text", { length: 256 }).notNull().default(''),
+    secondary_cta_text: varchar("secondary_cta_text", { length: 128 }).notNull().default(''),
+    secondary_cta_link: varchar("secondary_cta_link", { length: 512 }).notNull().default(''),
+    rating_text: varchar("rating_text", { length: 128 }).notNull().default(''),
     is_active: int("is_active").default(1).notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });

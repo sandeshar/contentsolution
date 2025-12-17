@@ -108,6 +108,12 @@ export async function POST(request: Request) {
                 cta_text: 'Schedule a Free Consultation',
                 cta_link: '/contact',
                 background_image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB_ntBsh0ac8NNu4CDZ0OwptNX4TckC0Vk370Stu-5ncnvdbLPszfUWx1G4Vbyynsp7G1IukNqM2ARj6R242IPtABbGqsoHea3IRXWJjfZy8v0YwvghTSdy3UYS0ViJGsCxmB3Jua3jm3Nmz5ZA2yh5p70-qFmtfPdmvtc7WyY0gauc1eQ0Hc20w96-OEQp1WkX_IMlpkYEhv___4podpWVNeJtiFPjhpMwNu1nIMzW0bcH_-R-luLL4KVRpHNF93ktX31uFGTKMXk',
+                hero_image_alt: 'Hero background showing team collaboration',
+                badge_text: 'Accepting new projects',
+                highlight_text: 'Powerful Content',
+                secondary_cta_text: 'View Our Work',
+                secondary_cta_link: '/work',
+                rating_text: 'Trusted by modern teams',
                 is_active: 1,
             });
 
@@ -337,10 +343,23 @@ export async function POST(request: Request) {
             // Only seed if we have a user and status
             if (firstUser && publishedStatus) {
                 await db.insert(servicesPageHero).values({
-                    tagline: 'OUR SERVICES',
-                    title: 'Content Solutions That Drive Results',
-                    description: 'Comprehensive content services designed to help your business grow.',
-                    is_active: 1,
+                    tagline: 'Strategic Content That Converts',
+                    title: 'Strategic Content That Converts',
+                    description: "We don't just write words; we craft experiences. Elevate your brand with data-driven content strategies designed to captivate your audience and drive meaningful growth.",
+                    badge_text: 'Premier Content Agency',
+                    highlight_text: 'That Converts',
+                    primary_cta_text: 'Get Started Now',
+                    primary_cta_link: '/contact',
+                    secondary_cta_text: 'View Our Work',
+                    secondary_cta_link: '/work',
+                    background_image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCFR7tIGeKNlooQKoKzI99ZmhdAiYEeN7-W0VuqKkzn5_LkeWBmDZuWq2D1sKPTZW8vgWE1MvRe4iQHi9_Cley5gsMoFI7WJk7Oot3IO0kSVaiD0P5Gc0exZJ4CefO_K6hXJHRaHpWDvobpNb7rOeFCulKjyIwwaecQGDoo9nq5Aulw1jqloMBd1rvSNYcd0KVkIvmBdnXtBXr7_zQgUXnqHwROX0L36QjKYpwBnJflSI6CLCBY_AcCn8G29HBQPOlh3GMuTSz5KKw',
+                    hero_image_alt: 'Team collaborating on content strategy',
+                    stat1_value: '500+',
+                    stat1_label: 'Clients Served',
+                    stat2_value: '98%',
+                    stat2_label: 'Satisfaction Rate',
+                    stat3_value: '10k+',
+                    stat3_label: 'Articles Written',
                 });
 
                 const categorySlug = 'content-services';
