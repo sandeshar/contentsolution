@@ -2,22 +2,39 @@ import SideBar from "@/components/Sidebar"
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { db } from "@/db";
-import { storeSettings, users } from "@/db/schema";
 import { checkAuth } from "@/utils/authHelper";
-import { count, inArray } from "drizzle-orm";
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
     try {
-        const rows = await db.select().from(storeSettings).limit(1);
-        const s = rows[0];
-        const siteName = s?.store_name || "Content Store";
+        const base = process.env.NEXT_PUBLIC_BASE_URL;
+        if (base) {
+            try {
+                const res = await fetch(`${base}/api/store-settings`);
+                if (res.ok) {
+                    const payload = await res.json();
+                    const s = payload?.data;
+                    const siteName = s?.storeName || "Content Store";
+                    return {
+                        title: `Admin | ${siteName}`,
+                        description: `Admin dashboard for ${siteName}`,
+                        robots: "noindex, nofollow",
+                        creator: siteName,
+                        publisher: siteName,
+                    };
+                }
+            } catch (e) {
+                // ignore and fallback to DB
+            }
+        }
+
+        // If API fails return a safe default rather than accessing DB directly
         return {
-            title: `Admin | ${siteName}`,
-            description: `Admin dashboard for ${siteName}`,
+            title: `Admin | Content Store`,
+            description: `Admin dashboard for Content Store`,
             robots: "noindex, nofollow",
-            creator: siteName,
-            publisher: siteName,
+            creator: "Content Store",
+            publisher: "Content Store",
         };
     } catch {
         return {

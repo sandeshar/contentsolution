@@ -1,62 +1,55 @@
-import { db } from "@/db";
-import { blogPosts, users, status } from "@/db/schema";
-import { contactFormSubmissions } from "@/db/contactPageSchema";
-import { eq, desc, count } from "drizzle-orm";
+export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import { getBlogStatusClasses } from "@/utils/statusHelpers";
 
 const Page = async () => {
-    // Fetch real statistics
-    const [
-        totalPosts,
-        publishedPosts,
-        draftPosts,
-        recentPosts,
-        totalContact,
-        newContact,
-    ] = await Promise.all([
-        db.select({ count: count() }).from(blogPosts),
-        db.select({ count: count() }).from(blogPosts).where(eq(blogPosts.status, 2)), // Published
-        db.select({ count: count() }).from(blogPosts).where(eq(blogPosts.status, 1)), // Draft
-        db.select({
-            id: blogPosts.id,
-            slug: blogPosts.slug,
-            title: blogPosts.title,
-            authorName: users.name,
-            statusId: blogPosts.status,
-            statusName: status.name,
-            createdAt: blogPosts.createdAt,
-        })
-            .from(blogPosts)
-            .leftJoin(users, eq(blogPosts.authorId, users.id))
-            .leftJoin(status, eq(blogPosts.status, status.id))
-            .orderBy(desc(blogPosts.createdAt))
-            .limit(4),
-        db.select({ count: count() }).from(contactFormSubmissions),
-        db.select({ count: count() }).from(contactFormSubmissions).where(eq(contactFormSubmissions.status, "new")),
-    ]);
+    // API-only: fetch admin stats at runtime; page is dynamic so API should be available.
 
-    const stats = [
-        { label: "Total Posts", value: totalPosts[0]?.count?.toString() || "0", icon: "article", delta: "+12%", deltaType: "up" },
-        { label: "Published", value: publishedPosts[0]?.count?.toString() || "0", icon: "check_circle", delta: "0%", deltaType: "up" },
-        { label: "Draft", value: draftPosts[0]?.count?.toString() || "0", icon: "edit_note", delta: "0%", deltaType: "down" },
-        { label: "Contact Messages", value: totalContact[0]?.count?.toString() || "0", icon: "contact_mail", delta: "", deltaType: "up" },
-        { label: "New Messages", value: newContact[0]?.count?.toString() || "0", icon: "mark_email_unread", delta: "", deltaType: "up" },
-    ];
+    let stats: any[] = [];
+    let recent: any[] = [];
+    let totalPostsCount = 0;
 
-    const recent = recentPosts.map(post => ({
-        id: post.id?.toString() || "",
-        slug: post.slug || "",
-        title: post.title || "",
-        author: post.authorName || "Unknown",
-        statusId: post.statusId || 1,
-        status: post.statusName || "Unknown",
-        date: post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        }) : "",
-    }));
+    try {
+        const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        const res = await fetch(`${base}/api/admin/stats`);
+        if (res.ok) {
+            const payload = await res.json();
+            if (payload?.success) {
+                stats = [
+                    { label: "Total Posts", value: String(payload?.stats?.totalPosts || 0), icon: "article", delta: "+12%", deltaType: "up" },
+                    { label: "Published", value: String(payload?.stats?.publishedPosts || 0), icon: "check_circle", delta: "0%", deltaType: "up" },
+                    { label: "Draft", value: String(payload?.stats?.draftPosts || 0), icon: "edit_note", delta: "0%", deltaType: "down" },
+                    { label: "Contact Messages", value: String(payload?.stats?.totalContact || 0), icon: "contact_mail", delta: "", deltaType: "up" },
+                    { label: "New Messages", value: String(payload?.stats?.newContact || 0), icon: "mark_email_unread", delta: "", deltaType: "up" },
+                ];
+                recent = (payload?.recentPosts || []).map((post: any) => ({
+                    id: post.id?.toString() || "",
+                    slug: post.slug || "",
+                    title: post.title || "",
+                    author: post.authorName || "Unknown",
+                    statusId: post.statusId || 1,
+                    status: post.statusName || "Unknown",
+                    date: post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    }) : "",
+                }));
+                totalPostsCount = payload?.stats?.totalPosts || 0;
+            }
+        }
+    } catch (e) {
+        // If admin API fails, present zeros/defaults rather than querying DB directly here.
+        stats = [
+            { label: "Total Posts", value: "0", icon: "article", delta: "+0%", deltaType: "up" },
+            { label: "Published", value: "0", icon: "check_circle", delta: "0%", deltaType: "up" },
+            { label: "Draft", value: "0", icon: "edit_note", delta: "0%", deltaType: "down" },
+            { label: "Contact Messages", value: "0", icon: "contact_mail", delta: "", deltaType: "up" },
+            { label: "New Messages", value: "0", icon: "mark_email_unread", delta: "", deltaType: "up" },
+        ];
+        recent = [];
+        totalPostsCount = 0;
+    }
 
     return (
         <main className="flex-1 flex flex-col">
@@ -144,7 +137,7 @@ const Page = async () => {
                                 </table>
                             </div>
                             <div className="p-6 flex justify-between items-center text-sm text-slate-500">
-                                <span>Showing {recent.length > 0 ? '1' : '0'} to {recent.length} of {totalPosts[0]?.count || 0} results</span>
+                                <span>Showing {recent.length > 0 ? '1' : '0'} to {recent.length} of {totalPostsCount || 0} results</span>
                             </div>
                         </div>
 

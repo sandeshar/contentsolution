@@ -1,7 +1,5 @@
 import { returnRole } from "@/utils/authHelper";
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
 
 export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
@@ -16,17 +14,21 @@ export async function proxy(request: NextRequest) {
     // Allow seed operations if no users exist (initial setup)
     if (pathname.startsWith('/api/seed') || pathname.startsWith('/admin/seed')) {
         try {
-            const userCount = await db.select().from(users).limit(1);
-            const hasUsers = userCount.length > 0;
+            const origin = new URL(request.url).origin;
+            const res = await fetch(`${origin}/api/users`);
+            if (res.ok) {
+                const userList = await res.json();
+                const hasUsers = Array.isArray(userList) && userList.length > 0;
 
-            if (hasUsers && role !== 'superadmin') {
-                return NextResponse.json(
-                    { error: 'Forbidden: Only superadmins can seed data' },
-                    { status: 403 }
-                );
+                if (hasUsers && role !== 'superadmin') {
+                    return NextResponse.json(
+                        { error: 'Forbidden: Only superadmins can seed data' },
+                        { status: 403 }
+                    );
+                }
             }
         } catch (error) {
-            // If database check fails, allow it to proceed (might be initial setup)
+            // If the API check fails, allow it to proceed (might be initial setup)
         }
         return NextResponse.next();
     }

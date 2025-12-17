@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { db } from "@/db";
-import { storeSettings } from "@/db/schema";
+
 import { GoogleAnalytics } from '@next/third-parties/google'
 
 const geistSans = Geist({
@@ -21,47 +20,53 @@ export const viewport: Viewport = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
+  // API-only metadata: mark page dynamic so this runs at request-time and internal API is available.
   try {
-    const rows = await db.select().from(storeSettings).limit(1);
-    const s = rows[0];
-    if (!s) {
-      return {
-        title: "Content Store",
-        description: "Powered by ContentSolution",
-        robots: "index, follow",
-      };
+    const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    try {
+      const res = await fetch(`${base}/api/store-settings`);
+      if (res.ok) {
+        const payload = await res.json();
+        const s = payload?.data || null;
+        if (s) {
+          const title = s.metaTitle || s.storeName || "Content Store";
+          const description = s.metaDescription || s.storeDescription || "";
+          return {
+            title,
+            description,
+            keywords: s.metaKeywords || "",
+            robots: "index, follow",
+            creator: s.storeName,
+            publisher: s.storeName,
+            icons: s.favicon ? { icon: s.favicon } : undefined,
+            openGraph: {
+              type: "website",
+              locale: "en_US",
+              url: base,
+              siteName: s.storeName,
+              title,
+              description,
+              images: s.storeLogo ? [{ url: s.storeLogo, alt: s.storeName }] : [],
+            },
+            twitter: {
+              card: "summary_large_image",
+              title,
+              description,
+              images: s.storeLogo ? [s.storeLogo] : [],
+            },
+            alternates: {
+              canonical: base,
+            },
+          };
+        }
+      }
+    } catch (e) {
+      // If API is unavailable return defaults; avoid DB access here to keep all DB usage in API.
     }
 
-    const title = s.meta_title || s.store_name || "Content Store";
-    const description = s.meta_description || s.store_description || "";
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
     return {
-      title,
-      description,
-      keywords: s.meta_keywords || "",
-      robots: "index, follow",
-      creator: s.store_name,
-      publisher: s.store_name,
-      icons: s.favicon ? { icon: s.favicon } : undefined,
-      openGraph: {
-        type: "website",
-        locale: "en_US",
-        url: baseUrl,
-        siteName: s.store_name,
-        title,
-        description,
-        images: s.store_logo ? [{ url: s.store_logo, alt: s.store_name }] : [],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title,
-        description,
-        images: s.store_logo ? [s.store_logo] : [],
-      },
-      alternates: {
-        canonical: baseUrl,
-      },
+      title: "Content Store",
+      description: "",
     };
   } catch {
     return {
@@ -76,8 +81,19 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const rows = await db.select().from(storeSettings).limit(1);
-  const s = rows[0];
+  // API-only runtime fetch; mark dynamic above to avoid prerender-time fetch failures.
+  let s: any = null;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  try {
+    const res = await fetch(`${baseUrl}/api/store-settings`);
+    if (res.ok) {
+      const payload = await res.json();
+      s = payload?.data || null;
+    }
+  } catch (e) {
+    // If API fails, use defaults — do not perform DB access here.
+    s = null;
+  }
 
   // JSON-LD structured data for Organization
   const jsonLd = s ? {

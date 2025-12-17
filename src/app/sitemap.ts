@@ -1,7 +1,4 @@
 import { MetadataRoute } from 'next';
-import { db } from '@/db';
-import { blogPosts } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 import { frontendPages } from '@/utils/frontendPages';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -16,17 +13,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     try {
-        // Get published blog posts (status = 2)
-        const posts = await db.select().from(blogPosts).where(eq(blogPosts.status, 2));
+        // Use the blog API; if it fails, return static pages only (no DB access here)
+        const base = process.env.NEXT_PUBLIC_BASE_URL || baseUrl;
+        try {
+            const res = await fetch(`${base}/api/blog`);
+            if (res.ok) {
+                const posts = await res.json();
+                if (Array.isArray(posts)) {
+                    const blogPages: MetadataRoute.Sitemap = posts.map((post: any) => ({
+                        url: `${baseUrl}/blog/${post.slug}`,
+                        lastModified: new Date(post.updatedAt),
+                        changeFrequency: 'weekly',
+                        priority: 0.7,
+                    }));
+                    return [...staticPages, ...blogPages];
+                }
+            }
+        } catch (e) {
+            console.error('Error fetching /api/blog for sitemap:', e);
+            return staticPages;
+        }
 
-        const blogPages: MetadataRoute.Sitemap = posts.map((post) => ({
-            url: `${baseUrl}/blog/${post.slug}`,
-            lastModified: new Date(post.updatedAt),
-            changeFrequency: 'weekly',
-            priority: 0.7,
-        }));
-
-        return [...staticPages, ...blogPages];
+        return staticPages;
     } catch (error) {
         console.error('Error generating sitemap:', error);
         return staticPages;

@@ -1,7 +1,5 @@
 import { notFound } from 'next/navigation';
-import { db } from '@/db';
-import { blogPosts, storeSettings } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+export const dynamic = 'force-dynamic';
 import ShareButtons from '@/components/BlogPage/ShareButtons';
 
 interface BlogPostPageProps {
@@ -13,22 +11,32 @@ interface BlogPostPageProps {
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const { slug } = await params;
 
-    // Fetch the blog post by slug
-    const posts = await db
-        .select()
-        .from(blogPosts)
-        .where(eq(blogPosts.slug, slug))
-        .limit(1);
-
-    const post = posts[0];
+    // Fetch the blog post by slug via API
+    const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const postRes = await fetch(`${base}/api/blog?slug=${encodeURIComponent(slug)}`);
+    let post: any = null;
+    if (postRes.ok) {
+        const payload = await postRes.json();
+        // API returns single post object when slug passed
+        post = payload?.id ? payload : null;
+    }
 
     // If post doesn't exist or is not published (status !== 2), show 404
     if (!post || post.status !== 2) {
         notFound();
     }
 
-    const storeRows = await db.select().from(storeSettings).limit(1);
-    const store = storeRows[0];
+    // Fetch store settings via API
+    let store: any = null;
+    try {
+        const storeRes = await fetch(`${base}/api/store-settings`);
+        if (storeRes.ok) {
+            const payload = await storeRes.json();
+            store = payload?.data || null;
+        }
+    } catch (e) {
+        store = null;
+    }
 
     // Format the date
     const formattedDate = new Date(post.createdAt).toLocaleDateString('en-US', {
@@ -40,17 +48,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     // Get category from tags for breadcrumb
     const category = post.tags ? post.tags.split(',')[0]?.trim() : 'Blog';
 
-    // Fetch related articles (same category, exclude current post) ordered by newest first
-    const relatedPosts = await db
-        .select()
-        .from(blogPosts)
-        .where(eq(blogPosts.status, 2))
-        .orderBy(desc(blogPosts.createdAt))
-        .limit(3);
-
-    const relatedFiltered = relatedPosts
-        .filter(p => p.id !== post.id)
-        .slice(0, 2);
+    // Fetch related articles via API and filter out current post
+    let relatedFiltered: any[] = [];
+    try {
+        const relRes = await fetch(`${base}/api/blog?limit=3`);
+        if (relRes.ok) {
+            const relPayload = await relRes.json();
+            if (Array.isArray(relPayload)) {
+                relatedFiltered = relPayload.filter((p: any) => p.slug !== post.slug).slice(0, 2);
+            }
+        }
+    } catch (e) {
+        relatedFiltered = [];
+    }
 
     return (
         <main className="grow bg-white">
@@ -204,72 +214,71 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     );
 }
 
-// Generate static params for all published blog posts
-export async function generateStaticParams() {
-    const posts = await db
-        .select({ slug: blogPosts.slug })
-        .from(blogPosts)
-        .where(eq(blogPosts.status, 2));
+// This page is dynamic and fetches content via API at request time. Static params were removed to avoid DB access at build-time.
 
-    return posts.map((post) => ({
-        slug: post.slug,
-    }));
-}
 
-// Generate metadata for SEO
+// Generate metadata for SEO (API-only)
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
+    const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-    const posts = await db
-        .select()
-        .from(blogPosts)
-        .where(eq(blogPosts.slug, slug))
-        .limit(1);
+    try {
+        // Fetch post via API
+        const postRes = await fetch(`${base}/api/blog?slug=${encodeURIComponent(slug)}`);
+        let post: any = null;
+        if (postRes.ok) {
+            post = await postRes.json();
+        }
+        if (!post) {
+            return {
+                title: 'Post Not Found',
+                robots: 'noindex, nofollow',
+            };
+        }
 
-    const post = posts[0];
+        const storeRes = await fetch(`${base}/api/store-settings`);
+        const storePayload = storeRes.ok ? await storeRes.json() : null;
+        const store = storePayload?.data || null;
 
-    if (!post) {
+        const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        const description = stripHtml(post.content).slice(0, 160) || post.title;
+        const keywords = post.tags ? post.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
+        const publishedIso = post.createdAt instanceof Date ? post.createdAt.toISOString() : new Date(post.createdAt as unknown as string).toISOString();
+        const siteName = store?.storeName || 'Content Solution';
+        const authorName = siteName;
+
+        return {
+            title: `${post.title} | ${siteName}`,
+            description,
+            keywords,
+            creator: authorName,
+            publisher: siteName,
+            authors: [{ name: authorName }],
+            openGraph: {
+                type: 'article',
+                siteName,
+                title: post.title,
+                description,
+                images: post.thumbnail ? [{ url: post.thumbnail, alt: post.title }] : [],
+                publishedTime: publishedIso,
+                authors: [authorName],
+                tags: keywords,
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: post.title,
+                description,
+                images: post.thumbnail ? [post.thumbnail] : [],
+                creator: authorName,
+            },
+            alternates: {
+                canonical: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/blog/${post.slug}`,
+            },
+        };
+    } catch (e) {
         return {
             title: 'Post Not Found',
             robots: 'noindex, nofollow',
         };
     }
-
-    const [store] = await db.select().from(storeSettings).limit(1);
-
-    const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    const description = stripHtml(post.content).slice(0, 160) || post.title;
-    const keywords = post.tags ? post.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-    const publishedIso = post.createdAt instanceof Date ? post.createdAt.toISOString() : new Date(post.createdAt as unknown as string).toISOString();
-    const siteName = store?.store_name || 'Content Solution';
-    const authorName = siteName;
-
-    return {
-        title: `${post.title} | ${siteName}`,
-        description,
-        keywords,
-        creator: authorName,
-        publisher: siteName,
-        authors: [{ name: authorName }],
-        openGraph: {
-            type: 'article',
-            siteName,
-            title: post.title,
-            description,
-            images: post.thumbnail ? [{ url: post.thumbnail, alt: post.title }] : [],
-            publishedTime: publishedIso,
-            authors: [authorName],
-            tags: keywords,
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: post.title,
-            description,
-            images: post.thumbnail ? [post.thumbnail] : [],
-            creator: authorName,
-        },
-        alternates: {
-            canonical: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/blog/${post.slug}`,
-        },
-    };
 }
