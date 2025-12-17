@@ -12,11 +12,12 @@ export const fetchCache = 'force-no-store';
 const POSTS_PER_PAGE = 6;
 
 async function getBlogHeroData() {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     try {
-        const res = await fetch(`/api/pages/blog/hero`, { next: { tags: ['blog-hero'] } });
+        const res = await fetch(`${baseUrl}/api/pages/blog/hero`, { next: { tags: ['blog-hero'] } });
         return await res.json();
     } catch (error) {
-        console.error('Error fetching blog hero:', error);
+        console.error('Error fetching blog hero:', (error as Error)?.message ?? String(error));
         return {
             title: "The Content Solution Blog",
             subtitle: "Expert insights, trends, and strategies in content marketing for Nepali businesses.",
@@ -31,7 +32,7 @@ async function getBlogCTAData() {
         const res = await fetch(`${baseUrl}/api/pages/blog/cta`, { cache: 'no-store' });
         return await res.json();
     } catch (error) {
-        console.error('Error fetching blog cta:', error);
+        console.error('Error fetching blog cta:', (error as Error)?.message ?? String(error));
         return {
             title: "Stay Ahead of the Curve",
             description: "Get the latest content marketing tips delivered to your inbox.",
@@ -51,6 +52,7 @@ export default async function BlogPage({
         getBlogCTAData()
     ]);
 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const currentPage = Math.max(1, parseInt(params.page || '1'));
     const searchQuery = params.search?.trim() || '';
     const categoryFilter = params.category?.trim() || '';
@@ -64,14 +66,14 @@ export default async function BlogPage({
     if (categoryFilter && categoryFilter !== 'All') q.set('category', categoryFilter);
     q.set('meta', 'true');
 
-    const res = await fetch(`/api/blog?${q.toString()}`, { next: { tags: ['blog-posts'] } });
+    const res = await fetch(`${baseUrl}/api/blog?${q.toString()}`, { next: { tags: ['blog-posts'] } });
     const body = await res.json();
     const posts = Array.isArray(body) ? body : body.posts || [];
     const totalPosts = Array.isArray(body) ? body.length : Number(body.total || 0);
     const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
 
     // Get all unique categories from tags (fallback to fetching all posts)
-    const allRes = await fetch('/api/blog', { next: { tags: ['blog-posts'] } });
+    const allRes = await fetch(`${baseUrl}/api/blog`, { next: { tags: ['blog-posts'] } });
     const allPosts = allRes.ok ? await allRes.json() : [];
     const categoriesSet = new Set<string>();
     (allPosts || []).forEach((post: any) => {
@@ -117,7 +119,8 @@ export default async function BlogPage({
 
 export async function generateMetadata(): Promise<Metadata> {
     try {
-        const res = await fetch('/api/store-settings', { cache: 'no-store' });
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const res = await fetch(`${baseUrl}/api/store-settings`, { cache: 'no-store' });
         const [store] = res.ok ? await res.json() : [null];
         const siteName = store?.store_name || "Content Store";
         const title = `Blog | ${siteName}`;
