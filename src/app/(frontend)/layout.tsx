@@ -48,7 +48,7 @@ export async function generateMetadata(): Promise<Metadata> {
                 };
             }
         }
-    } catch (e) {}
+    } catch (e) { }
     return {
         title: "Content Store",
         description: "",
