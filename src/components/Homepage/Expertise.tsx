@@ -28,7 +28,7 @@ const Expertise = ({ section, items = [] }: ExpertiseProps) => {
     }
 
     return (
-        <section className="flex flex-col gap-10 py-16 sm:py-24 @container">
+        <section className="flex flex-col gap-10 py-20 sm:py-32 @container">
             <div className="flex flex-col gap-4 text-center items-center">
                 <h1
                     className="text-slate-900 tracking-light text-3xl font-bold leading-tight @[480px]:text-4xl @[480px]:font-black max-w-2xl">

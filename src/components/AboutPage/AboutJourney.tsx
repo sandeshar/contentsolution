@@ -45,7 +45,7 @@ const AboutJourney = ({ section, stats = [], features = [] }: AboutJourneyProps)
     }
 
     return (
-        <section className="w-full py-16 sm:py-24">
+        <section className="w-full py-20 sm:py-32">
             <div className="mx-auto max-w-6xl">
                 <div className="grid gap-12 lg:grid-cols-2 lg:items-start lg:gap-16">
                     <div className="flex flex-col gap-6">
@@ -63,7 +63,7 @@ const AboutJourney = ({ section, stats = [], features = [] }: AboutJourneyProps)
                         </div>
                     </div>
                     <div className="flex flex-col gap-6">
-                        <div className="rounded-xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+                        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                             <h3 className="text-xl font-bold text-slate-900">{section.thinking_box_title}</h3>
                             <p className="mt-3 text-slate-600 leading-relaxed text-base">
                                 {section.thinking_box_content}

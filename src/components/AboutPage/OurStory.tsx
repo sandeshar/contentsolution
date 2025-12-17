@@ -1,6 +1,6 @@
 const OurStory = () => {
     return (
-        <section className="w-full py-16 lg:py-24">
+        <section className="w-full py-20 sm:py-32 lg:py-32">
             <div className="mx-auto max-w-4xl px-4">
                 <div className="text-center">
                     <h2 className="text-3xl font-bold leading-tight tracking-[-0.015em] text-slate-900">

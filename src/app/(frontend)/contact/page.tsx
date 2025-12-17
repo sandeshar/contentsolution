@@ -68,7 +68,7 @@ export default async function ContactPage() {
     return (
         <main className="flex flex-col items-center page-bg">
             <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
-                <section className="w-full bg-white py-16 sm:py-24">
+                <section className="w-full bg-white py-20 sm:py-32">
                     <div className="text-center">
                         <ContactHero data={data.hero} />
                     </div>

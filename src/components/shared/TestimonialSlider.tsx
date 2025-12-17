@@ -87,7 +87,7 @@ const TestimonialSlider: React.FC<TestimonialSliderProps> = ({
     ];
 
     return (
-        <section className="py-16 sm:py-24 overflow-hidden">
+        <section className="py-20 sm:py-32 overflow-hidden">
             <div className="flex flex-col gap-12">
                 <div className="flex flex-col gap-4 text-center items-center">
                     <h2 className="text-slate-900 text-3xl font-bold tracking-tight md:text-4xl md:font-black max-w-2xl">

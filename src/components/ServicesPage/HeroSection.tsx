@@ -33,14 +33,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
     }
 
     return (
-        <section className="relative w-full min-h-screen flex items-center overflow-hidden">
-            <div className="absolute inset-0 z-0 overflow-hidden">
-                <div className="absolute -top-[20%] right-[-10%] h-[800px] w-[800px] rounded-full bg-linear-to-br from-primary/20 via-blue-400/10 to-transparent blur-[120px] opacity-60"></div>
-                <div className="absolute top-[40%] -left-[10%] h-[600px] w-[600px] rounded-full bg-indigo-500/10 blur-[100px] opacity-50"></div>
-                <div className="absolute bottom-[-20%] right-[20%] h-[500px] w-[500px] rounded-full bg-primary/10 blur-[90px] opacity-40"></div>
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-25 brightness-100 contrast-150 grayscale mix-blend-overlay"></div>
-            </div>
-
+        <section className="relative w-full min-h-[calc(100vh-60px)] flex items-center overflow-hidden">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-24 xl:gap-32 items-center justify-items-center lg:justify-items-stretch">
                     <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
@@ -109,7 +102,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
                             <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-blue-400/20 blur-3xl group-hover:bg-blue-400/30 transition-all duration-700 animate-pulse delay-700"></div>
                             <div className="relative h-full w-full bg-cover bg-center transform transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url("${data.background_image}")` }} />
 
-                            <div className="absolute -left-6 bottom-20 z-20 hidden md:block animate-[bounce_4s_infinite]">
+                            <div className="absolute -left-6 bottom-20 z-20 hidden md:block">
                                 <div className="flex items-center gap-4 rounded-xl bg-white/90 p-4 pr-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 border border-white/20">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500 text-white">
                                         <span className="material-symbols-outlined">trending_up</span>
@@ -121,7 +114,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
                                 </div>
                             </div>
 
-                            <div className="absolute -right-6 top-20 z-20 hidden md:block animate-[bounce_5s_infinite]">
+                            <div className="absolute -right-6 top-20 z-20 hidden md:block">
                                 <div className="flex items-center gap-4 rounded-xl bg-white/90 p-4 pr-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 border border-white/20">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-white">
                                         <span className="material-symbols-outlined">article</span>

@@ -18,7 +18,7 @@ const OurFoundation = () => {
     ];
 
     return (
-        <section className="w-full bg-white py-16 lg:py-24">
+        <section className="w-full bg-white py-20 sm:py-32 lg:py-32">
             <div className="mx-auto max-w-6xl px-4">
                 <div className="flex flex-col gap-12">
                     <div className="text-center">

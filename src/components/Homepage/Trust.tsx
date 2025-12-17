@@ -27,7 +27,7 @@ const Trust = ({ section, logos = [] }: TrustProps) => {
     }
 
     return (
-        <section className="py-16 sm:py-24">
+        <section className="py-20 sm:py-32">
             <h4
                 className="text-slate-500 text-sm font-bold leading-normal tracking-[0.015em] text-center pb-8">
                 {section.heading}</h4>

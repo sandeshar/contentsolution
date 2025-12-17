@@ -38,7 +38,7 @@ const AboutHero = ({ data }: AboutHeroProps) => {
     );
 
     return (
-        <section className="relative w-full h-[calc(100vh-80px)] flex items-center overflow-hidden">
+        <section className="relative w-full min-h-[calc(100vh-60px)] flex items-center overflow-hidden">
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 xl:gap-32 items-center justify-items-center lg:justify-items-stretch">
                     <div className="flex flex-col gap-8 items-center lg:items-start text-center lg:text-left z-10">

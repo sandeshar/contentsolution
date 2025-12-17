@@ -122,7 +122,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
         <main className="flex flex-col items-center page-bg">
             <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
                 {/* Hero Section */}
-                <section className="relative py-16 sm:py-24">
+                <section className="relative py-20 sm:py-32">
                     <div className="absolute inset-0 -z-10 bg-linear-to-br from-slate-50 to-slate-100" />
                     <div className="mx-auto w-full max-w-6xl">
                         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
@@ -173,7 +173,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                 </section>
 
                 {/* Details Section */}
-                <section id="details" className="py-16 sm:py-24">
+                <section id="details" className="py-20 sm:py-32">
                     <div className="mx-auto w-full max-w-6xl">
                         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12">
                             {/* Main Content */}
@@ -274,7 +274,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
 
                 {/* Testimonials */}
                 {post.id && (
-                    <section className="py-16 sm:py-24">
+                    <section className="py-20 sm:py-32">
                         <TestimonialSlider
                             filter={String(post.id)}
                             title={`Success Stories for ${post.title}`}
