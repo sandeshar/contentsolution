@@ -150,7 +150,7 @@ export default function TermsPageUI() {
                                 <div className="space-y-5">
                                     <InputGroup label="Title" value={headerData.title || ''} onChange={(v) => setHeaderData({ ...headerData, title: v })} />
                                     <InputGroup label="Last Updated Text" value={headerData.last_updated || ''} onChange={(v) => setHeaderData({ ...headerData, last_updated: v })} />
-                                    
+
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
                                         <Toggle checked={headerData.is_active === 1} onChange={(c) => setHeaderData({ ...headerData, is_active: c ? 1 : 0 })} />
@@ -180,7 +180,7 @@ export default function TermsPageUI() {
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (section.id) setDeletedSections([...deletedSections, section.id]);
                                                         setSections(sections.filter((_, i) => i !== idx));
@@ -193,7 +193,7 @@ export default function TermsPageUI() {
                                             <div className="space-y-4">
                                                 <InputGroup label="Title" value={section.title || ''} onChange={(v) => updateItem(idx, 'title', v, sections, setSections)} />
                                                 <TextAreaGroup label="Content" value={section.content || ''} onChange={(v) => updateItem(idx, 'content', v, sections, setSections)} />
-                                                
+
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <InputGroup label="Display Order" value={String(section.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), sections, setSections)} />
                                                     <div className="flex items-end justify-between">

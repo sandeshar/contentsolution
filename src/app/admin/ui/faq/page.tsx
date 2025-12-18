@@ -163,7 +163,7 @@ export default function FAQPageUI() {
                                     <InputGroup label="Title" value={headerData.title || ''} onChange={(v) => setHeaderData({ ...headerData, title: v })} />
                                     <TextAreaGroup label="Description" value={headerData.description || ''} onChange={(v) => setHeaderData({ ...headerData, description: v })} />
                                     <InputGroup label="Search Placeholder" value={headerData.search_placeholder || ''} onChange={(v) => setHeaderData({ ...headerData, search_placeholder: v })} />
-                                    
+
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
                                         <span className="text-sm font-medium text-gray-700">Enable Section</span>
                                         <Toggle checked={headerData.is_active === 1} onChange={(c) => setHeaderData({ ...headerData, is_active: c ? 1 : 0 })} />
@@ -193,7 +193,7 @@ export default function FAQPageUI() {
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (category.id) setDeletedCategories([...deletedCategories, category.id]);
                                                         setCategories(categories.filter((_, i) => i !== idx));
@@ -239,7 +239,7 @@ export default function FAQPageUI() {
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow group">
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-500">{idx + 1}</span>
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         if (item.id) setDeletedFaqItems([...deletedFaqItems, item.id]);
                                                         setFaqItems(faqItems.filter((_, i) => i !== idx));
@@ -252,7 +252,7 @@ export default function FAQPageUI() {
                                             <div className="space-y-4">
                                                 <InputGroup label="Question" value={item.question || ''} onChange={(v) => updateItem(idx, 'question', v, faqItems, setFaqItems)} />
                                                 <TextAreaGroup label="Answer" value={item.answer || ''} onChange={(v) => updateItem(idx, 'answer', v, faqItems, setFaqItems)} />
-                                                
+
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
                                                     <select

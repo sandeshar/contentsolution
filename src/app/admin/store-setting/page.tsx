@@ -276,7 +276,7 @@ export default function StoreSettingPage() {
                                                                 setFormData({ ...formData, favicon: json.url });
                                                             } catch (err: any) {
                                                                 console.error('Favicon upload failed', err);
-                                                            showToast(err.message || 'Favicon upload failed', { type: 'error' });
+                                                                showToast(err.message || 'Favicon upload failed', { type: 'error' });
                                                             }
                                                         }
                                                     }}

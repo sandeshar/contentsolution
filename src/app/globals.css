@@ -401,22 +401,28 @@
 
 /* Toast notifications */
 .toast-container {
-  pointer-events: none; /* allow clicks through empty areas */
+    pointer-events: none;
+    /* allow clicks through empty areas */
 }
+
 .toast {
-  pointer-events: auto;
-  background-color: var(--color-card);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
+    pointer-events: auto;
+    background-color: var(--color-card);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
 }
+
 .toast .material-symbols-outlined {
-  font-size: 20px;
+    font-size: 20px;
 }
+
 .toast-success {
-  border-left: 4px solid var(--color-primary);
+    border-left: 4px solid var(--color-primary);
 }
+
 .toast-error {
-  border-left: 4px solid #ef4444; /* red-500 */
+    border-left: 4px solid #ef4444;
+    /* red-500 */
 }
 
 .tiptap [style*="text-align: right"] {
