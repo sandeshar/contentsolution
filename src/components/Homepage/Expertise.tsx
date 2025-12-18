@@ -31,10 +31,10 @@ const Expertise = ({ section, items = [] }: ExpertiseProps) => {
         <section className="flex flex-col gap-10 py-20 sm:py-32 @container">
             <div className="flex flex-col gap-4 text-center items-center">
                 <h1
-                    className="text-slate-900 tracking-light text-3xl font-bold leading-tight @[480px]:text-4xl @[480px]:font-black max-w-2xl">
+                    className="text-body tracking-light text-3xl font-bold leading-tight @[480px]:text-4xl @[480px]:font-black max-w-2xl">
                     {section.title}
                 </h1>
-                <p className="text-slate-600 text-base font-normal leading-normal max-w-2xl">
+                <p className="text-subtext text-base font-normal leading-normal max-w-2xl">
                     {section.description}
                 </p>
             </div>
@@ -42,12 +42,12 @@ const Expertise = ({ section, items = [] }: ExpertiseProps) => {
                 {items.map((item) => (
                     <div
                         key={item.id}
-                        className="flex flex-1 gap-4 rounded-xl border border-slate-200 bg-white p-6 flex-col"
+                        className="flex flex-1 gap-4 rounded-xl border border-muted bg-card p-6 flex-col"
                     >
-                        <span className="material-symbols-outlined text-primary text-3xl">{item.icon}</span>
+                        <span className="material-symbols-outlined text-primary-var text-3xl">{item.icon}</span>
                         <div className="flex flex-col gap-1">
-                            <h2 className="text-slate-900 text-lg font-bold leading-tight">{item.title}</h2>
-                            <p className="text-slate-600 text-sm font-normal leading-normal">{item.description}</p>
+                            <h2 className="text-body text-lg font-bold leading-tight">{item.title}</h2>
+                            <p className="text-subtext text-sm font-normal leading-normal">{item.description}</p>
                         </div>
                     </div>
                 ))}

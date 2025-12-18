@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import ImageUploader from "@/components/shared/ImageUploader";
+import { showToast } from '@/components/Toast';
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -124,11 +125,11 @@ function AddBlogPage() {
                 throw new Error(data.error || 'Failed to create post');
             }
 
-            alert(isDraft ? 'Draft saved successfully!' : 'Post published successfully!');
+            showToast(isDraft ? 'Draft saved successfully!' : 'Post published successfully!', { type: 'success' });
             window.location.href = '/admin/blog';
         } catch (error: any) {
             console.error('Error creating post:', error);
-            alert(error.message || 'Failed to create post. Please try again.');
+            showToast(error.message || 'Failed to create post. Please try again.', { type: 'error' });
         } finally {
             setIsSaving(false);
         }
@@ -181,7 +182,7 @@ function AddBlogPage() {
                 editor?.chain().focus().setImage({ src: data.url }).run();
             } catch (error) {
                 console.error('Error uploading image:', error);
-                alert('Failed to upload image. Please try again.');
+                showToast('Failed to upload image. Please try again.', { type: 'error' });
                 // Remove loading image on error
                 editor?.commands.deleteSelection();
             }

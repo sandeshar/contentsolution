@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { showToast } from '@/components/Toast';
 
 type Submission = {
     id: number;
@@ -98,7 +99,7 @@ export default function ContactAdminPage() {
 
             setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)));
         } catch (err) {
-            alert(err instanceof Error ? err.message : "Could not update status");
+            showToast(err instanceof Error ? err.message : "Could not update status", { type: 'error' });
         } finally {
             setUpdatingId(null);
         }

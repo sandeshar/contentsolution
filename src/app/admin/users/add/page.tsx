@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { showToast } from '@/components/Toast';
 
 export default function AddUserPage() {
     const router = useRouter();
@@ -23,10 +24,10 @@ export default function AddUserPage() {
             body: JSON.stringify(formData),
         });
         if (response.ok) {
-            alert('User added successfully!');
+            showToast('User added successfully!', { type: 'success' });
             router.push('/admin/users');
         } else {
-            alert('Failed to add user.');
+            showToast('Failed to add user.', { type: 'error' });
         }
     };
 

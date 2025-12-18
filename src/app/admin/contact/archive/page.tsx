@@ -80,7 +80,7 @@ export default function ContactArchivePage() {
             if (!res.ok) throw new Error(data.error || "Failed to update status");
             setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)).filter((s) => s.status === "archived"));
         } catch (err) {
-            alert(err instanceof Error ? err.message : "Could not update status");
+            showToast(err instanceof Error ? err.message : "Could not update status", { type: 'error' });
         } finally {
             setUpdatingId(null);
         }

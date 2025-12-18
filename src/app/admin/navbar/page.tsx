@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { showToast } from '@/components/Toast';
 
 type NavbarItem = {
     id?: number;
@@ -75,22 +76,22 @@ export default function NavbarManagerPage() {
             });
             const data = await response.json();
             if (response.status === 201) {
-                alert('Navbar item created successfully!');
+                showToast('Navbar item created successfully!', { type: 'success' });
             } else if (response.status === 200 && data?.existing) {
-                alert('Navbar item already exists.');
+                showToast('Navbar item already exists.', { type: 'info' });
             } else if (response.status === 409) {
-                alert('Cannot create navbar item: duplicate exists.');
+                showToast('Cannot create navbar item: duplicate exists.', { type: 'error' });
             } else if (!response.ok) {
                 throw new Error('Failed to save navbar item');
             } else {
-                alert('Navbar item saved successfully!');
+                showToast('Navbar item saved successfully!', { type: 'success' });
             }
             setIsModalOpen(false);
             setSelectedItem(null);
             fetchData();
         } catch (error) {
             console.error('Error saving navbar item:', error);
-            alert('Failed to save navbar item. Please try again.');
+            showToast('Failed to save navbar item. Please try again.', { type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -109,11 +110,11 @@ export default function NavbarManagerPage() {
 
             if (!response.ok) throw new Error('Failed to delete navbar item');
 
-            alert('Navbar item deleted successfully!');
+            showToast('Navbar item deleted successfully!', { type: 'success' });
             fetchData();
         } catch (error) {
             console.error('Error deleting navbar item:', error);
-            alert('Failed to delete navbar item. Please try again.');
+            showToast('Failed to delete navbar item. Please try again.', { type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -257,12 +258,12 @@ export default function NavbarManagerPage() {
                     }
                 }
             }
-            alert('Categories and subcategories added to navbar');
+            showToast('Categories and subcategories added to navbar', { type: 'success' });
             setManageChildrenId(null);
             fetchData();
         } catch (error) {
             console.error('Error adding categories:', error);
-            alert('Failed to add categories');
+            showToast('Failed to add categories', { type: 'error' });
         }
     };
 
@@ -279,11 +280,11 @@ export default function NavbarManagerPage() {
                 }
                 await fetch('/api/navbar', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: child.id }) });
             }
-            alert('All children removed');
+            showToast('All children removed', { type: 'success' });
             fetchData();
         } catch (error) {
             console.error('Error removing children:', error);
-            alert('Failed to remove children');
+            showToast('Failed to remove children', { type: 'error' });
         } finally {
             setSaving(false);
             setManageChildrenId(null);

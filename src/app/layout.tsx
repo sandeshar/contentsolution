@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ToastContainer from '@/components/Toast';
 
 import { GoogleAnalytics } from '@next/third-parties/google'
 
@@ -121,7 +122,7 @@ export default async function RootLayout({
     ].filter(Boolean)
   } : null;
 
-  const themeClass = `theme-${s?.theme ?? 'light'}`;
+  const themeClass = `theme-${s?.theme ?? 'default'}`;
 
   return (
     <html lang="en">
@@ -139,8 +140,7 @@ export default async function RootLayout({
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID as string} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} font-display antialiased ${themeClass}`}>
-        {children}
-      </body>
+        {children}        <ToastContainer />      </body>
     </html>
   );
 }

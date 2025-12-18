@@ -27,7 +27,7 @@ const AvatarList = () => (
         <img alt="User" className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSpy53nmHtxtTkompr0U5wlwZWFYZJDNk7GjA9-O4iOv-ZHJVFbDnl-mqCCH9pSUgCt9XZ9XehLTovbWeKhFYgRTXQsEQRSGPj9AJR1_Wqf5gpDjXJPIuVRgTF-IBr80s6VWteFE7PKAWIWi5hohaN1scKGzMdIMR3VrStzut8iDvo2xhclYGoZ1l4BsjTjNoyI6tL7bt5H2xndCMAGbAqMwM67RMjOTnPCXweriKLSl2B-DzCe2o3OovgtBIGjNyNKNUHk5NKD0c" />
         <img alt="User" className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8lNGQE5AKH2jT1ixjd-ecIaNsPRHmBRqHXINCkZDvh8OETJRHbo7SLVoP6tgDx2H4kIUob2tbjbwp46kUFvPbY3znIBSfrg69LxtPAV4LTTXY4TrynMnDRFNASV6ZfUnV8hh6vLDS8uvMhEDB32QvXRkZae_jT0vFGiSm38YisYluh3YIMtR2WFFGzu2juHXagKk4Z-LZGYEFL-kKix5yajEMp1vCJuwcekVhj12MBPSTUdz9eq6YUylBsza99eBeGkNY1rje6go" />
         <img alt="User" className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkWe0Z-JjmmalmerCPJhKs-S5DcjpJbQ9cmhlotohozR3NZcFr9FUkWlccHJ8bQkbuzctReniOawWvgwBLRGR7Q-ek5wHeOPwHId1pE2QfeBAGVkyOrUb9h9CkFcjiJ1GRjgSasbwJ91W8FnFyFjs3Sd-kP0PCrXS0fdzJi8-Q3IRfsz8DiRi16ShJtqty0brtTGfvN6OJOryQ9xPTkoXiJM0oXodu2OLe4glzX1K0cG2sYYoSzqBs12KRaJtANov31VSwmevZ-yU" />
-        <div className="inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-white bg-slate-100 text-xs font-bold text-slate-600">
+        <div className="inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-muted bg-card text-xs font-bold text-subtext">
             +2k
         </div>
     </div>
@@ -56,21 +56,21 @@ const Hero = ({ data }: HeroProps) => {
                     <div className="flex flex-col gap-8 items-center lg:items-start text-center lg:text-left z-10">
                         {data.badge_text && (
                             <div className="flex justify-center lg:justify-start">
-                                <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1 backdrop-blur-sm">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-muted bg-card px-3 py-1 backdrop-blur-sm">
                                     <span className="relative flex h-2 w-2">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                                     </span>
-                                    <span className="text-sm font-medium text-slate-600">{data.badge_text}</span>
+                                    <span className="text-sm font-medium text-subtext">{data.badge_text}</span>
                                 </div>
                             </div>
                         )}
 
                         <div className="flex flex-col gap-6">
-                            <h1 className="text-slate-900 text-3xl font-black leading-[1.05] tracking-[-0.033em] md:text-4xl lg:text-5xl xl:text-6xl">
+                            <h1 className="text-body text-3xl font-black leading-[1.05] tracking-[-0.033em] md:text-4xl lg:text-5xl xl:text-6xl">
                                 <HighlightedTitle title={data.title} highlight={data.highlight_text} />
                             </h1>
-                            <p className="text-slate-600 text-sm font-normal leading-relaxed md:text-base xl:text-lg max-w-2xl mx-auto lg:mx-0">{data.subtitle}</p>
+                            <p className="text-subtext text-sm font-normal leading-relaxed md:text-base xl:text-lg max-w-2xl mx-auto lg:mx-0">{data.subtitle}</p>
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -84,7 +84,7 @@ const Hero = ({ data }: HeroProps) => {
                             )}
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start pt-4 border-t border-slate-100 mt-2">
+                        <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start pt-4 border-t border-muted mt-2">
                             <AvatarList />
                             <div className="flex flex-col items-center sm:items-start gap-1">
                                 <div className="flex text-yellow-400" aria-hidden>
@@ -100,24 +100,24 @@ const Hero = ({ data }: HeroProps) => {
                     </div>
 
                     <div className="relative w-full z-10 perspective-1000">
-                        <div className="relative w-full h-[360px] sm:h-[480px] lg:h-[560px] xl:h-[72vh] rounded-2xl shadow-2xl bg-white border-4 border-white overflow-hidden transform transition-transform hover:scale-[1.02] duration-500 group" style={{ backgroundImage: `url("${data.background_image}")`, backgroundPosition: 'center', backgroundSize: 'cover' }} role="img" aria-label={data.hero_image_alt || 'Hero image'}>
-                            <div className="absolute top-5 right-2 sm:right-8 bg-white p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden sm:flex items-center gap-3 animate-float z-20">
-                                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+                        <div className="relative w-full h-[360px] sm:h-[480px] lg:h-[560px] xl:h-[72vh] rounded-2xl shadow-2xl bg-card border-4 border-muted overflow-hidden transform transition-transform hover:scale-[1.02] duration-500 group" style={{ backgroundImage: `url("${data.background_image}")`, backgroundPosition: 'center', backgroundSize: 'cover' }} role="img" aria-label={data.hero_image_alt || 'Hero image'}>
+                            <div className="absolute top-5 right-2 sm:right-8 bg-card p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden sm:flex items-center gap-3 animate-float z-20">
+                                <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-primary-var">
                                     <span className="material-symbols-outlined">trending_up</span>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Growth</p>
-                                    <p className="text-sm font-bold text-slate-900">+240% ROI</p>
+                                    <p className="text-xs text-subtext font-bold uppercase tracking-wider">Growth</p>
+                                    <p className="text-sm font-bold text-body">+240% ROI</p>
                                 </div>
                             </div>
 
-                            <div className="absolute bottom-5 left-2 sm:left-8 bg-white p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden sm:flex items-center gap-3 animate-float-delayed z-20">
-                                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center text-primary">
+                            <div className="absolute bottom-5 left-2 sm:left-8 bg-card p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden sm:flex items-center gap-3 animate-float-delayed z-20">
+                                <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-primary-var">
                                     <span className="material-symbols-outlined">check_circle</span>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Ranking</p>
-                                    <p className="text-sm font-bold text-slate-900">#1 Result</p>
+                                    <p className="text-xs text-subtext font-bold uppercase tracking-wider">Ranking</p>
+                                    <p className="text-sm font-bold text-body">#1 Result</p>
                                 </div>
                             </div>
                         </div>

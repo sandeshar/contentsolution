@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { showToast } from '@/components/Toast';
 
 interface Testimonial {
     id: number;
@@ -205,15 +206,15 @@ export default function TestimonialPage() {
             });
 
             if (response.ok) {
-                alert('Testimonial deleted successfully!');
+                showToast('Testimonial deleted successfully!', { type: 'success' });
                 fetchTestimonials();
             } else {
                 const data = await response.json();
-                alert(data.error || 'Failed to delete testimonial');
+                showToast(data.error || 'Failed to delete testimonial', { type: 'error' });
             }
         } catch (error) {
             console.error('Error deleting testimonial:', error);
-            alert('Failed to delete testimonial. Please try again.');
+            showToast('Failed to delete testimonial. Please try again.', { type: 'error' });
         }
     };
 

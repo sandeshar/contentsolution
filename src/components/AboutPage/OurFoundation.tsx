@@ -18,14 +18,14 @@ const OurFoundation = () => {
     ];
 
     return (
-        <section className="w-full bg-white py-20 sm:py-32 lg:py-32">
+        <section className="w-full bg-page py-20 sm:py-32 lg:py-32">
             <div className="mx-auto max-w-6xl">
                 <div className="flex flex-col gap-12">
                     <div className="text-center">
-                        <h2 className="text-3xl font-bold leading-tight tracking-[-0.033em] text-slate-900">
+                        <h2 className="text-3xl font-bold leading-tight tracking-[-0.033em] text-body">
                             Our Foundation
                         </h2>
-                        <p className="mx-auto mt-4 max-w-3xl text-base font-normal leading-normal text-slate-600">
+                        <p className="mx-auto mt-4 max-w-3xl text-base font-normal leading-normal text-subtext">
                             We are guided by a core set of principles that define who we are and how we work. These are the promises we make to our clients and to each other.
                         </p>
                     </div>
@@ -33,16 +33,16 @@ const OurFoundation = () => {
                         {foundations.map((item, index) => (
                             <div
                                 key={index}
-                                className="flex flex-col items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-6 text-center"
+                                className="flex flex-col items-center gap-4 rounded-xl border border-muted bg-card p-6 text-center"
                             >
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-primary">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-20 text-primary-var">
                                     <span className="material-symbols-outlined text-3xl">{item.icon}</span>
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <h3 className="text-xl font-bold leading-tight text-slate-900">
+                                    <h3 className="text-xl font-bold leading-tight text-body">
                                         {item.title}
                                     </h3>
-                                    <p className="text-sm font-normal leading-normal text-slate-600">
+                                    <p className="text-sm font-normal leading-normal text-subtext">
                                         {item.description}
                                     </p>
                                 </div>

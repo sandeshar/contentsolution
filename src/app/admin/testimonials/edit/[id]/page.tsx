@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import ImageUploader from '@/components/shared/ImageUploader';
+import { showToast } from '@/components/Toast';
 
 interface Service {
     id: number;
@@ -127,7 +128,7 @@ export default function EditTestimonialPage() {
             }
         } catch (error) {
             console.error('Error fetching testimonial:', error);
-            alert('Failed to load testimonial');
+            showToast('Failed to load testimonial', { type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -137,7 +138,7 @@ export default function EditTestimonialPage() {
         e.preventDefault();
 
         if (!imageUrl) {
-            alert('Please upload an image');
+            showToast('Please upload an image', { type: 'error' });
             return;
         }
 
@@ -167,11 +168,11 @@ export default function EditTestimonialPage() {
                 throw new Error(data.error || 'Failed to update testimonial');
             }
 
-            alert('Testimonial updated successfully!');
+            showToast('Testimonial updated successfully!', { type: 'success' });
             router.push('/admin/testimonials');
         } catch (error: any) {
             console.error('Error updating testimonial:', error);
-            alert(error.message || 'Failed to update testimonial. Please try again.');
+            showToast(error.message || 'Failed to update testimonial. Please try again.', { type: 'error' });
         } finally {
             setIsSaving(false);
         }

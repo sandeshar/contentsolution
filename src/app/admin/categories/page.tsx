@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { showToast } from '@/components/Toast';
 
 type Category = {
     id?: number;
@@ -100,13 +101,13 @@ export default function CategoriesManagerPage() {
 
             if (!response.ok) throw new Error('Failed to save category');
 
-            alert('Category saved successfully!');
+            showToast('Category saved successfully!', { type: 'success' });
             setIsCategoryModalOpen(false);
             setSelectedCategory(null);
             fetchData();
         } catch (error) {
             console.error('Error saving category:', error);
-            alert('Failed to save category. Please try again.');
+            showToast('Failed to save category. Please try again.', { type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -126,13 +127,13 @@ export default function CategoriesManagerPage() {
 
             if (!response.ok) throw new Error('Failed to save subcategory');
 
-            alert('Subcategory saved successfully!');
+            showToast('Subcategory saved successfully!', { type: 'success' });
             setIsSubcategoryModalOpen(false);
             setSelectedSubcategory(null);
             fetchData();
         } catch (error) {
             console.error('Error saving subcategory:', error);
-            alert('Failed to save subcategory. Please try again.');
+            showToast('Failed to save subcategory. Please try again.', { type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -151,11 +152,11 @@ export default function CategoriesManagerPage() {
 
             if (!response.ok) throw new Error('Failed to delete category');
 
-            alert('Category deleted successfully!');
+            showToast('Category deleted successfully!', { type: 'success' });
             fetchData();
         } catch (error) {
             console.error('Error deleting category:', error);
-            alert('Failed to delete category. Please try again.');
+            showToast('Failed to delete category. Please try again.', { type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -174,11 +175,11 @@ export default function CategoriesManagerPage() {
 
             if (!response.ok) throw new Error('Failed to delete subcategory');
 
-            alert('Subcategory deleted successfully!');
+            showToast('Subcategory deleted successfully!', { type: 'success' });
             fetchData();
         } catch (error) {
             console.error('Error deleting subcategory:', error);
-            alert('Failed to delete subcategory. Please try again.');
+            showToast('Failed to delete subcategory. Please try again.', { type: 'error' });
         } finally {
             setSaving(false);
         }

@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { User } from "@/types/user";
+import { showToast } from '@/components/Toast';
 
 export default function AddUserPage() {
     const id = useParams().id;
@@ -50,11 +51,11 @@ export default function AddUserPage() {
             body: JSON.stringify({ id: parseInt(id as string), ...formData }),
         });
         if (response.ok) {
-            alert('User updated successfully!');
+            showToast('User updated successfully!', { type: 'success' });
             router.push('/admin/users');
         } else {
             const data = await response.json();
-            alert(data.error || 'Failed to update user.');
+            showToast(data.error || 'Failed to update user.', { type: 'error' });
         }
     };
 

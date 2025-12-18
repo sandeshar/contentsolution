@@ -49,11 +49,11 @@ const AboutJourney = ({ section, stats = [], features = [] }: AboutJourneyProps)
             <div className="mx-auto max-w-6xl">
                 <div className="grid gap-12 lg:grid-cols-2 lg:items-start lg:gap-16">
                     <div className="flex flex-col gap-6">
-                        <h2 className="text-3xl font-black leading-tight tracking-[-0.02em] text-slate-900 md:text-5xl">{section.title}</h2>
-                        <p className="text-lg leading-relaxed text-slate-600">
+                        <h2 className="text-3xl font-black leading-tight tracking-[-0.02em] text-body md:text-5xl">{section.title}</h2>
+                        <p className="text-lg leading-relaxed text-subtext">
                             {section.paragraph1}
                         </p>
-                        <p className="text-lg leading-relaxed text-slate-600">
+                        <p className="text-lg leading-relaxed text-subtext">
                             {section.paragraph2}
                         </p>
                         <div className="grid grid-cols-3 gap-4 pt-4">
@@ -63,9 +63,9 @@ const AboutJourney = ({ section, stats = [], features = [] }: AboutJourneyProps)
                         </div>
                     </div>
                     <div className="flex flex-col gap-6">
-                        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                            <h3 className="text-xl font-bold text-slate-900">{section.thinking_box_title}</h3>
-                            <p className="mt-3 text-slate-600 leading-relaxed text-base">
+                        <div className="rounded-xl bg-card p-6 shadow-sm ring-1 ring-muted">
+                            <h3 className="text-xl font-bold text-body">{section.thinking_box_title}</h3>
+                            <p className="mt-3 text-subtext leading-relaxed text-base">
                                 {section.thinking_box_content}
                             </p>
                         </div>

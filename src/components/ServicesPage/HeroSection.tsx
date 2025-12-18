@@ -38,7 +38,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
                 <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-24 xl:gap-32 items-center justify-items-center lg:justify-items-stretch">
                     <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
                         {data.badge_text && (
-                            <div className="inline-flex items-center gap-2 self-start rounded-full bg-white/50 backdrop-blur-md px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary ring-1 ring-slate-200/60 transition-transform hover:scale-105 mb-2">
+                            <div className="inline-flex items-center gap-2 self-start rounded-full bg-card px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-var ring-1 ring-muted transition-transform hover:scale-105 mb-2">
                                 <span className="flex h-2 w-2 relative">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -47,7 +47,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
                             </div>
                         )}
 
-                        <h1 className="text-slate-900 text-3xl font-black leading-[1.05] tracking-[-0.033em] md:text-4xl lg:text-5xl xl:text-6xl">
+                        <h1 className="text-body text-3xl font-black leading-[1.05] tracking-[-0.033em] md:text-4xl lg:text-5xl xl:text-6xl">
                             {data.title.split('\n').map((line, i) => {
                                 const hl = data.highlight_text || '';
                                 const idx = hl ? line.indexOf(hl) : -1;
@@ -66,7 +66,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
                             })}
                         </h1>
 
-                        <p className="mt-2 text-slate-600 text-sm font-normal leading-relaxed md:text-base xl:text-lg max-w-2xl">{data.description}</p>
+                        <p className="mt-2 text-subtext text-sm font-normal leading-relaxed md:text-base xl:text-lg max-w-2xl">{data.description}</p>
 
                         <div className="mt-6 flex flex-col sm:flex-row gap-4">
                             <a href={data.primary_cta_link || '#'} aria-label={data.primary_cta_text}>
@@ -79,10 +79,10 @@ const HeroSection = ({ data }: HeroSectionProps) => {
                             )}
                         </div>
 
-                        <div className="mt-6 pt-4 border-t border-slate-100 grid grid-cols-3 gap-6 w-full">
+                        <div className="mt-6 pt-4 border-t border-muted grid grid-cols-3 gap-6 w-full">
                             <div>
-                                <p className="text-3xl font-extrabold text-slate-900">{data.stat1_value || ''}</p>
-                                <p className="text-sm font-semibold text-slate-500 mt-1">{data.stat1_label || ''}</p>
+                                <p className="text-3xl font-extrabold text-body">{data.stat1_value || ''}</p>
+                                <p className="text-sm font-semibold text-subtext mt-1">{data.stat1_label || ''}</p>
                             </div>
                             <div>
                                 <p className="text-3xl font-extrabold text-slate-900">{data.stat2_value || ''}</p>
@@ -96,20 +96,20 @@ const HeroSection = ({ data }: HeroSectionProps) => {
                     </div>
 
                     <div className="relative lg:pl-10 mt-6 lg:mt-0 w-full">
-                        <div className="relative w-full h-[360px] sm:h-[480px] lg:h-[560px] xl:h-[72vh] overflow-hidden rounded-2xl bg-slate-100 shadow-2xl ring-1 ring-slate-900/5 group transform transition-transform hover:scale-[1.01] duration-500">
+                        <div className="relative w-full h-[360px] sm:h-[480px] lg:h-[560px] xl:h-[72vh] overflow-hidden rounded-2xl bg-card shadow-2xl ring-1 ring-muted group transform transition-transform hover:scale-[1.01] duration-500">
                             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${data.background_image}")` }} role="img" aria-label={data.hero_image_alt || 'Hero image'}></div>
-                            <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-primary/20 blur-3xl group-hover:bg-primary/30 transition-all duration-700 animate-pulse"></div>
-                            <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-blue-400/20 blur-3xl group-hover:bg-blue-400/30 transition-all duration-700 animate-pulse delay-700"></div>
+                            <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-primary-20 blur-3xl transition-all duration-700 animate-pulse"></div>
+                            <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-primary-20 blur-3xl transition-all duration-700 animate-pulse delay-700"></div>
                             <div className="relative h-full w-full bg-cover bg-center transform transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url("${data.background_image}")` }} />
 
                             <div className="absolute -left-6 bottom-20 z-20 hidden md:block">
-                                <div className="flex items-center gap-4 rounded-xl bg-white/90 p-4 pr-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 border border-white/20">
+                                <div className="flex items-center gap-4 rounded-xl bg-card p-4 pr-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 border border-muted">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500 text-white">
                                         <span className="material-symbols-outlined">trending_up</span>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Traffic Growth</p>
-                                        <p className="text-xl font-black text-slate-900">+145%</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-subtext">Traffic Growth</p>
+                                        <p className="text-xl font-black text-body">+145%</p>
                                     </div>
                                 </div>
                             </div>

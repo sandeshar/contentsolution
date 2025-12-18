@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ImageUploader from '@/components/shared/ImageUploader';
+import { showToast } from '@/components/Toast';
 
 interface Service {
     id: number;
@@ -79,7 +80,7 @@ export default function AddTestimonialPage() {
         e.preventDefault();
 
         if (!imageUrl) {
-            alert('Please upload an image');
+            showToast('Please upload an image', { type: 'error' });
             return;
         }
 
@@ -108,11 +109,11 @@ export default function AddTestimonialPage() {
                 throw new Error(data.error || 'Failed to create testimonial');
             }
 
-            alert('Testimonial created successfully!');
+            showToast('Testimonial created successfully!', { type: 'success' });
             router.push('/admin/testimonials');
         } catch (error: any) {
             console.error('Error creating testimonial:', error);
-            alert(error.message || 'Failed to create testimonial. Please try again.');
+            showToast(error.message || 'Failed to create testimonial. Please try again.', { type: 'error' });
         } finally {
             setIsSaving(false);
         }

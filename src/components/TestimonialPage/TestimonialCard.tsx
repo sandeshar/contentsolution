@@ -20,7 +20,7 @@ const TestimonialCard = ({
     date,
 }: TestimonialCardProps) => {
     return (
-        <div className="flex flex-col gap-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md">
+        <div className="flex flex-col gap-4 rounded-xl bg-card p-6 shadow-sm ring-1 ring-muted transition-shadow hover:shadow-md">
             {/* Rating */}
             <div className="flex gap-1">
                 {Array.from({ length: 5 }).map((_, index) => {
@@ -40,7 +40,7 @@ const TestimonialCard = ({
             </div>
 
             {/* Content */}
-            <p className="text-sm leading-relaxed text-slate-600">{content}</p>
+            <p className="text-sm leading-relaxed text-subtext">{content}</p>
 
             {/* Author */}
             <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
@@ -50,10 +50,10 @@ const TestimonialCard = ({
                     alt={name}
                 />
                 <div>
-                    <h4 className="text-sm font-bold text-slate-900">{name}</h4>
-                    <p className="text-xs text-slate-500">{role}</p>
+                    <h4 className="text-sm font-bold text-body">{name}</h4>
+                    <p className="text-xs text-subtext">{role}</p>
                     {date && (
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-subtext">
                             {new Date(date).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'short',

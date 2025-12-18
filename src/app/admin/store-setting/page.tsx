@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { showToast } from '@/components/Toast';
 
 export default function StoreSettingPage() {
     const [loading, setLoading] = useState(true);
@@ -22,7 +23,7 @@ export default function StoreSettingPage() {
         footerText: "",
         logo: "",
         favicon: "",
-        theme: "light",
+        theme: "default",
     });
 
     // Theme select UI state
@@ -31,15 +32,13 @@ export default function StoreSettingPage() {
 
     // Preset themes for quick selection (colors mirror globals.css variables)
     const presetThemes = [
-        { id: 'light', name: 'Light', colors: { primary: '#135bec', background: '#f6f7f8', card: '#ffffff' } },
-        { id: 'dark', name: 'Dark', colors: { primary: '#7c3aed', background: '#0b1220', card: '#0f1724' } },
+        { id: 'default', name: 'Default', colors: { primary: '#2563eb', background: '#f8fafc', card: '#ffffff' } },
         { id: 'ocean', name: 'Ocean', colors: { primary: '#0ea5a4', background: '#ecfeff', card: '#ffffff' } },
         { id: 'corporate', name: 'Corporate', colors: { primary: '#0f172a', background: '#f8fafc', card: '#ffffff' } },
         { id: 'sunset', name: 'Sunset', colors: { primary: '#ff6b6b', background: '#fff7f5', card: '#fff1f0' } },
         { id: 'forest', name: 'Forest', colors: { primary: '#16a34a', background: '#f0fff5', card: '#ffffff' } },
         { id: 'lavender', name: 'Lavender', colors: { primary: '#7c3aed', background: '#fbf5ff', card: '#ffffff' } },
-        { id: 'minimal', name: 'Minimal', colors: { primary: '#111827', background: '#ffffff', card: '#ffffff' } },
-        { id: 'vibrant', name: 'Vibrant', colors: { primary: '#ff7a18', background: '#fffaf0', card: '#ffffff' } },
+        { id: 'minimal', name: 'Minimal', colors: { primary: '#2563eb', background: '#ffffff', card: '#ffffff' } },
     ];
 
     useEffect(() => {
@@ -66,7 +65,7 @@ export default function StoreSettingPage() {
                         footerText: d.footerText || "",
                         logo: d.storeLogo || "",
                         favicon: d.favicon || "",
-                        theme: d.theme || "light",
+                        theme: d.theme || "default",
                     });
                 }
             } catch (e) {
@@ -155,12 +154,12 @@ export default function StoreSettingPage() {
             if (!res.ok || !json?.success) {
                 throw new Error(json?.error || 'Failed to save');
             }
-            alert('Settings saved successfully');
+            showToast('Settings saved successfully', { type: 'success' });
             // Reload to apply theme/site-wide changes immediately
             window.location.reload();
         } catch (e: any) {
             console.error('Save failed', e);
-            alert(e.message || 'Failed to save');
+            showToast(e.message || 'Failed to save', { type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -241,7 +240,7 @@ export default function StoreSettingPage() {
                                                                 setFormData({ ...formData, logo: json.url });
                                                             } catch (err: any) {
                                                                 console.error('Logo upload failed', err);
-                                                                alert(err.message || 'Logo upload failed');
+                                                                showToast(err.message || 'Logo upload failed', { type: 'error' });
                                                             }
                                                         }
                                                     }}
@@ -277,7 +276,7 @@ export default function StoreSettingPage() {
                                                                 setFormData({ ...formData, favicon: json.url });
                                                             } catch (err: any) {
                                                                 console.error('Favicon upload failed', err);
-                                                                alert(err.message || 'Favicon upload failed');
+                                                            showToast(err.message || 'Favicon upload failed', { type: 'error' });
                                                             }
                                                         }
                                                     }}
@@ -501,7 +500,7 @@ export default function StoreSettingPage() {
                                                         aria-label="Theme options"
                                                         className="absolute right-0 bottom-full mb-2 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-60 overflow-auto"
                                                     >
-                                                        {['light', 'dark', 'ocean', 'corporate', 'sunset', 'forest', 'lavender', 'minimal', 'vibrant'].map((t) => (
+                                                        {['default', 'ocean', 'corporate', 'forest', 'sunset', 'lavender', 'minimal'].map((t) => (
                                                             <li
                                                                 key={t}
                                                                 role="option"
@@ -518,8 +517,8 @@ export default function StoreSettingPage() {
 
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-md border" style={{ background: 'var(--color-primary)' }} aria-hidden></div>
-                                                <div className="w-10 h-10 rounded-md border" style={{ background: 'var(--color-card-light)', boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }} aria-hidden></div>
-                                                <div className="px-2 py-1 rounded text-sm border" style={{ color: 'var(--color-text-light)', background: 'transparent' }}>Aa</div>
+                                                <div className="w-10 h-10 rounded-md border" style={{ background: 'var(--color-card)', boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }} aria-hidden></div>
+                                                <div className="px-2 py-1 rounded text-sm border" style={{ color: 'var(--color-text)', background: 'transparent' }}>Aa</div>
                                             </div>
                                         </div>
 

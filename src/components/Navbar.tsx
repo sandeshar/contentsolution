@@ -157,10 +157,10 @@ const NavBar = ({ storeName }: NavBarProps) => {
     };
 
     return (
-        <header className="sticky top-0 z-50 flex items-center justify-center border-b border-solid border-slate-200/80 bg-background-light/80 backdrop-blur-sm">
+        <header className="sticky top-0 z-50 flex items-center justify-center border-b border-solid border-muted page-bg backdrop-blur-sm">
             <div className="flex items-center justify-between whitespace-nowrap py-3 w-full max-w-7xl">
-                <a href="/" className="flex items-center gap-4 text-slate-900 hover:opacity-90 transition-opacity">
-                    <span className="material-symbols-outlined text-primary text-3xl">hub</span>
+                <a href="/" className="flex items-center gap-4 text-body hover:opacity-90 transition-opacity">
+                    <span className="material-symbols-outlined text-primary-var text-3xl">hub</span>
                     <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">{storeName}</h2>
                 </a>
 
@@ -197,7 +197,7 @@ const NavBar = ({ storeName }: NavBarProps) => {
                                     >
                                         <Link
                                             href={link.href}
-                                            className="text-sm font-medium leading-normal text-slate-700 hover:text-primary transition-colors flex items-center gap-1"
+                                            className="text-sm font-medium leading-normal text-subtext hover-text-primary transition-colors flex items-center gap-1"
                                         >
                                             {link.label}
                                             {hasDropdown && <span className="material-symbols-outlined text-sm">expand_more</span>}
@@ -205,7 +205,7 @@ const NavBar = ({ storeName }: NavBarProps) => {
 
                                         {hasDropdown && openDropdown === link.id && (
                                             <div
-                                                className="absolute top-full left-0 right-0 w-full bg-white shadow-lg border-b border-slate-200 py-2 z-60 pointer-events-auto"
+                                                className="absolute top-full left-0 right-0 w-full bg-card shadow-lg border-b border-muted py-2 z-60 pointer-events-auto"
                                                 onMouseEnter={() => {
                                                     clearAllCloseTimers();
                                                     setOpenDropdown(link.id);
@@ -252,7 +252,7 @@ const NavBar = ({ storeName }: NavBarProps) => {
                                                                                 >
                                                                                     <Link
                                                                                         href={child.href}
-                                                                                        className="px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-primary transition-colors flex items-center justify-between"
+                                                                                        className="px-4 py-2 text-sm text-subtext hover-bg-card hover-text-primary transition-colors flex items-center justify-between"
                                                                                         onMouseEnter={() => {
                                                                                             clearAllCloseTimers();
                                                                                             setOpenDropdown(link.id);

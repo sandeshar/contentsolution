@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { showToast } from '@/components/Toast';
 
 export default function HomePageUI() {
     const [activeTab, setActiveTab] = useState("hero");
@@ -99,11 +100,11 @@ export default function HomePageUI() {
             setDeletedTrustLogos([]);
             setDeletedExpertiseItems([]);
 
-            alert("Settings saved successfully!");
+            showToast("Settings saved successfully!", { type: 'success' });
             window.location.reload();
         } catch (error) {
             console.error("Error saving settings:", error);
-            alert(`Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            showToast(`Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`, { type: 'error' });
         } finally {
             setSaving(false);
         }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { showToast } from '@/components/Toast';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -17,7 +18,7 @@ const Login = () => {
             window.location.href = '/admin';
         } else {
             const data = await response.json();
-            alert(data.message || 'Login failed');
+            showToast(data.message || 'Login failed', { type: 'error' });
         }
     }
     return (

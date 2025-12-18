@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { showToast } from '@/components/Toast';
 
 export default function SitemapPage() {
     const [generating, setGenerating] = useState(false);
@@ -35,10 +36,10 @@ export default function SitemapPage() {
             }
             setStats(json.stats);
             setLastGenerated(new Date().toISOString());
-            alert('Stats refreshed successfully');
+            showToast('Stats refreshed successfully', { type: 'success' });
         } catch (e: any) {
             console.error('Generate failed', e);
-            alert(e.message || 'Failed to generate');
+            showToast(e.message || 'Failed to generate', { type: 'error' });
         } finally {
             setGenerating(false);
         }

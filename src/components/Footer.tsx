@@ -33,26 +33,26 @@ const footerLinks = [
 
 const Footer = ({ storeName }: FooterProps) => {
     return (
-        <footer className="bg-white border-t border-slate-200">
+        <footer className="bg-card border-t border-muted">
             <div className="max-w-7xl mx-auto py-12">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                     <div className="col-span-2 md:col-span-1">
                         <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary text-2xl">hub</span>
-                            <h2 className="text-base font-bold text-slate-900">{storeName}</h2>
+                            <span className="material-symbols-outlined text-primary-var text-2xl">hub</span>
+                            <h2 className="text-base font-bold text-body">{storeName}</h2>
                         </div>
-                        <p className="mt-4 text-sm text-slate-500">Crafting content that converts.</p>
+                        <p className="mt-4 text-sm text-subtext">Crafting content that converts.</p>
                     </div>
                     {footerLinks.map((section) => (
                         <div key={section.title}>
-                            <h3 className="text-sm font-semibold text-slate-600 tracking-wider uppercase">
+                            <h3 className="text-sm font-semibold text-subtext tracking-wider uppercase">
                                 {section.title}
                             </h3>
                             <ul className="mt-4 space-y-2">
                                 {section.links.map((link) => (
                                     <li key={link.label}>
                                         <a
-                                            className="text-sm text-slate-500 hover:text-primary"
+                                            className="text-sm text-subtext hover-text-primary"
                                             href={link.href}
                                         >
                                             {link.label}
@@ -64,7 +64,7 @@ const Footer = ({ storeName }: FooterProps) => {
                     ))}
                 </div>
                 <div
-                    className="mt-8 border-t border-slate-200 pt-8 text-sm text-slate-500 text-center">
+                    className="mt-8 border-t border-muted pt-8 text-sm text-subtext text-center">
                     <p>© {new Date().getFullYear()} {storeName}. All rights reserved.</p>
                 </div>
             </div>

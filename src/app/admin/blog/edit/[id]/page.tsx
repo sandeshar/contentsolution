@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import ImageUploader from "@/components/shared/ImageUploader";
 import { useParams } from "next/navigation";
+import { showToast } from '@/components/Toast';
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -136,7 +137,7 @@ export default function EditBlogPage() {
                 }
             } catch (error: any) {
                 console.error('Error fetching post:', error);
-                alert(`Failed to load post: ${error.message}`);
+                showToast(`Failed to load post: ${error.message}`, { type: 'error' });
                 // Redirect back to blog list after error
                 setTimeout(() => {
                     window.location.href = '/admin/blog';
@@ -188,11 +189,11 @@ export default function EditBlogPage() {
                 throw new Error(data.error || 'Failed to update post');
             }
 
-            alert(isDraft ? 'Draft saved successfully!' : 'Post updated successfully!');
+            showToast(isDraft ? 'Draft saved successfully!' : 'Post updated successfully!', { type: 'success' });
             window.location.href = '/admin/blog';
         } catch (error: any) {
             console.error('Error updating post:', error);
-            alert(error.message || 'Failed to update post. Please try again.');
+            showToast(error.message || 'Failed to update post. Please try again.', { type: 'error' });
         } finally {
             setIsSaving(false);
         }
@@ -245,7 +246,7 @@ export default function EditBlogPage() {
                 editor?.chain().focus().setImage({ src: data.url }).run();
             } catch (error) {
                 console.error('Error uploading image:', error);
-                alert('Failed to upload image. Please try again.');
+                showToast('Failed to upload image. Please try again.', { type: 'error' });
                 // Remove loading image on error
                 editor?.commands.deleteSelection();
             }

@@ -25,10 +25,10 @@ const Contact = ({ data }: ContactProps) => {
 
     return (
         <section className="py-20 sm:py-32">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center bg-white border border-slate-200 rounded-xl p-8 sm:p-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center bg-card border border-muted rounded-xl p-8 sm:p-12">
                 <div className="flex flex-col gap-4">
-                    <h2 className="text-3xl md:text-4xl font-black text-slate-900">{data.title}</h2>
-                    <p className="text-slate-600 text-base">{data.description}</p>
+                    <h2 className="text-3xl md:text-4xl font-black text-body">{data.title}</h2>
+                    <p className="text-subtext text-base">{data.description}</p>
                 </div>
                 <ContactFormSection
                     namePlaceholder={data.name_placeholder}

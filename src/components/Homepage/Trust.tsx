@@ -29,7 +29,7 @@ const Trust = ({ section, logos = [] }: TrustProps) => {
     return (
         <section className="py-20 sm:py-32">
             <h4
-                className="text-slate-500 text-sm font-bold leading-normal tracking-[0.015em] text-center pb-8">
+                className="text-subtext text-sm font-bold leading-normal tracking-[0.015em] text-center pb-8">
                 {section.heading}</h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 items-center">
                 {logos.map((logo) => (

@@ -15,7 +15,7 @@ interface ContactFormProps {
 
 const ContactForm = ({ data }: ContactFormProps) => {
     return (
-        <div className="w-full rounded-xl border border-gray-200 bg-white p-8 shadow-lg">
+        <div className="w-full rounded-xl border border-muted bg-card p-8 shadow-lg">
             <ContactFormSection
                 namePlaceholder={data.name_placeholder}
                 emailPlaceholder={data.email_placeholder}

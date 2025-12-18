@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { showToast } from '@/components/Toast';
 
 export default function RobotsPage() {
     const [content, setContent] = useState("");
@@ -38,10 +39,10 @@ export default function RobotsPage() {
             if (!res.ok || !json?.success) {
                 throw new Error(json?.error || 'Failed to save');
             }
-            alert('robots.txt saved successfully');
+            showToast('robots.txt saved successfully', { type: 'success' });
         } catch (e: any) {
             console.error('Save failed', e);
-            alert(e.message || 'Failed to save');
+            showToast(e.message || 'Failed to save', { type: 'error' });
         } finally {
             setSaving(false);
         }

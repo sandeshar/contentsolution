@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import ImageUploader from "@/components/shared/ImageUploader";
+import { showToast } from '@/components/Toast';
 
 export default function AboutPageUI() {
     const [activeTab, setActiveTab] = useState("hero");
@@ -118,13 +119,13 @@ export default function AboutPageUI() {
             setDeletedPrinciples([]);
             setDeletedTeamMembers([]);
 
-            alert("Settings saved successfully!");
+            showToast("Settings saved successfully!", { type: 'success' });
             // Optionally refetch data to get new IDs for created items
             window.location.reload();
 
         } catch (error) {
             console.error("Error saving settings:", error);
-            alert("Failed to save settings. Please try again.");
+            showToast("Failed to save settings. Please try again.", { type: 'error' });
         } finally {
             setSaving(false);
         }

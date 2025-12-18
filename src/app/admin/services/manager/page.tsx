@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import NextLink from "next/link";
+import { showToast } from '@/components/Toast';
 import { getBlogStatusLabel, getBlogStatusClasses } from "@/utils/statusHelpers";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -246,7 +247,7 @@ export default function ServicesManagerPage() {
 
         // Validate slug
         if (!selectedService.slug && !selectedService.key) {
-            alert('Please enter a slug for the service');
+            showToast('Please enter a slug for the service', { type: 'error' });
             return;
         }
 
@@ -255,7 +256,7 @@ export default function ServicesManagerPage() {
             const finalSlug = (selectedService.slug || selectedService.key).trim();
 
             if (!finalSlug) {
-                alert('Slug cannot be empty');
+                showToast('Slug cannot be empty', { type: 'error' });
                 setSaving(false);
                 return;
             }
@@ -333,13 +334,13 @@ export default function ServicesManagerPage() {
                 throw new Error(`Failed to save service detail: ${errorData.error || 'Unknown error'}`);
             }
 
-            alert('Service saved successfully!');
+            showToast('Service saved successfully!', { type: 'success' });
             setIsModalOpen(false);
             setSelectedService(null);
             fetchAllData();
         } catch (error) {
             console.error('Error saving service:', error);
-            alert('Failed to save service. Please try again.');
+            showToast('Failed to save service. Please try again.', { type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -366,13 +367,13 @@ export default function ServicesManagerPage() {
                 if (!postRes.ok) throw new Error('Failed to delete service post');
             }
 
-            alert('Service deleted successfully!');
+            showToast('Service deleted successfully!', { type: 'success' });
             setIsModalOpen(false);
             setSelectedService(null);
             fetchAllData();
         } catch (error) {
             console.error('Error deleting service:', error);
-            alert('Failed to delete service. Please try again.');
+            showToast('Failed to delete service. Please try again.', { type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -434,12 +435,12 @@ export default function ServicesManagerPage() {
             }
 
             await Promise.all(promises);
-            alert('Changes saved successfully!');
+            showToast('Changes saved successfully!', { type: 'success' });
             setDeletedProcessSteps([]);
             fetchAllData();
         } catch (error) {
             console.error('Error saving:', error);
-            alert('Failed to save changes. Please try again.');
+            showToast('Failed to save changes. Please try again.', { type: 'error' });
         } finally {
             setSaving(false);
         }

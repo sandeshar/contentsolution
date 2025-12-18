@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { showToast } from '@/components/Toast';
 import { getBlogStatusLabel, getBlogStatusClasses } from "@/utils/statusHelpers";
 import { BlogPost } from "@/types/blog";
 
@@ -39,15 +40,15 @@ export default function BlogPage() {
             });
 
             if (response.ok) {
-                alert(`Status updated for "${title}"!`);
+                showToast(`Status updated for "${title}"!`, { type: 'success' });
                 fetchPosts();
             } else {
                 const data = await response.json();
-                alert(data.error || 'Failed to update status');
+                showToast(data.error || 'Failed to update status', { type: 'error' });
             }
         } catch (error) {
             console.error('Error updating status:', error);
-            alert('Failed to update status. Please try again.');
+            showToast('Failed to update status. Please try again.', { type: 'error' });
         }
     };
 
@@ -62,15 +63,15 @@ export default function BlogPage() {
             });
 
             if (response.ok) {
-                alert('Post deleted successfully!');
+                showToast('Post deleted successfully!', { type: 'success' });
                 fetchPosts(); // Refresh the list
             } else {
                 const data = await response.json();
-                alert(data.error || 'Failed to delete post');
+                showToast(data.error || 'Failed to delete post', { type: 'error' });
             }
         } catch (error) {
             console.error('Error deleting post:', error);
-            alert('Failed to delete post. Please try again.');
+            showToast('Failed to delete post. Please try again.', { type: 'error' });
         }
     };
 
