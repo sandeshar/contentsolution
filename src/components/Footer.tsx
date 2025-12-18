@@ -34,7 +34,7 @@ const footerLinks = [
 const Footer = ({ storeName }: FooterProps) => {
     return (
         <footer className="bg-white border-t border-slate-200">
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto py-12">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                     <div className="col-span-2 md:col-span-1">
                         <div className="flex items-center gap-2">

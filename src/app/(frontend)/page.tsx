@@ -51,7 +51,7 @@ export default async function Home() {
 
     return (
         <main className="flex flex-col items-center page-bg">
-            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+            <div className="flex flex-col w-full max-w-7xl py-5">
                 <Hero data={data.hero} />
                 <Trust section={data.trustSection} logos={data.trustLogos} />
                 <Expertise section={data.expertiseSection} items={data.expertiseItems} />

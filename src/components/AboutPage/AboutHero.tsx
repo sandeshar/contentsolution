@@ -39,7 +39,7 @@ const AboutHero = ({ data }: AboutHeroProps) => {
 
     return (
         <section className="relative w-full min-h-[calc(100vh-60px)] flex items-center overflow-hidden">
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
+            <div className="relative max-w-7xl mx-auto  z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 xl:gap-32 items-center justify-items-center lg:justify-items-stretch">
                     <div className="flex flex-col gap-8 items-center lg:items-start text-center lg:text-left z-10">
                         {data.badge_text && (
@@ -92,11 +92,11 @@ const AboutHero = ({ data }: AboutHeroProps) => {
 
                         <div className="flex flex-col sm:flex-row gap-4">
                             <a href={data.button1_link || '#'} aria-label={data.button1_text}>
-                                <CTAButton text={data.button1_text} variant="primary" className="rounded-xl h-10 md:h-12 px-4 md:px-6 xl:h-14 xl:px-8 shadow-lg shadow-primary/25 hover:-translate-y-1 transition-all duration-300" />
+                                <CTAButton text={data.button1_text} variant="primary" className="rounded-xl h-10 md:h-12 md:px-6 xl:h-14 xl:px-8 shadow-lg shadow-primary/25 hover:-translate-y-1 transition-all duration-300" />
                             </a>
                             {data.button2_text && (
                                 <a href={data.button2_link || '#'} aria-label={data.button2_text}>
-                                    <CTAButton text={data.button2_text} variant="secondary" className="rounded-xl h-10 md:h-12 px-4 md:px-6 xl:h-14 xl:px-8" />
+                                    <CTAButton text={data.button2_text} variant="secondary" className="rounded-xl h-10 md:h-12 md:px-6 xl:h-14 xl:px-8" />
                                 </a>
                             )}
                         </div>

@@ -46,7 +46,7 @@ export default async function TermsPage() {
 
     return (
         <main className="flex flex-col items-center page-bg">
-            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+            <div className="flex flex-col w-full max-w-7xl py-5">
                 <div className="flex flex-col items-center text-center">
                     <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
                         {data.header.title}

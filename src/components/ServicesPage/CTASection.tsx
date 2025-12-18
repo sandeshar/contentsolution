@@ -21,7 +21,7 @@ const CTASection = ({ data }: CTASectionProps) => {
 
     return (
         <section className="py-20 sm:py-32">
-            <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-5xl">
                 <div className="relative overflow-hidden rounded-xl bg-slate-800 p-8 text-center md:p-12">
                     <div className="absolute -top-12 -right-12 size-48 rounded-full bg-primary/20" />
                     <div className="absolute -bottom-24 -left-12 size-64 rounded-full bg-primary/10" />

@@ -1,4 +1,3 @@
-import React from 'react';
 import CTAButton from '../shared/CTAButton';
 
 interface ContactHeroProps {

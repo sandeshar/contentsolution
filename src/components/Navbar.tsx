@@ -158,7 +158,7 @@ const NavBar = ({ storeName }: NavBarProps) => {
 
     return (
         <header className="sticky top-0 z-50 flex items-center justify-center border-b border-solid border-slate-200/80 bg-background-light/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between whitespace-nowrap px-4 sm:px-6 lg:px-8 py-3 w-full max-w-7xl">
+            <div className="flex items-center justify-between whitespace-nowrap py-3 w-full max-w-7xl">
                 <a href="/" className="flex items-center gap-4 text-slate-900 hover:opacity-90 transition-opacity">
                     <span className="material-symbols-outlined text-primary text-3xl">hub</span>
                     <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">{storeName}</h2>

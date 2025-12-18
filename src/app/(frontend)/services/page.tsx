@@ -120,7 +120,7 @@ export default async function ServicesPage() {
     const services = mergeServiceDetailsWithPosts(data.details, posts);
 
     return (
-        <main className="page-bg grow">
+        <main className="page-bg grow ">
             <HeroSection data={data.hero} />
             <ServiceDetails services={services} />
             <ProcessSection section={data.processSection} steps={data.processSteps} />

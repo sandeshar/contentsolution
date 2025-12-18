@@ -120,7 +120,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
 
     return (
         <main className="flex flex-col items-center page-bg">
-            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+            <div className="flex flex-col w-full max-w-7xl py-5">
                 {/* Hero Section */}
                 <section className="relative py-20 sm:py-32">
                     <div className="absolute inset-0 -z-10 bg-linear-to-br from-slate-50 to-slate-100" />

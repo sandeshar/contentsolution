@@ -31,7 +31,7 @@ const ProcessSection = ({ section, steps = [] }: ProcessSectionProps) => {
 
     return (
         <section className="py-20 sm:py-32">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl">
                 <div className="flex flex-col items-center gap-4 text-center">
                     <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                         {section.title}

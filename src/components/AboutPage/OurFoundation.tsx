@@ -19,7 +19,7 @@ const OurFoundation = () => {
 
     return (
         <section className="w-full bg-white py-20 sm:py-32 lg:py-32">
-            <div className="mx-auto max-w-6xl px-4">
+            <div className="mx-auto max-w-6xl">
                 <div className="flex flex-col gap-12">
                     <div className="text-center">
                         <h2 className="text-3xl font-bold leading-tight tracking-[-0.033em] text-slate-900">

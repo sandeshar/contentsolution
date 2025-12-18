@@ -74,7 +74,7 @@ export default async function AboutPage() {
 
     return (
         <main className="flex flex-col items-center page-bg">
-            <div className="flex flex-col w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+            <div className="flex flex-col w-full max-w-7xl py-5">
                 <AboutHero data={data.hero} />
                 <AboutJourney section={data.journey} stats={data.stats} features={data.features} />
                 <AboutPhilosophy section={data.philosophy} principles={data.principles} />

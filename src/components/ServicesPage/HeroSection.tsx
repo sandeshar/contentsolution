@@ -34,7 +34,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
     return (
         <section className="relative w-full min-h-[calc(100vh-60px)] flex items-center overflow-hidden">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="mx-auto max-w-7xl relative z-10">
                 <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-24 xl:gap-32 items-center justify-items-center lg:justify-items-stretch">
                     <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
                         {data.badge_text && (
