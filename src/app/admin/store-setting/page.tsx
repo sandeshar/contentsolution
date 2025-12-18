@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function StoreSettingPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+
     const [formData, setFormData] = useState({
         storeName: "",
         storeDescription: "",
@@ -21,15 +22,34 @@ export default function StoreSettingPage() {
         footerText: "",
         logo: "",
         favicon: "",
+        theme: "light",
     });
+
+    // Theme select UI state
+    const [themeOpen, setThemeOpen] = useState(false);
+    const themeRef = useRef<HTMLDivElement | null>(null);
+
+    // Preset themes for quick selection (colors mirror globals.css variables)
+    const presetThemes = [
+        { id: 'light', name: 'Light', colors: { primary: '#135bec', background: '#f6f7f8', card: '#ffffff' } },
+        { id: 'dark', name: 'Dark', colors: { primary: '#7c3aed', background: '#0b1220', card: '#0f1724' } },
+        { id: 'ocean', name: 'Ocean', colors: { primary: '#0ea5a4', background: '#ecfeff', card: '#ffffff' } },
+        { id: 'corporate', name: 'Corporate', colors: { primary: '#0f172a', background: '#f8fafc', card: '#ffffff' } },
+        { id: 'sunset', name: 'Sunset', colors: { primary: '#ff6b6b', background: '#fff7f5', card: '#fff1f0' } },
+        { id: 'forest', name: 'Forest', colors: { primary: '#16a34a', background: '#f0fff5', card: '#ffffff' } },
+        { id: 'lavender', name: 'Lavender', colors: { primary: '#7c3aed', background: '#fbf5ff', card: '#ffffff' } },
+        { id: 'minimal', name: 'Minimal', colors: { primary: '#111827', background: '#ffffff', card: '#ffffff' } },
+        { id: 'vibrant', name: 'Vibrant', colors: { primary: '#ff7a18', background: '#fffaf0', card: '#ffffff' } },
+    ];
 
     useEffect(() => {
         const load = async () => {
             try {
-                const res = await fetch('/api/store-settings', { cache: 'no-store' });
-                const json = await res.json();
-                if (json?.success && json.data) {
-                    const d = json.data;
+                const resStore = await fetch('/api/store-settings', { cache: 'no-store' });
+                const jsonStore = await resStore.json();
+
+                if (jsonStore?.success && jsonStore.data) {
+                    const d = jsonStore.data;
                     setFormData({
                         storeName: d.storeName || "",
                         storeDescription: d.storeDescription || "",
@@ -46,16 +66,63 @@ export default function StoreSettingPage() {
                         footerText: d.footerText || "",
                         logo: d.storeLogo || "",
                         favicon: d.favicon || "",
+                        theme: d.theme || "light",
                     });
                 }
             } catch (e) {
-                console.error('Failed to load store settings', e);
+                console.error('Failed to load settings/themes', e);
             } finally {
                 setLoading(false);
             }
         };
         load();
     }, []);
+
+    // Apply live preview of selected theme while on the admin page
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+        const html = document.documentElement;
+        const body = document.body;
+
+        const removeThemeClasses = (el: Element) => {
+            Array.from(el.classList)
+                .filter((c) => c.startsWith('theme-'))
+                .forEach((c) => el.classList.remove(c));
+        };
+
+        // Clear previous state
+        removeThemeClasses(html);
+        removeThemeClasses(body);
+
+        // Apply selected theme class to body and html
+        body.classList.add(`theme-${formData.theme}`);
+        html.classList.add(`theme-${formData.theme}`);
+
+        // Close the dropup if open when theme changes externally
+        setThemeOpen(false);
+
+        return () => {
+            // cleanup
+            removeThemeClasses(html);
+            removeThemeClasses(body);
+        };
+    }, [formData.theme]);
+
+    // Close dropup when clicking outside
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (!themeRef.current) return;
+            if (!themeRef.current.contains(e.target as Node)) {
+                setThemeOpen(false);
+            }
+        };
+        if (themeOpen) {
+            document.addEventListener('mousedown', handler);
+        }
+        return () => document.removeEventListener('mousedown', handler);
+    }, [themeOpen]);
+
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -77,6 +144,7 @@ export default function StoreSettingPage() {
                 metaDescription: formData.metaDescription,
                 metaKeywords: formData.metaKeywords,
                 footerText: formData.footerText,
+                theme: formData.theme,
             };
             const res = await fetch('/api/store-settings', {
                 method: 'PUT',
@@ -88,6 +156,8 @@ export default function StoreSettingPage() {
                 throw new Error(json?.error || 'Failed to save');
             }
             alert('Settings saved successfully');
+            // Reload to apply theme/site-wide changes immediately
+            window.location.reload();
         } catch (e: any) {
             console.error('Save failed', e);
             alert(e.message || 'Failed to save');
@@ -400,8 +470,69 @@ export default function StoreSettingPage() {
                             </div>
                         </div>
 
-                        {/* Additional Settings */}
+                        {/* Theme Management */}
                         <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                            <div className="px-6 py-4 border-b border-slate-200">
+                                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                    <span className="material-symbols-outlined">palette</span>
+                                    Theme Management
+                                </h2>
+                            </div>
+                            <div className="p-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Active Theme</label>
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative w-full" ref={themeRef}>
+                                                <button
+                                                    type="button"
+                                                    aria-expanded={themeOpen}
+                                                    onClick={() => setThemeOpen((s) => !s)}
+                                                    onKeyDown={(e) => { if (e.key === 'Escape') setThemeOpen(false); }}
+                                                    className="w-full text-left px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-primary flex items-center justify-between"
+                                                >
+                                                    <span>{formData.theme.charAt(0).toUpperCase() + formData.theme.slice(1)}</span>
+                                                    <span className="material-symbols-outlined">{themeOpen ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
+                                                </button>
+
+                                                {themeOpen && (
+                                                    <ul
+                                                        role="listbox"
+                                                        aria-label="Theme options"
+                                                        className="absolute right-0 bottom-full mb-2 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-60 overflow-auto"
+                                                    >
+                                                        {['light', 'dark', 'ocean', 'corporate', 'sunset', 'forest', 'lavender', 'minimal', 'vibrant'].map((t) => (
+                                                            <li
+                                                                key={t}
+                                                                role="option"
+                                                                aria-selected={formData.theme === t}
+                                                                onClick={() => { setFormData({ ...formData, theme: t }); setThemeOpen(false); }}
+                                                                className={`px-4 py-2 cursor-pointer hover:bg-slate-50 ${formData.theme === t ? 'bg-slate-100 font-semibold' : ''}`}
+                                                            >
+                                                                {t.charAt(0).toUpperCase() + t.slice(1)}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-md border" style={{ background: 'var(--color-primary)' }} aria-hidden></div>
+                                                <div className="w-10 h-10 rounded-md border" style={{ background: 'var(--color-card-light)', boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }} aria-hidden></div>
+                                                <div className="px-2 py-1 rounded text-sm border" style={{ color: 'var(--color-text-light)', background: 'transparent' }}>Aa</div>
+                                            </div>
+                                        </div>
+
+
+
+                                        <div className="mt-4 text-sm text-slate-500">Choose a preset theme above and click Save Settings to apply it site-wide.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Additional Settings */}
+                        <div className="bg-white rounded-lg shadow-sm border border-slate-200 mt-10">
                             <div className="px-6 py-4 border-b border-slate-200">
                                 <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                     <span className="material-symbols-outlined">settings</span>

@@ -15,9 +15,137 @@
     --font-family-display: Inter, sans-serif;
 }
 
+/* Theme classes to override CSS variables */
+.theme-light {
+    --color-primary: #135bec;
+    --color-background-light: #f6f7f8;
+    --color-background-dark: #101622;
+    --color-card-light: #ffffff;
+    --color-card-dark: #182134;
+    --color-text-light: #111827;
+    --color-text-dark: #e5e7eb;
+    --color-subtext-light: #6b7280;
+    --color-subtext-dark: #9ca3af;
+    --color-border-light: #e5e7eb;
+    --color-border-dark: #374151;
+}
+
+.theme-dark {
+    --color-primary: #7c3aed;
+    --color-background-light: #0b1220;
+    --color-background-dark: #070914;
+    --color-card-light: #0f1724;
+    --color-card-dark: #0b1220;
+    --color-text-light: #e6eef8;
+    --color-text-dark: #cbd5e1;
+    --color-subtext-light: #94a3b8;
+    --color-subtext-dark: #94a3b8;
+    --color-border-light: #1f2937;
+    --color-border-dark: #1f2937;
+}
+
+.theme-ocean {
+    --color-primary: #0ea5a4;
+    --color-background-light: #ecfeff;
+    --color-background-dark: #022b2b;
+    --color-card-light: #ffffff;
+    --color-card-dark: #052028;
+    --color-text-light: #083344;
+    --color-text-dark: #d1f5f4;
+    --color-subtext-light: #2563eb;
+    --color-subtext-dark: #7dd3fc;
+    --color-border-light: #c7f9f9;
+    --color-border-dark: #064e4e;
+}
+
+.theme-corporate {
+    --color-primary: #0f172a;
+    --color-background-light: #f8fafc;
+    --color-background-dark: #0b1220;
+    --color-card-light: #ffffff;
+    --color-card-dark: #0f172a;
+    --color-text-light: #0b1220;
+    --color-text-dark: #e6eef8;
+    --color-subtext-light: #475569;
+    --color-subtext-dark: #94a3b8;
+    --color-border-light: #e2e8f0;
+    --color-border-dark: #1f2937;
+}
+
+/* Additional attractive themes */
+.theme-sunset {
+    --color-primary: #ff6b6b;
+    --color-background-light: #fff7f5;
+    --color-background-dark: #2b0712;
+    --color-card-light: #fff1f0;
+    --color-card-dark: #3a0e14;
+    --color-text-light: #3b0a0a;
+    --color-text-dark: #ffd6d6;
+    --color-subtext-light: #7c2d2d;
+    --color-subtext-dark: #fca5a5;
+    --color-border-light: #ffdada;
+    --color-border-dark: #4b0f15;
+}
+
+.theme-forest {
+    --color-primary: #16a34a;
+    --color-background-light: #f0fff5;
+    --color-background-dark: #04210a;
+    --color-card-light: #ffffff;
+    --color-card-dark: #062712;
+    --color-text-light: #052e13;
+    --color-text-dark: #c7f3d1;
+    --color-subtext-light: #155e3a;
+    --color-subtext-dark: #86efac;
+    --color-border-light: #dff8e6;
+    --color-border-dark: #0b3920;
+}
+
+.theme-lavender {
+    --color-primary: #7c3aed;
+    --color-background-light: #fbf5ff;
+    --color-background-dark: #10021a;
+    --color-card-light: #ffffff;
+    --color-card-dark: #12031d;
+    --color-text-light: #1f0b2e;
+    --color-text-dark: #e9d9ff;
+    --color-subtext-light: #6b21a8;
+    --color-subtext-dark: #c7a7ff;
+    --color-border-light: #f1e7ff;
+    --color-border-dark: #291032;
+}
+
+.theme-minimal {
+    --color-primary: #111827;
+    --color-background-light: #ffffff;
+    --color-background-dark: #0b0b0b;
+    --color-card-light: #ffffff;
+    --color-card-dark: #0f0f10;
+    --color-text-light: #0b1220;
+    --color-text-dark: #f8fafc;
+    --color-subtext-light: #6b7280;
+    --color-subtext-dark: #9ca3af;
+    --color-border-light: #e5e7eb;
+    --color-border-dark: #1f2937;
+}
+
+.theme-vibrant {
+    --color-primary: #ff7a18;
+    --color-background-light: #fffaf0;
+    --color-background-dark: #2a1200;
+    --color-card-light: #ffffff;
+    --color-card-dark: #3b1200;
+    --color-text-light: #34110b;
+    --color-text-dark: #ffd8b5;
+    --color-subtext-light: #c2410c;
+    --color-subtext-dark: #fca311;
+    --color-border-light: #ffe8d1;
+    --color-border-dark: #5a1f06;
+}
+
 /* Page background */
 .page-bg {
-    background-color: #f6f7f8;
+    background-color: var(--color-background-light);
 }
 
 /* Contact page pattern background utility */

@@ -15,5 +15,7 @@ export interface StoreSettings {
     metaDescription: string;
     metaKeywords: string;
     footerText: string;
+    // Theme identifier (e.g., 'light', 'dark', 'ocean')
+    theme: string;
     updatedAt: string;
-}
+} 

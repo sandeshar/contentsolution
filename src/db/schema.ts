@@ -47,5 +47,7 @@ export const storeSettings = mysqlTable("store_settings", {
     meta_description: varchar("meta_description", { length: 512 }).notNull(),
     meta_keywords: varchar("meta_keywords", { length: 512 }).notNull(),
     footer_text: varchar("footer_text", { length: 512 }).notNull(),
+    // Theme selection for the site (e.g., light, dark, ocean, corporate)
+    theme: varchar("theme", { length: 100 }).notNull().default('light'),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 }); 

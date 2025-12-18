@@ -22,6 +22,8 @@ function toDb(payload: any) {
         meta_description: payload.metaDescription ?? '',
         meta_keywords: payload.metaKeywords ?? '',
         footer_text: payload.footerText ?? '',
+        // Theme is stored as a simple string identifier (e.g., 'light', 'dark')
+        theme: payload.theme ?? 'light',
     };
 }
 
@@ -45,6 +47,8 @@ function fromDb(row: any) {
         metaDescription: row.meta_description,
         metaKeywords: row.meta_keywords,
         footerText: row.footer_text,
+        // Theme identifier available to front-end
+        theme: row.theme,
         updatedAt: row.updated_at,
     };
 }

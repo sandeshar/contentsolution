@@ -121,6 +121,8 @@ export default async function RootLayout({
     ].filter(Boolean)
   } : null;
 
+  const themeClass = `theme-${s?.theme ?? 'light'}`;
+
   return (
     <html lang="en">
       <head>
@@ -136,7 +138,7 @@ export default async function RootLayout({
         )}
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID as string} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} font-display antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} font-display antialiased ${themeClass}`}>
         {children}
       </body>
     </html>
