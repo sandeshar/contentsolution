@@ -2,32 +2,7 @@
 import { notFound } from "next/navigation";
 import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
-
-type ServiceRecord = {
-    id?: number;
-    slug: string;
-    title: string;
-    excerpt: string;
-    content: string;
-    thumbnail?: string | null;
-    icon?: string | null;
-    meta_title?: string | null;
-    meta_description?: string | null;
-    price?: string | null;
-    currency?: string | null;
-    price_type?: string | null;
-    price_label?: string | null;
-    price_description?: string | null;
-};
-
-type ServiceDetail = {
-    title: string;
-    bullets: string;
-};
-
-type ServicePostPageProps = {
-    params: Promise<{ slug: string }>;
-};
+import type { ServiceRecord, ServiceDetail, ServicePostPageProps } from "@/types/pages";
 
 async function getServicePost(slug: string): Promise<ServiceRecord | null> {
     try {

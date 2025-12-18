@@ -2,11 +2,7 @@ import { notFound } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 import ShareButtons from '@/components/BlogPage/ShareButtons';
 
-interface BlogPostPageProps {
-    params: Promise<{
-        slug: string;
-    }>;
-}
+import type { BlogPostPageProps } from '@/types/pages';
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const { slug } = await params;
