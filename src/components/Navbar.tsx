@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 
 interface NavBarProps {
     storeName: string;
+    storeLogo?: string;
+    store?: any;
 }
 
 type NavbarItem = {
@@ -27,7 +29,7 @@ export const MAX_SERVICES_PREVIEW = 4;
 export const CLOSE_DELAY_MS = 200;
 export const CHILD_CLOSE_DELAY_MS = 150;
 
-const NavBar = ({ storeName }: NavBarProps) => {
+const NavBar = ({ storeName, storeLogo, store }: NavBarProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [navLinks, setNavLinks] = useState<NavbarItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -160,7 +162,11 @@ const NavBar = ({ storeName }: NavBarProps) => {
         <header className="sticky top-0 z-50 flex items-center justify-center border-b border-solid border-muted page-bg backdrop-blur-sm">
             <div className="flex items-center justify-between whitespace-nowrap py-3 w-full max-w-7xl">
                 <a href="/" className="flex items-center gap-4 text-body hover:opacity-90 transition-opacity">
-                    <span className="material-symbols-outlined text-primary-var text-3xl">hub</span>
+                    {storeLogo ? (
+                        <img src={storeLogo} alt={storeName} className="h-8 w-auto object-contain rounded" />
+                    ) : (
+                        <span className="material-symbols-outlined text-primary-var text-3xl">hub</span>
+                    )}
                     <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">{storeName}</h2>
                 </a>
 

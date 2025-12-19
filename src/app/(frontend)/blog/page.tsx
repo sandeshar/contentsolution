@@ -121,10 +121,11 @@ export async function generateMetadata(): Promise<Metadata> {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
         const res = await fetch(`${baseUrl}/api/store-settings`, { cache: 'no-store' });
-        const [store] = res.ok ? await res.json() : [null];
-        const siteName = store?.store_name || "Content Store";
+        const payload = res.ok ? await res.json() : null;
+        const store = payload?.data || payload;
+        const siteName = store?.storeName || store?.store_name || "Content Store";
         const title = `Blog | ${siteName}`;
-        const description = store?.meta_description || store?.store_description || "Read the latest articles.";
+        const description = store?.metaDescription || store?.meta_description || store?.storeDescription || store?.store_description || "Read the latest articles.";
         return {
             title,
             description,

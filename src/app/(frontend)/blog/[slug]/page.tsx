@@ -25,7 +25,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     // Fetch store settings via API
     let store: any = null;
     try {
-        const storeRes = await fetch(`${base}/api/store-settings`);
+        const storeRes = await fetch(`${base}/api/store-settings`, { next: { tags: ['store-settings'] } });
         if (storeRes.ok) {
             const payload = await storeRes.json();
             store = payload?.data || null;
@@ -104,7 +104,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                                 </div>
                                 <div>
                                     <p className="text-slate-900 text-base font-bold leading-normal">
-                                        {store?.store_name || 'Author'}
+                                        {store?.storeName || store?.store_name || 'Author'}
                                     </p>
                                     <p className="text-slate-600 text-sm font-normal leading-normal">
                                         Published on {formattedDate} • {Math.ceil(post.content.split(/\s+/).length / 200)} min read
@@ -232,7 +232,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             };
         }
 
-        const storeRes = await fetch(`${base}/api/store-settings`);
+        const storeRes = await fetch(`${base}/api/store-settings`, { next: { tags: ['store-settings'] } });
         const storePayload = storeRes.ok ? await storeRes.json() : null;
         const store = storePayload?.data || null;
 

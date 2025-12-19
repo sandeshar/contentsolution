@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
         const base = process.env.NEXT_PUBLIC_BASE_URL;
         if (base) {
             try {
-                const res = await fetch(`${base}/api/store-settings`);
+                const res = await fetch(`${base}/api/store-settings`, { next: { tags: ['store-settings'] } });
                 if (res.ok) {
                     const payload = await res.json();
                     const s = payload?.data;

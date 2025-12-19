@@ -2,25 +2,29 @@
 import { notFound } from "next/navigation";
 import TestimonialSlider from "@/components/shared/TestimonialSlider";
 
+// Use an absolute base URL for server-side fetches.
+// Relative URLs like `/api/...` can fail when executed on the server runtime.
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
 import type { ServiceRecord, ServiceDetail, ServicePostPageProps } from "@/types/pages";
 
 async function getServicePost(slug: string): Promise<ServiceRecord | null> {
     try {
         // Try primary source: /api/services by slug
-        const res = await fetch(`/api/services?slug=${encodeURIComponent(slug)}`, { next: { tags: ['services'] } });
+        const res = await fetch(`${API_BASE}/api/services?slug=${encodeURIComponent(slug)}`, { next: { tags: ['services'] } });
         if (res.ok) {
             const post = await res.json();
             if (post && post.id) return post as ServiceRecord;
         }
 
         // Fallback: services page details by slug or key
-        const detailRes = await fetch(`/api/pages/services/details?slug=${encodeURIComponent(slug)}`, { next: { tags: ['services-details'] } });
+        const detailRes = await fetch(`${API_BASE}/api/pages/services/details?slug=${encodeURIComponent(slug)}`, { next: { tags: ['services-details'] } });
         if (detailRes.ok) {
             const detail = await detailRes.json();
             if (detail && detail.id) return normalizeDetail(detail, slug);
         }
 
-        const detailKeyRes = await fetch(`/api/pages/services/details?key=${encodeURIComponent(slug)}`, { next: { tags: ['services-details'] } });
+        const detailKeyRes = await fetch(`${API_BASE}/api/pages/services/details?key=${encodeURIComponent(slug)}`, { next: { tags: ['services-details'] } });
         if (detailKeyRes.ok) {
             const detail = await detailKeyRes.json();
             if (detail && detail.id) return normalizeDetail(detail, slug);
@@ -49,14 +53,14 @@ function normalizeDetail(detail: any, fallbackSlug: string): ServiceRecord {
 async function getServiceDetailBySlug(slug: string): Promise<ServiceDetail | null> {
     try {
         // Try to find by slug first
-        const detailRes = await fetch(`/api/pages/services/details?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
+        const detailRes = await fetch(`${API_BASE}/api/pages/services/details?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' });
         if (detailRes.ok) {
             const detail = await detailRes.json();
             if (detail && detail.title !== undefined) return detail as ServiceDetail;
         }
 
         // Fallback to key
-        const detailKeyRes = await fetch(`/api/pages/services/details?key=${encodeURIComponent(slug)}`, { cache: 'no-store' });
+        const detailKeyRes = await fetch(`${API_BASE}/api/pages/services/details?key=${encodeURIComponent(slug)}`, { cache: 'no-store' });
         if (detailKeyRes.ok) {
             const detail = await detailKeyRes.json();
             if (detail && detail.title !== undefined) return detail as ServiceDetail;
@@ -172,7 +176,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                 {/* Pricing Card */}
                                 {/* Combined Pricing + CTA Card (or Ready CTA when no pricing) */}
                                 {post.price ? (
-                                    <div className="bg-linear-to-br from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+                                    <div className="bg-primary rounded-xl p-6 text-white shadow-lg ring-1 ring-muted">
                                         <div className="flex items-center justify-between gap-4 mb-4">
                                             <div>
                                                 <div className="text-sm font-semibold uppercase tracking-wide mb-1 text-white/90">{post.price_label || 'Pricing'}</div>
@@ -192,7 +196,8 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                         <div className="mt-4">
                                             <a
                                                 href="/contact"
-                                                className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-white text-primary font-semibold rounded-lg hover:shadow-lg transition"
+                                                aria-label={`Contact us about ${post.title}`}
+                                                className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-card text-primary-var font-semibold rounded-lg hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-muted"
                                             >
                                                 <span className="material-symbols-outlined">call</span>
                                                 Contact Us
@@ -200,12 +205,13 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="bg-linear-to-br from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+                                    <div className="bg-primary rounded-xl p-6 text-white shadow-lg ring-1 ring-muted">
                                         <h3 className="text-xl font-bold mb-2">Ready?</h3>
                                         <p className="text-white/90 text-sm mb-6">Let's discuss your project needs.</p>
                                         <a
                                             href="/contact"
-                                            className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-white text-primary font-semibold rounded-lg hover:shadow-lg transition"
+                                            aria-label="Contact us"
+                                            className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-card text-primary-var font-semibold rounded-lg hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-muted"
                                         >
                                             <span className="material-symbols-outlined text-[20px]">call</span>
                                             Contact Us

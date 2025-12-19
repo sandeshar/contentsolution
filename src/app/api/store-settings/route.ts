@@ -22,8 +22,8 @@ function toDb(payload: any) {
         meta_description: payload.metaDescription ?? '',
         meta_keywords: payload.metaKeywords ?? '',
         footer_text: payload.footerText ?? '',
-        // Theme is stored as a simple string identifier (e.g., 'light', 'dark')
-        theme: payload.theme ?? 'light',
+        // Theme is stored as a simple string identifier (e.g., 'default', 'ocean')
+        theme: payload.theme ?? 'default',
     };
 }
 

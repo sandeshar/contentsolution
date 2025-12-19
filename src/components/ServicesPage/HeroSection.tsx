@@ -47,6 +47,12 @@ const HeroSection = ({ data }: HeroSectionProps) => {
                             </div>
                         )}
 
+                        {data.tagline && (
+                            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.12em] text-primary-var">
+                                {data.tagline}
+                            </p>
+                        )}
+
                         <h1 className="text-body text-3xl font-black leading-[1.05] tracking-[-0.033em] md:text-4xl lg:text-5xl xl:text-6xl">
                             {data.title.split('\n').map((line, i) => {
                                 const hl = data.highlight_text || '';

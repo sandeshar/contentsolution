@@ -25,13 +25,18 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     try {
-      const res = await fetch(`${base}/api/store-settings`);
+      const res = await fetch(`${base}/api/store-settings`, { next: { tags: ['store-settings'] } });
       if (res.ok) {
         const payload = await res.json();
         const s = payload?.data || null;
         if (s) {
           const title = s.metaTitle || s.storeName || "Content Store";
           const description = s.metaDescription || s.storeDescription || "";
+          // Version query to bust cache when updated
+          const version = s?.updatedAt ? `?v=${encodeURIComponent(String(s.updatedAt))}` : `?v=${Date.now()}`;
+          const faviconUrl = s.favicon ? `${s.favicon}${version}` : undefined;
+          const storeLogoUrl = s.storeLogo ? `${s.storeLogo}${version}` : undefined;
+
           return {
             title,
             description,
@@ -39,7 +44,8 @@ export async function generateMetadata(): Promise<Metadata> {
             robots: "index, follow",
             creator: s.storeName,
             publisher: s.storeName,
-            icons: s.favicon ? { icon: s.favicon } : undefined,
+            // Use versioned URLs via Next metadata icons (avoid manual duplicate <link> tags in head)
+            icons: s.favicon ? { icon: faviconUrl, apple: storeLogoUrl } : undefined,
             openGraph: {
               type: "website",
               locale: "en_US",
@@ -47,13 +53,13 @@ export async function generateMetadata(): Promise<Metadata> {
               siteName: s.storeName,
               title,
               description,
-              images: s.storeLogo ? [{ url: s.storeLogo, alt: s.storeName }] : [],
+              images: storeLogoUrl ? [{ url: storeLogoUrl, alt: s.storeName }] : [],
             },
             twitter: {
               card: "summary_large_image",
               title,
               description,
-              images: s.storeLogo ? [s.storeLogo] : [],
+              images: storeLogoUrl ? [storeLogoUrl] : [],
             },
             alternates: {
               canonical: base,
@@ -86,7 +92,7 @@ export default async function RootLayout({
   let s: any = null;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   try {
-    const res = await fetch(`${baseUrl}/api/store-settings`);
+    const res = await fetch(`${baseUrl}/api/store-settings`, { next: { tags: ['store-settings'] } });
     if (res.ok) {
       const payload = await res.json();
       s = payload?.data || null;
@@ -100,14 +106,14 @@ export default async function RootLayout({
   const jsonLd = s ? {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": s.store_name,
-    "description": s.store_description,
+    "name": s.storeName || s.store_name || undefined,
+    "description": s.storeDescription || s.store_description || undefined,
     "url": process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
-    "logo": s.store_logo || undefined,
+    "logo": s.storeLogo || s.store_logo || undefined,
     "contactPoint": {
       "@type": "ContactPoint",
-      "email": s.contact_email,
-      "telephone": s.contact_phone,
+      "email": s.contactEmail || s.contact_email || undefined,
+      "telephone": s.contactPhone || s.contact_phone || undefined,
       "contactType": "customer service"
     },
     "address": s.address ? {
@@ -130,7 +136,7 @@ export default async function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols" rel="stylesheet" />
-        {s?.favicon ? (<link rel="icon" href={s.favicon} />) : null}
+
         {jsonLd && (
           <script
             type="application/ld+json"

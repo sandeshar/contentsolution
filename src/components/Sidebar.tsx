@@ -9,11 +9,14 @@ const SideBar = () => {
     useEffect(() => {
         const fetchSiteName = async () => {
             try {
-                const response = await fetch('/api/store-settings');
+                // Use no-store to avoid cached values and handle the API payload shape { success, data }
+                const response = await fetch('/api/store-settings', { cache: 'no-store' });
                 if (response.ok) {
-                    const data = await response.json();
-                    if (data.store_name) {
-                        setSiteName(data.store_name);
+                    const payload = await response.json();
+                    const s = payload?.data || payload;
+                    const name = s?.storeName || s?.store_name || '';
+                    if (name) {
+                        setSiteName(name);
                     }
                 }
             } catch (error) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { showToast } from '@/components/Toast';
+import ImageUploader from '@/components/shared/ImageUploader';
 
 export default function HomePageUI() {
     const [activeTab, setActiveTab] = useState("hero");
@@ -197,7 +198,7 @@ export default function HomePageUI() {
                                         <InputGroup label="Secondary CTA Link" value={heroData.secondary_cta_link || ''} onChange={(v) => setHeroData({ ...heroData, secondary_cta_link: v })} />
                                     </div>
 
-                                    <InputGroup label="Background Image URL" value={heroData.background_image || ''} onChange={(v) => setHeroData({ ...heroData, background_image: v })} />
+                                    <ImageUploader label="Background Image" value={heroData.background_image || ''} onChange={(url: string) => setHeroData({ ...heroData, background_image: url })} folder="home" />
                                     <InputGroup label="Background Image Alt Text" value={heroData.hero_image_alt || ''} onChange={(v) => setHeroData({ ...heroData, hero_image_alt: v })} />
                                     <InputGroup label="Rating / Trust Text" value={heroData.rating_text || ''} onChange={(v) => setHeroData({ ...heroData, rating_text: v })} />
 
@@ -250,7 +251,7 @@ export default function HomePageUI() {
                                             </div>
                                             <div className="space-y-4">
                                                 <InputGroup label="Alt Text" value={logo.alt_text || ''} onChange={(v) => updateItem(idx, 'alt_text', v, trustLogos, setTrustLogos)} />
-                                                <InputGroup label="Logo URL" value={logo.logo_url || ''} onChange={(v) => updateItem(idx, 'logo_url', v, trustLogos, setTrustLogos)} />
+                                                <ImageUploader label="Logo" value={logo.logo_url || ''} onChange={(url: string) => updateItem(idx, 'logo_url', url, trustLogos, setTrustLogos)} folder="logos" />
 
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <InputGroup label="Display Order" value={String(logo.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), trustLogos, setTrustLogos)} />

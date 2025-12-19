@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // API-only metadata (dynamic) - avoid DB access in layouts; return defaults on failure
     try {
         const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-        const res = await fetch(`${base}/api/store-settings`);
+        const res = await fetch(`${base}/api/store-settings`, { next: { tags: ['store-settings'] } });
         if (res.ok) {
             const payload = await res.json();
             const s = payload?.data || null;
@@ -62,22 +62,26 @@ export default async function FrontendLayout({
 }) {
     // API-only runtime: fetch store name from API and avoid direct DB access
     let storeName = "Content Solution Nepal";
-    const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    let storeLogo: string | null = null;
+    let store: any = null;
+    const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     try {
-        const res = await fetch(`${base}/api/store-settings`);
+        const res = await fetch(`${base}/api/store-settings`, { next: { tags: ['store-settings'] } });
         if (res.ok) {
             const payload = await res.json();
-            storeName = payload?.data?.storeName || storeName;
+            store = payload?.data || null;
+            storeName = store?.storeName || store?.store_name || storeName;
+            storeLogo = store?.storeLogo || store?.store_logo || null;
         }
     } catch (e) {
-        // If API fails, keep default storeName but do not call DB directly
+        // If API fails, keep defaults but do not call DB directly
     }
 
     return (
         <>
-            <NavBar storeName={storeName} />
+            <NavBar storeName={storeName} storeLogo={storeLogo || undefined} store={store || undefined} />
             {children}
-            <Footer storeName={storeName} />
+            <Footer storeName={storeName} storeLogo={storeLogo || undefined} store={store || undefined} />
         </>
     );
 }

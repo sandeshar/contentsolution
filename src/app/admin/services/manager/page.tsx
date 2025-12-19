@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import NextLink from "next/link";
 import { showToast } from '@/components/Toast';
+import ImageUploader from '@/components/shared/ImageUploader';
 import { getBlogStatusLabel, getBlogStatusClasses } from "@/utils/statusHelpers";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -403,12 +404,25 @@ export default function ServicesManagerPage() {
                     })
                 );
 
-                processSteps.forEach(step => {
+                processSteps.forEach((step, idx) => {
+                    // Normalize payload to API expectations: step_number, title, description, display_order, is_active
+                    const stepNumber = step.step_number ?? step.order_index ?? (idx + 1);
+                    const displayOrder = step.display_order ?? step.order_index ?? (idx + 1);
+                    const payload: any = {
+                        title: step.title,
+                        description: step.description,
+                        step_number: stepNumber,
+                        display_order: displayOrder,
+                        is_active: step.is_active !== undefined ? step.is_active : 1,
+                    };
+                    // Include id when updating
+                    if (step.id) payload.id = step.id;
+
                     promises.push(
                         fetch('/api/pages/services/process-steps', {
                             method: step.id ? 'PUT' : 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(step),
+                            body: JSON.stringify(payload),
                         })
                     );
                 });
@@ -662,16 +676,24 @@ export default function ServicesManagerPage() {
                                 <InputGroup label="Secondary CTA Link" value={heroData.secondary_cta_link || ''} onChange={(v: string) => setHeroData({ ...heroData, secondary_cta_link: v })} />
                             </div>
 
-                            <InputGroup label="Background Image URL" value={heroData.background_image || ''} onChange={(v: string) => setHeroData({ ...heroData, background_image: v })} />
+                            <ImageUploader label="Background Image" value={heroData.background_image || ''} onChange={(url: string) => setHeroData({ ...heroData, background_image: url })} folder="services" />
                             <InputGroup label="Background Image Alt Text" value={heroData.hero_image_alt || ''} onChange={(v: string) => setHeroData({ ...heroData, hero_image_alt: v })} />
 
-                            <div className="grid grid-cols-3 gap-5">
-                                <InputGroup label="Stat 1 Value" value={heroData.stat1_value || ''} onChange={(v: string) => setHeroData({ ...heroData, stat1_value: v })} />
-                                <InputGroup label="Stat 1 Label" value={heroData.stat1_label || ''} onChange={(v: string) => setHeroData({ ...heroData, stat1_label: v })} />
-                                <InputGroup label="Stat 2 Value" value={heroData.stat2_value || ''} onChange={(v: string) => setHeroData({ ...heroData, stat2_value: v })} />
-                                <InputGroup label="Stat 2 Label" value={heroData.stat2_label || ''} onChange={(v: string) => setHeroData({ ...heroData, stat2_label: v })} />
-                                <InputGroup label="Stat 3 Value" value={heroData.stat3_value || ''} onChange={(v: string) => setHeroData({ ...heroData, stat3_value: v })} />
-                                <InputGroup label="Stat 3 Label" value={heroData.stat3_label || ''} onChange={(v: string) => setHeroData({ ...heroData, stat3_label: v })} />
+                            <div className="grid gap-5">
+                                <div className="space-y-3 flex space-x-5">
+                                    <InputGroup label="Stat 1 Value" value={heroData.stat1_value || ''} onChange={(v: string) => setHeroData({ ...heroData, stat1_value: v })} />
+                                    <InputGroup label="Stat 1 Label" value={heroData.stat1_label || ''} onChange={(v: string) => setHeroData({ ...heroData, stat1_label: v })} />
+                                </div>
+
+                                <div className="space-y-3 flex space-x-5">
+                                    <InputGroup label="Stat 2 Value" value={heroData.stat2_value || ''} onChange={(v: string) => setHeroData({ ...heroData, stat2_value: v })} />
+                                    <InputGroup label="Stat 2 Label" value={heroData.stat2_label || ''} onChange={(v: string) => setHeroData({ ...heroData, stat2_label: v })} />
+                                </div>
+
+                                <div className="space-y-3 flex space-x-5">
+                                    <InputGroup label="Stat 3 Value" value={heroData.stat3_value || ''} onChange={(v: string) => setHeroData({ ...heroData, stat3_value: v })} />
+                                    <InputGroup label="Stat 3 Label" value={heroData.stat3_label || ''} onChange={(v: string) => setHeroData({ ...heroData, stat3_label: v })} />
+                                </div>
                             </div>
 
                             <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
@@ -797,128 +819,128 @@ export default function ServicesManagerPage() {
                                 <div className="flex-1 overflow-y-auto p-6">
                                     <div className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {/* Left Column */}
+                                            {/* Left Column (Service Details + Pricing as separate cards) */}
                                             <div className="space-y-4">
-                                                <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Service Details</h4>
+                                                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
+                                                    <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Service Details</h4>
 
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedService.title}
-                                                        onChange={(e) => updateItem('title', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedService.title}
+                                                            onChange={(e) => updateItem('title', e.target.value)}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedService.slug ?? selectedService.key ?? ''}
+                                                            onChange={(e) => {
+                                                                const newSlug = e.target.value;
+                                                                setSelectedService({ ...selectedService, slug: newSlug, key: newSlug });
+                                                            }}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Icon (Material Symbol)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedService.icon}
+                                                            onChange={(e) => updateItem('icon', e.target.value)}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Short Description</label>
+                                                        <textarea
+                                                            value={selectedService.description}
+                                                            onChange={(e) => updateItem('description', e.target.value)}
+                                                            rows={3}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                                                        <select
+                                                            value={selectedService.statusId}
+                                                            onChange={(e) => updateItem('statusId', Number(e.target.value))}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        >
+                                                            <option value={1}>Published</option>
+                                                            <option value={3}>Hidden</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div>
+                                                        <ImageUploader
+                                                            label="Service Image"
+                                                            value={selectedService.image || selectedService.thumbnail || ''}
+                                                            onChange={(url: string) => {
+                                                                updateItem('image', url);
+                                                                updateItem('thumbnail', url);
+                                                            }}
+                                                            folder="services"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Image Alt Text</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedService.image_alt}
+                                                            onChange={(e) => updateItem('image_alt', e.target.value)}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+
+                                                    {/* Category & Subcategory */}
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                                                        <select
+                                                            value={selectedService.category_id?.toString() || ''}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value ? Number(e.target.value) : null;
+                                                                console.log('Category changed to:', val);
+                                                                setSelectedService({ ...selectedService, category_id: val, subcategory_id: null });
+                                                            }}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        >
+                                                            <option value="">No Category</option>
+                                                            {categories.map((cat: any) => (
+                                                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                            ))}
+                                                        </select>
+                                                        <p className="text-xs text-slate-500 mt-1">Categories available: {categories.length}</p>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Subcategory</label>
+                                                        <select
+                                                            value={selectedService.subcategory_id?.toString() || ''}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value ? Number(e.target.value) : null;
+                                                                setSelectedService({ ...selectedService, subcategory_id: val });
+                                                            }}
+                                                            disabled={!selectedService.category_id}
+                                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                                                        >
+                                                            <option value="">No Subcategory</option>
+                                                            {subcategories.filter((sub: any) => sub.category_id === selectedService.category_id).map((sub: any) => (
+                                                                <option key={sub.id} value={sub.id}>{sub.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
                                                 </div>
 
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Slug</label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedService.slug ?? selectedService.key ?? ''}
-                                                        onChange={(e) => {
-                                                            const newSlug = e.target.value;
-                                                            setSelectedService({ ...selectedService, slug: newSlug, key: newSlug });
-                                                        }}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Icon (Material Symbol)</label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedService.icon}
-                                                        onChange={(e) => updateItem('icon', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Short Description</label>
-                                                    <textarea
-                                                        value={selectedService.description}
-                                                        onChange={(e) => updateItem('description', e.target.value)}
-                                                        rows={3}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                                                    <select
-                                                        value={selectedService.statusId}
-                                                        onChange={(e) => updateItem('statusId', Number(e.target.value))}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    >
-                                                        <option value={1}>Published</option>
-                                                        <option value={3}>Hidden</option>
-                                                    </select>
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Image URL</label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedService.image || selectedService.thumbnail}
-                                                        onChange={(e) => {
-                                                            updateItem('image', e.target.value);
-                                                            updateItem('thumbnail', e.target.value);
-                                                        }}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Image Alt Text</label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedService.image_alt}
-                                                        onChange={(e) => updateItem('image_alt', e.target.value)}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
-                                                </div>
-
-                                                {/* Category & Subcategory */}
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                                                    <select
-                                                        value={selectedService.category_id?.toString() || ''}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value ? Number(e.target.value) : null;
-                                                            console.log('Category changed to:', val);
-                                                            setSelectedService({ ...selectedService, category_id: val, subcategory_id: null });
-                                                        }}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    >
-                                                        <option value="">No Category</option>
-                                                        {categories.map((cat: any) => (
-                                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                                        ))}
-                                                    </select>
-                                                    <p className="text-xs text-slate-500 mt-1">Categories available: {categories.length}</p>
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Subcategory</label>
-                                                    <select
-                                                        value={selectedService.subcategory_id?.toString() || ''}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value ? Number(e.target.value) : null;
-                                                            setSelectedService({ ...selectedService, subcategory_id: val });
-                                                        }}
-                                                        disabled={!selectedService.category_id}
-                                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                                                    >
-                                                        <option value="">No Subcategory</option>
-                                                        {subcategories.filter((sub: any) => sub.category_id === selectedService.category_id).map((sub: any) => (
-                                                            <option key={sub.id} value={sub.id}>{sub.name}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-
-                                                {/* Pricing */}
-                                                <div className="border-t border-slate-200 pt-4">
+                                                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
                                                     <h5 className="text-sm font-semibold text-slate-700 mb-3">Pricing</h5>
 
                                                     <div className="grid grid-cols-2 gap-3 mb-3">
@@ -991,9 +1013,8 @@ export default function ServicesManagerPage() {
                                                 </div>
 
                                             </div>
-                                            <div>
-                                                {/* Middle Column: Post Content */}
-                                                <div className="space-y-4 md:col-span-2">
+                                            <div className="space-y-4">
+                                                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
                                                     <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Post Content</h4>
 
                                                     <div>
@@ -1016,8 +1037,7 @@ export default function ServicesManagerPage() {
 
                                                 </div>
 
-                                                {/* Right Column: SEO */}
-                                                <div className="space-y-4 md:col-span-1">
+                                                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
                                                     <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">SEO</h4>
 
                                                     <div>
