@@ -26,21 +26,33 @@ export async function POST() {
         await db.delete(aboutPageCTA);
 
         // Seed Hero Section
-        await db.insert(aboutPageHero).values({
-            title: "We Don't Just Write. We Build Worlds with Words.",
-            description: "Welcome to Content Solution Nepal. We're a team of storytellers, strategists, and digital artisans dedicated to crafting narratives that resonate, engage, and drive growth. Your brand has a story. Let's tell it together.",
-            button1_text: 'Meet the Team',
-            button1_link: '#team',
-            button2_text: 'Our Story',
-            button2_link: '#story',
-            background_image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTGNaIxV2yP8yow4vP4sY-zbc2rGNflWrmYA6XGpOKuy0LiNEdcuCLu0m9b1WbTFpw3v3-d-OgpGVH8wbsGNshWs2GFVT-zZTMpF7UJ9ykyyLa1PyF_vfQSbW6f2fveOmmpTQ66uhhM5w8bJLYOOoULMgIWwePl-eTFMrzCfXWjVvUTejB5cJEZ0b5tqEM7RSy-eO-CklDZypw8e5SRxq2IFJ_7PtJNqm5ij0ilfaT66A_WIGoPSQrH8kiHzxAp7tHrL-vjB3sBNo',
-            hero_image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTGNaIxV2yP8yow4vP4sY-zbc2rGNflWrmYA6XGpOKuy0LiNEdcuCLu0m9b1WbTFpw3v3-d-OgpGVH8wbsGNshWs2GFVT-zZTMpF7UJ9ykyyLa1PyF_vfQSbW6f2fveOmmpTQ66uhhM5w8bJLYOOoULMgIWwePl-eTFMrzCfXWjVvUTejB5cJEZ0b5tqEM7RSy-eO-CklDZypw8e5SRxq2IFJ_7PtJNqm5ij0ilfaT66A_WIGoPSQrH8kiHzxAp7tHrL-vjB3sBNo',
-            badge_text: 'Creative Team',
-            highlight_text: 'Build Worlds',
-            rating_text: 'Trusted by modern teams',
-            hero_image_alt: 'Creative team collaborating in a modern office space',
-            is_active: 1,
-        });
+        try {
+            await db.insert(aboutPageHero).values({
+                title: "We Don't Just Write. We Build Worlds with Words.",
+                description: "Welcome to Content Solution Nepal. We're a team of storytellers, strategists, and digital artisans dedicated to crafting narratives that resonate, engage, and drive growth. Your brand has a story. Let's tell it together.",
+                button1_text: 'Meet the Team',
+                button1_link: '#team',
+                button2_text: 'Our Story',
+                button2_link: '#story',
+                hero_image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTGNaIxV2yP8yow4vP4sY-zbc2rGNflWrmYA6XGpOKuy0LiNEdcuCLu0m9b1WbTFpw3v3-d-OgpGVH8wbsGNshWs2GFVT-zZTMpF7UJ9ykyyLa1PyF_vfQSbW6f2fveOmmpTQ66uhhM5w8bJLYOOoULMgIWwePl-eTFMrzCfXWjVvUTejB5cJEZ0b5tqEM7RSy-eO-CklDZypw8e5SRxq2IFJ_7PtJNqm5ij0ilfaT66A_WIGoPSQrH8kiHzxAp7tHrL-vjB3sBNo',
+                float_top_enabled: 1,
+                float_top_icon: 'trending_up',
+                float_top_title: 'Traffic Growth',
+                float_top_value: '+145%',
+                float_bottom_enabled: 1,
+                float_bottom_icon: 'article',
+                float_bottom_title: 'Content Pieces',
+                float_bottom_value: '5k+',
+                badge_text: 'Creative Team',
+                highlight_text: 'Build Worlds',
+                rating_text: 'Trusted by modern teams',
+                hero_image_alt: 'Creative team collaborating in a modern office space',
+                is_active: 1,
+            });
+        } catch (err) {
+            console.error('Error seeding about hero:', err);
+            throw new Error('About hero seeding failed: ' + (err instanceof Error ? err.message : String(err)));
+        }
 
         // Seed Journey Section
         await db.insert(aboutPageJourney).values({

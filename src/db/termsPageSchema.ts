@@ -15,7 +15,6 @@ export const termsPageSections = mysqlTable("terms_page_sections", {
     title: varchar("title", { length: 256 }).notNull(),
     content: varchar("content", { length: 5000 }).notNull(),
     has_email: int("has_email").default(0).notNull(),
-    has_link: int("has_link").default(0).notNull(),
     display_order: int("display_order").notNull(),
     is_active: int("is_active").default(1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),

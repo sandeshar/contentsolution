@@ -86,9 +86,7 @@ export default async function FAQPage() {
                         <p className="text-slate-500 mb-8 max-w-md text-lg">
                             {cta.description}
                         </p>
-                        <Link href={cta.button_link}>
-                            <CTAButton text={cta.button_text} />
-                        </Link>
+                        <CTAButton text={cta.button_text} href={cta.button_link} />
                     </div>
                 ) : (
                     <div className="bg-primary/10 rounded-xl my-10 p-8 sm:p-10 text-center flex flex-col items-center animate-pulse">

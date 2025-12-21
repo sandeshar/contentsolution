@@ -63,7 +63,6 @@ export interface TermsSectionData {
     title: string;
     content: string;
     has_email: number;
-    has_link: number;
 }
 
 // FAQ page types

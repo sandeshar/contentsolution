@@ -29,16 +29,54 @@ export default async function TermsPage() {
     const data = await getTermsData();
     const { header, sections } = data;
 
+    // Render section content with smart link/email detection when toggles are enabled
+    function renderSectionContent(section: TermsSectionData) {
+        const content = section.content || '';
+
+        // Regex matches URLs or emails
+        const regex = /(https?:\/\/[^\s]+)|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g;
+        const nodes: Array<string | JSX.Element> = [];
+        let lastIndex = 0;
+        let m: RegExpExecArray | null;
+
+        while ((m = regex.exec(content)) !== null) {
+            const idx = m.index;
+            if (idx > lastIndex) nodes.push(content.substring(lastIndex, idx));
+            const matchText = m[0];
+            if (matchText.includes('@')) {
+                nodes.push(
+                    <a key={idx} href={`mailto:${matchText}`} className="text-primary underline">
+                        {matchText}
+                    </a>
+                );
+            } else {
+                nodes.push(
+                    <a key={idx} href={matchText} className="text-primary underline" target="_blank" rel="noopener noreferrer">
+                        {matchText}
+                    </a>
+                );
+            }
+            lastIndex = idx + matchText.length;
+        }
+
+        if (lastIndex < content.length) nodes.push(content.substring(lastIndex));
+
+
+
+        // Return assembled nodes
+        return <>{nodes.map((n, i) => (typeof n === 'string' ? <span key={i}>{n}</span> : <span key={i}>{n}</span>))}</>;
+    }
+
     return (
         <main className="flex flex-col items-center page-bg">
-            <div className="flex flex-col w-full max-w-7xl py-5">
-                <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col w-full max-w-7xl py-12 md:py-16 px-4 md:px-0">
+                <div className="flex flex-col items-center text-center gap-4 mb-8 md:mb-12">
                     {header ? (
                         <>
                             <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
                                 {header.title}
                             </h1>
-                            <p className="mt-4 text-lg text-slate-600">
+                            <p className="mt-2 text-sm md:text-lg text-slate-600">
                                 {header.last_updated}
                             </p>
                         </>
@@ -50,13 +88,13 @@ export default async function TermsPage() {
                     )}
                 </div>
 
-                <div className="prose prose-slate mx-auto mt-16 max-w-none prose-headings:font-semibold prose-headings:text-slate-800 prose-p:text-slate-700 prose-a:text-primary hover:prose-a:underline">
+                <div className="prose prose-slate mx-auto mt-8 md:mt-12 max-w-3xl prose-headings:font-semibold prose-headings:text-slate-800 prose-p:text-slate-700 prose-a:text-primary hover:prose-a:underline space-y-8">
                     {sections && sections.length > 0 ? (
                         sections.map((section: TermsSectionData) => (
-                            <section key={section.id}>
-                                <h2 className="text-2xl font-bold">{section.title}</h2>
-                                <p>
-                                    {section.content}
+                            <section key={section.id} className="py-6 md:py-8">
+                                <h2 className="text-2xl font-bold mb-3">{section.title}</h2>
+                                <p className="text-base md:text-lg leading-relaxed">
+                                    {renderSectionContent(section)}
                                 </p>
                             </section>
                         ))

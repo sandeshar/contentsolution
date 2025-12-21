@@ -170,7 +170,7 @@ export default function TermsPageUI() {
                                 </h2>
                                 <div className="flex items-center justify-between mb-6">
                                     <p className="text-sm text-gray-500">Manage terms sections</p>
-                                    <button onClick={() => addItem(sections, setSections, { title: "", content: "", has_email: 0, has_link: 0 })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                                    <button onClick={() => addItem(sections, setSections, { title: "", content: "", has_email: 0 })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
                                         <span className="material-symbols-outlined text-[18px]">add_circle</span> Add Section
                                     </button>
                                 </div>
@@ -200,10 +200,6 @@ export default function TermsPageUI() {
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm text-gray-600">Has Email</span>
                                                             <Toggle checked={section.has_email === 1} onChange={(c) => updateItem(idx, 'has_email', c ? 1 : 0, sections, setSections)} />
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-sm text-gray-600">Has Link</span>
-                                                            <Toggle checked={section.has_link === 1} onChange={(c) => updateItem(idx, 'has_link', c ? 1 : 0, sections, setSections)} />
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm text-gray-600">Active</span>

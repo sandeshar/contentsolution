@@ -95,6 +95,19 @@ export default function AboutPageUI() {
                 for (const id of deletedIds) {
                     await fetch(`${url}?id=${id}`, { method: 'DELETE' });
                 }
+
+                // If saving team members, validate required fields to provide a clearer error early
+                if (url.endsWith('/team-members')) {
+                    items.forEach((item, idx) => {
+                        const required = ['name', 'role', 'description', 'image', 'image_alt', 'display_order'];
+                        for (const field of required) {
+                            if (item[field] === undefined || item[field] === null || String(item[field]).trim() === '') {
+                                throw new Error(`Team member at position ${idx + 1} is missing required field: ${field}`);
+                            }
+                        }
+                    });
+                }
+
                 // Save/Update current items
                 for (const item of items) {
                     await saveSection(url, item);
@@ -237,9 +250,35 @@ export default function AboutPageUI() {
                                         <InputGroup label="Secondary Button Link" value={heroData.button2_link || ''} onChange={(v) => setHeroData({ ...heroData, button2_link: v })} />
                                     </div>
 
-                                    <ImageUploader label="Background Image" value={heroData.background_image || ''} onChange={(v) => setHeroData({ ...heroData, background_image: v })} folder="about" />
                                     <ImageUploader label="Hero Image" value={heroData.hero_image || ''} onChange={(v) => setHeroData({ ...heroData, hero_image: v })} folder="about" />
                                     <InputGroup label="Hero Image Alt Text" value={heroData.hero_image_alt || ''} onChange={(v) => setHeroData({ ...heroData, hero_image_alt: v })} />
+
+                                    {/* Floating UI Elements */}
+                                    <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-100">
+                                        <h4 className="text-sm font-semibold mb-3">Floating UI Elements</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="p-3 bg-white rounded border border-gray-100">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="text-sm font-medium">Top Floating Card</div>
+                                                    <Toggle checked={heroData.float_top_enabled === 1} onChange={(c) => setHeroData({ ...heroData, float_top_enabled: c ? 1 : 0 })} />
+                                                </div>
+                                                <InputGroup label="Icon (Material Symbol)" value={heroData.float_top_icon || ''} onChange={(v) => setHeroData({ ...heroData, float_top_icon: v })} />
+                                                <InputGroup label="Title" value={heroData.float_top_title || ''} onChange={(v) => setHeroData({ ...heroData, float_top_title: v })} />
+                                                <InputGroup label="Value" value={heroData.float_top_value || ''} onChange={(v) => setHeroData({ ...heroData, float_top_value: v })} />
+                                            </div>
+
+                                            <div className="p-3 bg-white rounded border border-gray-100">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="text-sm font-medium">Bottom Floating Card</div>
+                                                    <Toggle checked={heroData.float_bottom_enabled === 1} onChange={(c) => setHeroData({ ...heroData, float_bottom_enabled: c ? 1 : 0 })} />
+                                                </div>
+                                                <InputGroup label="Icon (Material Symbol)" value={heroData.float_bottom_icon || ''} onChange={(v) => setHeroData({ ...heroData, float_bottom_icon: v })} />
+                                                <InputGroup label="Title" value={heroData.float_bottom_title || ''} onChange={(v) => setHeroData({ ...heroData, float_bottom_title: v })} />
+                                                <InputGroup label="Value" value={heroData.float_bottom_value || ''} onChange={(v) => setHeroData({ ...heroData, float_bottom_value: v })} />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <InputGroup label="Rating / Trust Text" value={heroData.rating_text || ''} onChange={(v) => setHeroData({ ...heroData, rating_text: v })} />
 
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">
@@ -409,7 +448,7 @@ export default function AboutPageUI() {
 
                                 <div className="flex items-center justify-between mb-6 border-t pt-6">
                                     <h3 className="text-lg font-semibold text-gray-900">Team Members</h3>
-                                    <button onClick={() => addItem(teamMembers, setTeamMembers, { name: "", role: "", image: "", image_alt: "", bio: "" })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                                    <button onClick={() => addItem(teamMembers, setTeamMembers, { name: "", role: "", image: "", image_alt: "", description: "" })} className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
                                         <span className="material-symbols-outlined text-[18px]">add_circle</span> Add Member
                                     </button>
                                 </div>
@@ -436,7 +475,7 @@ export default function AboutPageUI() {
                                                 </div>
                                                 <ImageUploader label="Image" value={member.image || ''} onChange={(v) => updateItem(idx, 'image', v, teamMembers, setTeamMembers)} folder="about/team" />
                                                 <InputGroup label="Image Alt Text" value={member.image_alt || ''} onChange={(v) => updateItem(idx, 'image_alt', v, teamMembers, setTeamMembers)} />
-                                                <TextAreaGroup label="Bio" value={member.bio || ''} onChange={(v) => updateItem(idx, 'bio', v, teamMembers, setTeamMembers)} />
+                                                <TextAreaGroup label="Bio" value={member.description || ''} onChange={(v) => updateItem(idx, 'description', v, teamMembers, setTeamMembers)} />
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <InputGroup label="Display Order" value={String(member.display_order || '')} onChange={(v) => updateItem(idx, 'display_order', Number(v), teamMembers, setTeamMembers)} />
                                                     <div className="flex items-end">

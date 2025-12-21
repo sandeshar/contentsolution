@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { title, content, has_email = 0, has_link = 0, display_order, is_active = 1 } = body;
+        const { title, content, has_email = 0, display_order, is_active = 1 } = body;
 
         if (!title || !content || display_order === undefined) {
             return NextResponse.json({ error: 'Title, content, and display_order are required' }, { status: 400 });
@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
             title,
             content,
             has_email,
-            has_link,
             display_order,
             is_active,
         });
@@ -66,7 +65,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { id, title, content, has_email, has_link, display_order, is_active } = body;
+        const { id, title, content, has_email, display_order, is_active } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -76,7 +75,6 @@ export async function PUT(request: NextRequest) {
         if (title !== undefined) updateData.title = title;
         if (content !== undefined) updateData.content = content;
         if (has_email !== undefined) updateData.has_email = has_email;
-        if (has_link !== undefined) updateData.has_link = has_link;
         if (display_order !== undefined) updateData.display_order = display_order;
         if (is_active !== undefined) updateData.is_active = is_active;
 

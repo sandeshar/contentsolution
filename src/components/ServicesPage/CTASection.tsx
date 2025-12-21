@@ -28,7 +28,7 @@ const CTASection = ({ data }: CTASectionProps) => {
                     <div className="relative flex flex-col items-center gap-4">
                         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{data.title}</h2>
                         <p className="max-w-2xl text-base text-slate-300 sm:text-lg">{data.description}</p>
-                        <CTAButton text={data.button_text} variant="primary" className="mt-4 shadow-sm" />
+                        <CTAButton text={data.button_text} href={data.button_link} variant="primary" className="mt-4 shadow-sm" />
                     </div>
                 </div>
             </div>

@@ -9,11 +9,18 @@ interface AboutHeroData {
     button1_link: string;
     button2_text: string;
     button2_link: string;
-    background_image?: string;
     hero_image: string;
     hero_image_alt: string;
     badge_text?: string;
     highlight_text?: string;
+    float_top_enabled?: number;
+    float_top_icon?: string;
+    float_top_title?: string;
+    float_top_value?: string;
+    float_bottom_enabled?: number;
+    float_bottom_icon?: string;
+    float_bottom_title?: string;
+    float_bottom_value?: string;
     rating_text?: string;
     is_active: number;
     updatedAt: Date;
@@ -59,13 +66,17 @@ const AboutHero = ({ data }: AboutHeroProps) => {
                                 {data.title.split('\n').map((line, i) => {
                                     const hl = (data.highlight_text || '').trim();
                                     if (hl) {
-                                        const idx = line.indexOf(hl);
+                                        // Case-insensitive search to improve UX
+                                        const lowLine = line.toLowerCase();
+                                        const lowHl = hl.toLowerCase();
+                                        const idx = lowLine.indexOf(lowHl);
                                         if (idx === -1) return <span key={i} className="block">{line}</span>;
+                                        const matched = line.substring(idx, idx + hl.length);
                                         return (
                                             <span key={i} className="block">
                                                 {line.substring(0, idx)}
                                                 <span className="relative whitespace-nowrap">
-                                                    <span className="relative z-10 bg-clip-text text-transparent bg-linear-to-r from-primary via-blue-600 to-indigo-600">{hl}</span>
+                                                    <span className="relative z-10 bg-clip-text text-transparent bg-linear-to-r from-primary via-blue-600 to-indigo-600">{matched}</span>
                                                 </span>
                                                 {line.substring(idx + hl.length)}
                                             </span>
@@ -118,34 +129,38 @@ const AboutHero = ({ data }: AboutHeroProps) => {
 
                     <div className="relative lg:pl-10 mt-6 lg:mt-0 w-full">
                         <div className="relative w-full h-[360px] sm:h-[480px] lg:h-[560px] xl:h-[72vh] overflow-hidden rounded-2xl bg-card shadow-2xl border-4 border-muted group transform transition-transform hover:scale-[1.01] duration-500">
-                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${data.background_image || data.hero_image}")` }} role="img" aria-label={data.hero_image_alt || 'About hero image'}></div>
+                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${data.hero_image}")` }} role="img" aria-label={data.hero_image_alt || 'About hero image'}></div>
                             <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-primary-20 blur-3xl transition-all duration-700 animate-pulse"></div>
                             <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-primary-20 blur-3xl transition-all duration-700 animate-pulse delay-700"></div>
-                            <div className="relative h-full w-full bg-cover bg-center transform transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url("${data.background_image || data.hero_image}")` }} />
+                            <div className="relative h-full w-full bg-cover bg-center transform transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url("${data.hero_image}")` }} />
 
-                            <div className="absolute -left-4 bottom-20 z-20 hidden md:block">
-                                <div className="flex items-center gap-4 rounded-xl bg-card p-4 pr-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 border border-muted">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500 text-white">
-                                        <span className="material-symbols-outlined">trending_up</span>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-subtext">Traffic Growth</p>
-                                        <p className="text-xl font-black text-body">+145%</p>
+                            {data.float_bottom_enabled !== 0 && (
+                                <div className="absolute -left-4 bottom-20 z-20 hidden md:block">
+                                    <div className="flex items-center gap-4 rounded-xl bg-card p-4 pr-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 border border-muted">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500 text-white">
+                                            <span className="material-symbols-outlined">{data.float_bottom_icon || 'trending_up'}</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-subtext">{data.float_bottom_title || 'Traffic Growth'}</p>
+                                            <p className="text-xl font-black text-body">{data.float_bottom_value || '+145%'}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
-                            <div className="absolute -right-4 top-10 z-20 hidden md:block">
-                                <div className="flex items-center gap-4 rounded-xl bg-card p-4 pr-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 border border-muted">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-white">
-                                        <span className="material-symbols-outlined">article</span>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-subtext">Content Pieces</p>
-                                        <p className="text-xl font-black text-body">5k+</p>
+                            {data.float_top_enabled !== 0 && (
+                                <div className="absolute -right-4 top-10 z-20 hidden md:block">
+                                    <div className="flex items-center gap-4 rounded-xl bg-card p-4 pr-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] ring-1 border border-muted">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-white">
+                                            <span className="material-symbols-outlined">{data.float_top_icon || 'article'}</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-subtext">{data.float_top_title || 'Content Pieces'}</p>
+                                            <p className="text-xl font-black text-body">{data.float_top_value || '5k+'}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
