@@ -196,7 +196,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                         <div className="mt-4">
                                             <a
                                                 href={`/contact?service=${encodeURIComponent(post.slug)}`}
-                                                aria-label={`Contact us about ${post.title}` }
+                                                aria-label={`Contact us about ${post.title}`}
                                                 className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-card text-primary-var font-semibold rounded-lg hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-muted"
                                             >
                                                 <span className="material-symbols-outlined">call</span>

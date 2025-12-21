@@ -269,7 +269,7 @@ const ContactFormSection = ({
 
 // --- Small combobox component used for both variants ---
 function ServiceDropdown({ services, loading, filter, onFilterChange, value, onChange, placeholder }:
-    { services: Array<{slug:string;title:string}>, loading: boolean, filter: string, onFilterChange: (v:string)=>void, value: string, onChange: (v:string)=>void, placeholder: string }) {
+    { services: Array<{ slug: string; title: string }>, loading: boolean, filter: string, onFilterChange: (v: string) => void, value: string, onChange: (v: string) => void, placeholder: string }) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement | null>(null);
 
@@ -294,7 +294,7 @@ function ServiceDropdown({ services, loading, filter, onFilterChange, value, onC
 
             <div className={`absolute z-50 left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border ${open ? 'block' : 'hidden'}`}>
                 <div className="p-2">
-                    <input type="search" placeholder={loading ? 'Loading services...' : 'Search services...'} value={filter} onChange={(e)=>{ onFilterChange(e.target.value); }} className="w-full px-3 py-2 border rounded" />
+                    <input type="search" placeholder={loading ? 'Loading services...' : 'Search services...'} value={filter} onChange={(e) => { onFilterChange(e.target.value); }} className="w-full px-3 py-2 border rounded" />
                 </div>
                 <div className="max-h-56 overflow-auto">
                     {loading ? (
