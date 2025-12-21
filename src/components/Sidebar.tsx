@@ -28,29 +28,28 @@ const SideBar = () => {
 
     const mainItems = [
         { name: 'Dashboard', icon: 'dashboard', href: '/admin' },
+        { name: 'Store Setting', icon: 'settings', href: '/admin/store-setting' },
         { name: 'Users', icon: 'group', href: '/admin/users' },
-        { name: 'Blog', icon: 'article', href: '/admin/blog' },
-        { name: 'Testimonials', icon: 'reviews', href: '/admin/testimonials' },
         { name: 'Services Manager', icon: 'service_toolbox', href: '/admin/services/manager' },
         { name: 'Category Manager', icon: 'category', href: '/admin/categories' },
-        // Navbar moved to UI Elements
+        { name: 'Blog', icon: 'article', href: '/admin/blog' },
+        { name: 'Testimonials', icon: 'reviews', href: '/admin/testimonials' },
         { name: 'Contact', icon: 'contact_mail', href: '/admin/contact' },
-        { name: 'Store Setting', icon: 'settings', href: '/admin/store-setting' },
     ];
 
     const seoItems = [
-        { name: 'Robots.txt', icon: 'smart_toy', href: '/admin/seo/robots' },
         { name: 'Sitemap', icon: 'map', href: '/admin/seo/sitemap' },
+        { name: 'Robots.txt', icon: 'smart_toy', href: '/admin/seo/robots' },
     ];
 
     const uiSubItems = [
+        { name: 'Navbar', icon: 'menu', href: '/admin/navbar' },
+        { name: 'Footer', icon: 'web', href: '/admin/footer' },
         { name: 'Home', icon: 'home', href: '/admin/ui/home' },
+        { name: 'About', icon: 'info', href: '/admin/ui/about' },
         { name: 'Contact', icon: 'contact_mail', href: '/admin/ui/contact' },
         { name: 'FaQ', icon: 'help_outline', href: '/admin/ui/faq' },
-        { name: 'About', icon: 'info', href: '/admin/ui/about' },
         { name: 'Terms and Conditions', icon: 'description', href: '/admin/ui/termsandconditions' },
-        { name: 'Footer', icon: 'web', href: '/admin/footer' },
-        { name: 'Navbar', icon: 'menu', href: '/admin/navbar' },
     ];
 
     return (
