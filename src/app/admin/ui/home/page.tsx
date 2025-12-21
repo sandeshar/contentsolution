@@ -67,6 +67,15 @@ export default function HomePageUI() {
                     return; // Skip empty sections without id
                 }
 
+                // If saving homepage hero ensure colored_word is present in title when set
+                if (url === '/api/pages/homepage/hero' && data.colored_word) {
+                    const title = data.title || '';
+                    if (title && title.indexOf(data.colored_word) === -1) {
+                        // Prevent saving inconsistent state and ask user to autofill or fix
+                        throw new Error('Colored word must be present in Title. Use the "Autofill from title" button or update the Title.');
+                    }
+                }
+
                 const method = data.id ? 'PUT' : 'POST';
                 const res = await fetch(url, {
                     method,
@@ -75,7 +84,8 @@ export default function HomePageUI() {
                 });
                 if (!res.ok) {
                     const errorData = await res.json();
-                    throw new Error(`Failed to save ${url}: ${errorData.error || res.statusText}`);
+                    const details = errorData.details ? ` - ${errorData.details}` : '';
+                    throw new Error(`Failed to save ${url}: ${errorData.error || res.statusText}${details}`);
                 }
                 return res.json();
             };
@@ -187,6 +197,62 @@ export default function HomePageUI() {
                                     <InputGroup label="Title" value={heroData.title || ''} onChange={(v) => setHeroData({ ...heroData, title: v })} />
                                     <TextAreaGroup label="Subtitle" value={heroData.subtitle || ''} onChange={(v) => setHeroData({ ...heroData, subtitle: v })} />
                                     <InputGroup label="Highlight Text (substring to emphasize)" value={heroData.highlight_text || ''} onChange={(v) => setHeroData({ ...heroData, highlight_text: v })} />
+                                    <div>
+                                        <InputGroup label="Colored Word (single word to color)" value={heroData.colored_word || ''} onChange={(v) => setHeroData({ ...heroData, colored_word: v })} />
+                                        {heroData.colored_word && heroData.title && heroData.title.indexOf(heroData.colored_word) === -1 && (
+                                            <div className="mt-2 text-sm text-yellow-700 flex items-center gap-2">
+                                                <span>Colored word not found in title.</span>
+                                                <button
+                                                    onClick={() => {
+                                                        const title = heroData.title || '';
+                                                        const parts = title.trim().split(/\s+/);
+                                                        const last = parts.length ? parts[parts.length - 1] : '';
+                                                        setHeroData({ ...heroData, colored_word: last });
+                                                    }}
+                                                    className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                                                >
+                                                    Autofill from title
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Preview */}
+                                        <div className="mt-4 p-3 bg-gray-50 rounded">
+                                            <div className="text-sm text-gray-500 mb-2">Title Preview</div>
+                                            <div className="text-2xl font-black leading-tight">
+                                                {(() => {
+                                                    const t = heroData.title || 'Example Title';
+                                                    const cw = (heroData.colored_word || heroData.highlight_text || '').trim();
+                                                    if (!t) return <span className="text-gray-400">No title set</span>;
+                                                    return t.split('\n').map((line: string, i: number) => {
+                                                        const word = cw;
+                                                        if (word) {
+                                                            const idx = line.indexOf(word);
+                                                            if (idx !== -1) {
+                                                                return (
+                                                                    <span key={i} className="block">
+                                                                        {line.substring(0, idx)}
+                                                                        <span className="bg-clip-text text-transparent bg-linear-to-r from-primary via-blue-600 to-indigo-600">{word}</span>
+                                                                        {line.substring(idx + word.length)}
+                                                                    </span>
+                                                                );
+                                                            }
+                                                        }
+                                                        const trimmed = line.trim();
+                                                        const parts = trimmed.split(' ');
+                                                        if (parts.length === 1) return <span key={i} className="block">{trimmed}</span>;
+                                                        const last = parts.pop();
+                                                        const first = parts.join(' ');
+                                                        return (
+                                                            <span key={i} className="block">
+                                                                {first} <span className="bg-clip-text text-transparent bg-linear-to-r from-primary via-blue-600 to-indigo-600">{last}</span>
+                                                            </span>
+                                                        );
+                                                    });
+                                                })()}
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div className="grid grid-cols-2 gap-5">
                                         <InputGroup label="Primary CTA Text" value={heroData.cta_text || ''} onChange={(v) => setHeroData({ ...heroData, cta_text: v })} />
@@ -200,6 +266,33 @@ export default function HomePageUI() {
 
                                     <ImageUploader label="Background Image" value={heroData.background_image || ''} onChange={(url: string) => setHeroData({ ...heroData, background_image: url })} folder="home" />
                                     <InputGroup label="Background Image Alt Text" value={heroData.hero_image_alt || ''} onChange={(v) => setHeroData({ ...heroData, hero_image_alt: v })} />
+
+                                    {/* Floating UI Elements */}
+                                    <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-100">
+                                        <h4 className="text-sm font-semibold mb-3">Floating UI Elements</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="p-3 bg-white rounded border border-gray-100">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="text-sm font-medium">Top Floating Card</div>
+                                                    <Toggle checked={heroData.float_top_enabled === 1} onChange={(c) => setHeroData({ ...heroData, float_top_enabled: c ? 1 : 0 })} />
+                                                </div>
+                                                <InputGroup label="Icon (Material Symbol)" value={heroData.float_top_icon || ''} onChange={(v) => setHeroData({ ...heroData, float_top_icon: v })} />
+                                                <InputGroup label="Title" value={heroData.float_top_title || ''} onChange={(v) => setHeroData({ ...heroData, float_top_title: v })} />
+                                                <InputGroup label="Value" value={heroData.float_top_value || ''} onChange={(v) => setHeroData({ ...heroData, float_top_value: v })} />
+                                            </div>
+
+                                            <div className="p-3 bg-white rounded border border-gray-100">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="text-sm font-medium">Bottom Floating Card</div>
+                                                    <Toggle checked={heroData.float_bottom_enabled === 1} onChange={(c) => setHeroData({ ...heroData, float_bottom_enabled: c ? 1 : 0 })} />
+                                                </div>
+                                                <InputGroup label="Icon (Material Symbol)" value={heroData.float_bottom_icon || ''} onChange={(v) => setHeroData({ ...heroData, float_bottom_icon: v })} />
+                                                <InputGroup label="Title" value={heroData.float_bottom_title || ''} onChange={(v) => setHeroData({ ...heroData, float_bottom_title: v })} />
+                                                <InputGroup label="Value" value={heroData.float_bottom_value || ''} onChange={(v) => setHeroData({ ...heroData, float_bottom_value: v })} />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <InputGroup label="Rating / Trust Text" value={heroData.rating_text || ''} onChange={(v) => setHeroData({ ...heroData, rating_text: v })} />
 
                                     <div className="pt-4 flex items-center justify-between border-t border-gray-50 mt-6">

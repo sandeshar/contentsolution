@@ -11,6 +11,15 @@ interface HeroData {
     hero_image_alt?: string;
     badge_text?: string;
     highlight_text?: string;
+    colored_word?: string;
+    float_top_enabled?: number;
+    float_top_icon?: string;
+    float_top_title?: string;
+    float_top_value?: string;
+    float_bottom_enabled?: number;
+    float_bottom_icon?: string;
+    float_bottom_title?: string;
+    float_bottom_value?: string;
     secondary_cta_text?: string;
     secondary_cta_link?: string;
     rating_text?: string;
@@ -33,15 +42,41 @@ const AvatarList = () => (
     </div>
 );
 
-const HighlightedTitle = ({ title, highlight }: { title: string; highlight?: string }) => {
-    if (!highlight) return <>{title}</>;
-    const idx = title.indexOf(highlight);
-    if (idx === -1) return <>{title}</>;
+const HighlightedTitle = ({ title, highlight, coloredWord }: { title: string; highlight?: string; coloredWord?: string }) => {
+    // Render title line-by-line and color the `coloredWord` if provided, otherwise the `highlight` substring.
+    // If neither is provided or not found in the line, fall back to coloring the last word (preserves previous behavior).
+    const colorCandidate = (coloredWord || highlight || '').trim();
     return (
         <>
-            {title.substring(0, idx)}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-purple-600">{highlight}</span>
-            {title.substring(idx + highlight.length)}
+            {title.split('\n').map((line, i) => {
+                const wordToColor = (coloredWord || highlight || '').trim();
+                if (wordToColor) {
+                    const idx = line.indexOf(wordToColor);
+                    if (idx !== -1) {
+                        return (
+                            <span key={i} className="block">
+                                {line.substring(0, idx)}
+                                <span className="relative whitespace-nowrap">
+                                    <span className="relative z-10 bg-clip-text text-transparent bg-linear-to-r from-primary via-blue-600 to-indigo-600">{wordToColor}</span>
+                                </span>
+                                {line.substring(idx + wordToColor.length)}
+                            </span>
+                        );
+                    }
+                }
+
+                // Default: color the last word of the line (keeps prior two-color behavior)
+                const trimmed = line.trim();
+                const parts = trimmed.split(' ');
+                if (parts.length === 1) return <span key={i} className="block">{trimmed}</span>;
+                const last = parts.pop();
+                const first = parts.join(' ');
+                return (
+                    <span key={i} className="block">
+                        {first} <span className="bg-clip-text text-transparent bg-linear-to-r from-primary via-blue-600 to-indigo-600">{last}</span>
+                    </span>
+                );
+            })}
         </>
     );
 };
@@ -68,7 +103,7 @@ const Hero = ({ data }: HeroProps) => {
 
                         <div className="flex flex-col gap-6">
                             <h1 className="text-body text-3xl font-black leading-[1.05] tracking-[-0.033em] md:text-4xl lg:text-5xl xl:text-6xl">
-                                <HighlightedTitle title={data.title} highlight={data.highlight_text} />
+                                <HighlightedTitle title={data.title} highlight={data.highlight_text} coloredWord={data.colored_word} />
                             </h1>
                             <p className="text-subtext text-sm font-normal leading-relaxed md:text-base xl:text-lg max-w-2xl mx-auto lg:mx-0">{data.subtitle}</p>
                         </div>
@@ -101,25 +136,29 @@ const Hero = ({ data }: HeroProps) => {
 
                     <div className="relative w-full z-10 perspective-1000">
                         <div className="relative w-full h-[360px] sm:h-[480px] lg:h-[560px] xl:h-[72vh] rounded-2xl shadow-2xl bg-card border-4 border-muted overflow-hidden transform transition-transform hover:scale-[1.02] duration-500 group" style={{ backgroundImage: `url("${data.background_image}")`, backgroundPosition: 'center', backgroundSize: 'cover' }} role="img" aria-label={data.hero_image_alt || 'Hero image'}>
-                            <div className="absolute top-5 right-2 sm:right-8 bg-card p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden sm:flex items-center gap-3 animate-float z-20">
-                                <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-primary-var">
-                                    <span className="material-symbols-outlined">trending_up</span>
+                            {data.float_top_enabled !== 0 && (
+                                <div className="absolute top-5 right-2 sm:right-8 bg-card p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden sm:flex items-center gap-3 animate-float z-20">
+                                    <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-primary-var">
+                                        <span className="material-symbols-outlined">{data.float_top_icon || 'trending_up'}</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-subtext font-bold uppercase tracking-wider">{data.float_top_title || 'Growth'}</p>
+                                        <p className="text-sm font-bold text-body">{data.float_top_value || '+240% ROI'}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-xs text-subtext font-bold uppercase tracking-wider">Growth</p>
-                                    <p className="text-sm font-bold text-body">+240% ROI</p>
-                                </div>
-                            </div>
+                            )}
 
-                            <div className="absolute bottom-5 left-2 sm:left-8 bg-card p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden sm:flex items-center gap-3 animate-float-delayed z-20">
-                                <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-primary-var">
-                                    <span className="material-symbols-outlined">check_circle</span>
+                            {data.float_bottom_enabled !== 0 && (
+                                <div className="absolute bottom-5 left-2 sm:left-8 bg-card p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden sm:flex items-center gap-3 animate-float-delayed z-20">
+                                    <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-primary-var">
+                                        <span className="material-symbols-outlined">{data.float_bottom_icon || 'check_circle'}</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-subtext font-bold uppercase tracking-wider">{data.float_bottom_title || 'Ranking'}</p>
+                                        <p className="text-sm font-bold text-body">{data.float_bottom_value || '#1 Result'}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-xs text-subtext font-bold uppercase tracking-wider">Ranking</p>
-                                    <p className="text-sm font-bold text-body">#1 Result</p>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -4,6 +4,36 @@ export interface ContactHeroData {
     description: string;
 }
 
+// Homepage types
+export interface HomepageHeroFloat {
+    id?: number;
+    icon: string;
+    label: string;
+    stat_text: string;
+    position: string;
+    display_order: number;
+    is_active: number;
+}
+
+export interface HomepageHeroData {
+    id?: number;
+    title: string;
+    subtitle: string;
+    cta_text: string;
+    cta_link: string;
+    background_image: string;
+    hero_image_alt?: string;
+    badge_text?: string;
+    highlight_text?: string;
+    colored_word?: string;
+    secondary_cta_text?: string;
+    secondary_cta_link?: string;
+    rating_text?: string;
+    is_active: number;
+    updatedAt?: string | Date;
+    floats?: HomepageHeroFloat[];
+}
+
 export interface ContactInfoData {
     office_location: string;
     phone: string;

@@ -120,7 +120,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <a
-                                        href="/contact"
+                                        href={`/contact?service=${encodeURIComponent(post.slug)}`}
                                         className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition"
                                     >
                                         <span className="material-symbols-outlined">arrow_forward</span>
@@ -195,8 +195,8 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                         </div>
                                         <div className="mt-4">
                                             <a
-                                                href="/contact"
-                                                aria-label={`Contact us about ${post.title}`}
+                                                href={`/contact?service=${encodeURIComponent(post.slug)}`}
+                                                aria-label={`Contact us about ${post.title}` }
                                                 className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-card text-primary-var font-semibold rounded-lg hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-muted"
                                             >
                                                 <span className="material-symbols-outlined">call</span>
@@ -209,7 +209,7 @@ export default async function ServicePostPage({ params }: ServicePostPageProps) 
                                         <h3 className="text-xl font-bold mb-2">Ready?</h3>
                                         <p className="text-white/90 text-sm mb-6">Let's discuss your project needs.</p>
                                         <a
-                                            href="/contact"
+                                            href={`/contact?service=${encodeURIComponent(post.slug)}`}
                                             aria-label="Contact us"
                                             className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 bg-card text-primary-var font-semibold rounded-lg hover:shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-muted"
                                         >
