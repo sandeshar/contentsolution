@@ -50,4 +50,24 @@ export const storeSettings = mysqlTable("store_settings", {
     // Theme selection for the site (e.g., light, dark, ocean, corporate)
     theme: varchar("theme", { length: 100 }).notNull().default('light'),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export const footerSections = mysqlTable("footer_sections", {
+    id: int("id").primaryKey().autoincrement(),
+    store_id: int("store_id").references(() => storeSettings.id),
+    title: varchar("title", { length: 128 }).notNull(),
+    order: int("order").default(0).notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export const footerLinks = mysqlTable("footer_links", {
+    id: int("id").primaryKey().autoincrement(),
+    section_id: int("section_id").references(() => footerSections.id).notNull(),
+    label: varchar("label", { length: 256 }).notNull(),
+    href: varchar("href", { length: 512 }).notNull(),
+    is_external: int("is_external").default(0).notNull(),
+    order: int("order").default(0).notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 }); 

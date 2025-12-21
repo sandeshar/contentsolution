@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { db } from '@/db';
-import { storeSettings } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { storeSettings, footerSections, footerLinks } from '@/db/schema';
+import { eq, asc } from 'drizzle-orm';
 
 // Map camelCase payload to snake_case DB columns
 function toDb(payload: any) {
@@ -57,6 +57,23 @@ export async function GET() {
     try {
         const rows = await db.select().from(storeSettings).limit(1);
         const data = rows.length ? fromDb(rows[0]) : null;
+
+        // Load footer sections + links if we have a store row
+        if (data && rows[0]?.id) {
+            const secs = await db.select().from(footerSections).where(eq(footerSections.store_id, rows[0].id)).orderBy(asc(footerSections.order));
+            const sections: any[] = [];
+            for (const s of secs) {
+                const links = await db.select().from(footerLinks).where(eq(footerLinks.section_id, s.id)).orderBy(asc(footerLinks.order));
+                sections.push({
+                    id: s.id,
+                    title: s.title,
+                    order: s.order,
+                    links: links.map((l: any) => ({ id: l.id, label: l.label, href: l.href, isExternal: !!l.is_external, order: l.order })),
+                });
+            }
+            (data as any).footerSections = sections;
+        }
+
         return NextResponse.json({ success: true, data });
     } catch (error) {
         console.error('GET /api/store-settings error', error);
@@ -83,9 +100,48 @@ export async function PUT(request: NextRequest) {
         const id = rows[0].id;
         await db.update(storeSettings).set(update).where(eq(storeSettings.id, id));
 
+        // If footer sections were provided in the payload, replace existing sections/links
+        if (body.footerSections && Array.isArray(body.footerSections)) {
+            // Delete existing sections + links for this store
+            const existing = await db.select().from(footerSections).where(eq(footerSections.store_id, id));
+            for (const ex of existing) {
+                await db.delete(footerLinks).where(eq(footerLinks.section_id, ex.id));
+                await db.delete(footerSections).where(eq(footerSections.id, ex.id));
+            }
+
+            // Insert new sections and links
+            for (const [sIdx, sec] of body.footerSections.entries()) {
+                const secRes: any = await db.insert(footerSections).values({ store_id: id, title: sec.title || '', order: sec.order ?? sIdx });
+                const newSecId = Array.isArray(secRes) ? secRes[0]?.insertId : (secRes as any)?.insertId;
+                if (sec.links && Array.isArray(sec.links)) {
+                    for (const [lIdx, ln] of sec.links.entries()) {
+                        await db.insert(footerLinks).values({
+                            section_id: newSecId,
+                            label: ln.label || '',
+                            href: ln.href || '#',
+                            is_external: ln.isExternal ? 1 : 0,
+                            order: ln.order ?? lIdx,
+                        });
+                    }
+                }
+            }
+        }
+
         const updated = await db.select().from(storeSettings).where(eq(storeSettings.id, id)).limit(1);
         try { revalidateTag('store-settings', 'max'); } catch (e) { /* ignore */ }
-        return NextResponse.json({ success: true, message: 'Store settings updated', data: fromDb(updated[0]) });
+        // Re-fetch footer sections so response includes them
+        const data = fromDb(updated[0]);
+        if (data) {
+            const secs = await db.select().from(footerSections).where(eq(footerSections.store_id, id)).orderBy(asc(footerSections.order));
+            const sections: any[] = [];
+            for (const s of secs) {
+                const links = await db.select().from(footerLinks).where(eq(footerLinks.section_id, s.id)).orderBy(asc(footerLinks.order));
+                sections.push({ id: s.id, title: s.title, order: s.order, links: links.map((l: any) => ({ id: l.id, label: l.label, href: l.href, isExternal: !!l.is_external, order: l.order })) });
+            }
+            (data as any).footerSections = sections;
+        }
+
+        return NextResponse.json({ success: true, message: 'Store settings updated', data });
     } catch (error) {
         console.error('PUT /api/store-settings error', error);
         return NextResponse.json({ success: false, error: 'Failed to save store settings' }, { status: 500 });

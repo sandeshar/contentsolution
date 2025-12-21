@@ -1,4 +1,5 @@
 import type { TermsHeaderData, TermsSectionData } from '@/types/pages';
+import type { ReactNode } from 'react';
 
 async function getTermsData() {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -35,7 +36,7 @@ export default async function TermsPage() {
 
         // Regex matches URLs or emails
         const regex = /(https?:\/\/[^\s]+)|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g;
-        const nodes: Array<string | JSX.Element> = [];
+        const nodes: Array<string | ReactNode> = [];
         let lastIndex = 0;
         let m: RegExpExecArray | null;
 

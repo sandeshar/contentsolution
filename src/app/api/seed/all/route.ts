@@ -40,7 +40,7 @@ import {
 } from '@/db/faqPageSchema';
 import { termsPageHeader, termsPageSections } from '@/db/termsPageSchema';
 import { blogPageHero, blogPageCTA } from '@/db/blogPageSchema';
-import { blogPosts, users, status } from '@/db/schema';
+import { blogPosts, users, status, footerSections, footerLinks, storeSettings } from '@/db/schema';
 import { servicePosts } from '@/db/servicePostsSchema';
 import { reviewTestimonials } from '@/db/reviewSchema';
 import { eq } from 'drizzle-orm';
@@ -59,6 +59,7 @@ export async function POST(request: Request) {
             blog: { success: false, message: '' },
             testimonials: { success: false, message: '' },
             navbar: { success: false, message: '' },
+            footer: { success: false, message: '' },
         };
 
         // 1. Seed Status
@@ -980,6 +981,58 @@ export async function POST(request: Request) {
             results.navbar = { success: true, message: 'Navbar seeded successfully' };
         } catch (error) {
             results.navbar.message = error instanceof Error ? error.message : 'Failed to seed navbar';
+        }
+
+        // 11. Seed Footer
+        try {
+            // Remove old footer data
+            await db.delete(footerLinks);
+            await db.delete(footerSections);
+
+            const defaultSections = [
+                {
+                    title: 'Solutions',
+                    links: [
+                        { label: 'Content Strategy', href: '/services' },
+                        { label: 'SEO Writing', href: '/services' },
+                        { label: 'Copywriting', href: '/services' },
+                        { label: 'Social Media', href: '/services' },
+                    ],
+                },
+                {
+                    title: 'Company',
+                    links: [
+                        { label: 'About Us', href: '/about' },
+                        { label: 'FAQ', href: '/faq' },
+                        { label: 'Terms', href: '/terms' },
+                        { label: 'Contact', href: '/contact' },
+                    ],
+                },
+            ];
+
+            const storeRow = await db.select().from(storeSettings).limit(1);
+            const store = storeRow[0];
+            if (!store) {
+                results.footer = { success: false, message: 'No store settings found to attach footer to' };
+            } else {
+                for (const [sIdx, sec] of defaultSections.entries()) {
+                    const secRes: any = await db.insert(footerSections).values({ store_id: store.id, title: sec.title || '', order: sIdx });
+                    const newSecId = Array.isArray(secRes) ? secRes[0]?.insertId : (secRes as any)?.insertId;
+                    if (sec.links && sec.links.length) {
+                        for (const [lIdx, link] of sec.links.entries()) {
+                            await db.insert(footerLinks).values({ section_id: newSecId, label: link.label, href: link.href, is_external: 0, order: lIdx });
+                        }
+                    }
+                }
+
+                if (!store.footer_text) {
+                    await db.update(storeSettings).set({ footer_text: '© ' + new Date().getFullYear() + ' ' + (store.store_name || 'Your Store') + '. All rights reserved.' }).where(eq(storeSettings.id, store.id));
+                }
+
+                results.footer = { success: true, message: 'Footer seeded successfully' };
+            }
+        } catch (error) {
+            results.footer.message = error instanceof Error ? error.message : 'Failed to seed footer';
         }
 
         // Seed other pages with minimal data

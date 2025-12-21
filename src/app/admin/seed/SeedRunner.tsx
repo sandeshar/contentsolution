@@ -30,6 +30,7 @@ const SeedRunner = () => {
         { key: "terms", label: "Terms" },
         { key: "blog", label: "Blog" },
         { key: "navbar", label: "Navbar" },
+        { key: "footer", label: "Footer" },
     ];
 
     const runSeed = async () => {

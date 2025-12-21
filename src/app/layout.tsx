@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
         const payload = await res.json();
         const s = payload?.data || null;
         if (s) {
-          const title = s.metaTitle || s.storeName || "Content Store";
+          const title = s.storeName || s.metaTitle || "Content Store";
           const description = s.metaDescription || s.storeDescription || "";
           // Version query to bust cache when updated
           const version = s?.updatedAt ? `?v=${encodeURIComponent(String(s.updatedAt))}` : `?v=${Date.now()}`;

@@ -15,6 +15,12 @@ export interface StoreSettings {
     metaDescription: string;
     metaKeywords: string;
     footerText: string;
+    footerSections?: {
+        id?: number;
+        title: string;
+        order?: number;
+        links?: { id?: number; label: string; href: string; isExternal?: boolean; order?: number }[];
+    }[];
     // Theme identifier (e.g., 'default', 'ocean', 'corporate')
     theme: string;
     updatedAt: string;

@@ -49,6 +49,7 @@ const SideBar = () => {
         { name: 'FaQ', icon: 'help_outline', href: '/admin/ui/faq' },
         { name: 'About', icon: 'info', href: '/admin/ui/about' },
         { name: 'Terms and Conditions', icon: 'description', href: '/admin/ui/termsandconditions' },
+        { name: 'Footer', icon: 'web', href: '/admin/footer' },
         { name: 'Navbar', icon: 'menu', href: '/admin/navbar' },
     ];
 

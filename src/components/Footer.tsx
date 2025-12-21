@@ -23,13 +23,20 @@ const footerLinks = [
             { label: 'Contact', href: '/contact' },
         ],
     },
-    {
-        title: 'Connect',
-        links: [],
-    },
 ];
 
 const Footer = ({ storeName, storeLogo, store }: FooterProps) => {
+    const baseSections = (store?.footerSections && Array.isArray(store.footerSections) && store.footerSections.length) ? store.footerSections : footerLinks;
+    // If the store has social links but no 'Connect' section defined, synthesize it so social icons show
+    const sections = (() => {
+        const s = Array.isArray(baseSections) ? [...baseSections] : [];
+        const hasConnect = s.some((sec) => (sec?.title || '').toLowerCase() === 'connect');
+        if (!hasConnect && (store?.facebook || store?.twitter || store?.instagram || store?.linkedin)) {
+            s.push({ title: 'Connect', links: [] });
+        }
+        return s;
+    })();
+
     return (
         <footer className="bg-card border-t border-muted">
             <div className="max-w-7xl mx-auto py-12">
@@ -58,7 +65,7 @@ const Footer = ({ storeName, storeLogo, store }: FooterProps) => {
                             </div>
                         ) : null}
                     </div>
-                    {footerLinks.map((section) => (
+                    {sections.map((section: any) => (
                         <div key={section.title}>
                             <h3 className="text-sm font-semibold text-subtext tracking-wider uppercase">
                                 {section.title}
@@ -107,14 +114,14 @@ const Footer = ({ storeName, storeLogo, store }: FooterProps) => {
                                             </li>
                                         </>
                                     ) : (
-                                        section.links.map((link) => (
+                                        section.links.map((link: any) => (
                                             <li key={link.label}>
                                                 <a className="text-sm text-subtext hover-text-primary" href={link.href}>{link.label}</a>
                                             </li>
                                         ))
                                     )
                                 ) : (
-                                    section.links.map((link) => (
+                                    section.links.map((link: any) => (
                                         <li key={link.label}>
                                             <a className="text-sm text-subtext hover-text-primary" href={link.href}>{link.label}</a>
                                         </li>
