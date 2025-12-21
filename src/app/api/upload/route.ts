@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import path from 'path'
 import fs from 'fs/promises'
+import sharp from 'sharp'
+import pngToIco from 'png-to-ico'
 
 export const runtime = 'nodejs'
 
@@ -54,6 +56,38 @@ async function saveOne(file: File, folder: string) {
     const filename = `${base}-${unique}${ext}`
     const targetPath = path.join(targetDir, filename)
     await fs.writeFile(targetPath, buffer)
+
+    // If this upload is for favicons and the uploaded file wasn't already an .ico, attempt to generate a multi-size .ico
+    let icoPublicPath: string | undefined
+    if (folder === 'favicons' && (ext !== '.ico')) {
+        try {
+            const sizes = [16, 32, 48, 64, 128]
+            const pngBuffers = await Promise.all(sizes.map((s) => sharp(buffer).resize(s, s, { fit: 'cover' }).png().toBuffer()))
+            const icoBuffer = await ((pngToIco as any).default ?? (pngToIco as any).imagesToIco ?? (pngToIco as any))(pngBuffers)
+            const icoFilename = `${base}-${unique}.ico`
+            const icoTargetPath = path.join(targetDir, icoFilename)
+            await fs.writeFile(icoTargetPath, icoBuffer)
+
+            const baseUrlForIco = getBaseUrl()
+            const uploadsRootNormalizedForIco = uploadsRoot.replace(/\\/g, '/')
+            const isUnderPublicForIco = uploadsRootNormalizedForIco.includes('/public/') || uploadsRootNormalizedForIco.endsWith('/public')
+            const folderCleanForIco = folder.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')
+            if (baseUrlForIco) {
+                icoPublicPath = `${baseUrlForIco}/${folderCleanForIco}/${icoFilename}`.replace(/([^:]\/)\//, '$1/')
+            } else if (isUnderPublicForIco) {
+                const idx = uploadsRootNormalizedForIco.lastIndexOf('/public')
+                const afterPublic = idx >= 0 ? uploadsRootNormalizedForIco.substring(idx + '/public'.length) : '/uploads'
+                const basePath = afterPublic || '/uploads'
+                icoPublicPath = `${basePath}/${folderCleanForIco}/${icoFilename}`.replace(/\/\\/g, '/').replace(/\/\//g, '/')
+            } else {
+                icoPublicPath = `file://${icoTargetPath}`
+            }
+        } catch (e: any) {
+            console.warn('ICO generation failed:', e?.message || e)
+            icoPublicPath = undefined
+        }
+    }
+
     const baseUrl = getBaseUrl()
     let publicPath = ''
     const uploadsRootNormalized = uploadsRoot.replace(/\\/g, '/')
@@ -61,15 +95,21 @@ async function saveOne(file: File, folder: string) {
     const folderClean = folder.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')
     const relative = `${folderClean ? folderClean + '/' : ''}${filename}`
     if (baseUrl) {
-        publicPath = `${baseUrl}/${relative}`.replace(/([^:]\/)\/+/, '$1/')
+        publicPath = `${baseUrl}/${relative}`.replace(/([^:]\/\/)\//, '$1/')
     } else if (isUnderPublic) {
         const idx = uploadsRootNormalized.lastIndexOf('/public')
         const afterPublic = idx >= 0 ? uploadsRootNormalized.substring(idx + '/public'.length) : '/uploads'
         const basePath = afterPublic || '/uploads'
-        publicPath = `${basePath}/${relative}`.replace(/\/\/+/, '/')
+        publicPath = `${basePath}/${relative}`.replace(/\/\/+/g, '/')
     } else {
         publicPath = `file://${targetPath}`
     }
+
+    // Prefer returning the generated .ico URL for favicons when available
+    if (folder === 'favicons' && icoPublicPath) {
+        return icoPublicPath
+    }
+
     return publicPath
 }
 

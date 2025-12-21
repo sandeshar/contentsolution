@@ -130,12 +130,21 @@ export default async function RootLayout({
 
   const themeClass = `theme-${s?.theme ?? 'default'}`;
 
+  // Compute a cache-busting version suffix and versioned asset URLs for head tags
+  const version = s?.updatedAt ? `?v=${encodeURIComponent(String(s.updatedAt))}` : `?v=${Date.now()}`;
+  const faviconUrl = s?.favicon ? `${s.favicon}${version}` : undefined;
+  const storeLogoUrl = s?.storeLogo ? `${s.storeLogo}${version}` : undefined;
+
   return (
     <html lang="en">
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols" rel="stylesheet" />
+
+        {/* Explicit favicon links to ensure browsers pick up uploaded favicon immediately */}
+        <link rel="icon" href={faviconUrl ?? '/favicon.ico'} />
+        <link rel="apple-touch-icon" href={storeLogoUrl ?? (faviconUrl ?? '/favicon.ico')} />
 
         {jsonLd && (
           <script
