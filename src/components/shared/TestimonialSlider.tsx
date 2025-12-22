@@ -186,11 +186,12 @@ const TestimonialSlider: React.FC<TestimonialSliderProps> = ({
                     background: linear-gradient(to left, var(--color-background), transparent);
                 }
 
-                /* On small screens reduce the mask width so it doesn't intrude into the content */
+                /* On small screens remove the edge mask so it doesn't create a "blur" fade into the cards */
                 @media (max-width: 640px) {
                     .mask-gradient::before,
                     .mask-gradient::after {
-                        width: 48px;
+                        display: none;
+                        width: 0;
                     }
                 }
             `}</style>

@@ -39,6 +39,10 @@ export default function EditBlogPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
 
+    // Small local state to force re-render when editor commands change state
+    const [, setEditorTick] = useState(0);
+    const exec = (fn: () => void) => { fn(); setEditorTick((t) => t + 1); };
+
     const generateSlug = (text: string) => {
         return text
             .toLowerCase()
@@ -158,6 +162,29 @@ export default function EditBlogPage() {
             editor.commands.setContent(initialContent);
         }
     }, [editor, initialContent]);
+
+    // Keyboard shortcuts for editor and local re-rendering (same behavior as Add Post)
+    useEffect(() => {
+        if (!editor) return;
+        const handler = (e: KeyboardEvent) => {
+            // Ensure editor is focused and mounted before running shortcuts
+            if (!editor.isFocused || !editor.isFocused()) return;
+            const mod = e.ctrlKey || e.metaKey;
+            if (!mod) return;
+            const key = e.key.toLowerCase();
+
+            if (key === 'b') { e.preventDefault(); exec(() => editor.chain().focus().toggleBold().run()); }
+            else if (key === 'i') { e.preventDefault(); exec(() => editor.chain().focus().toggleItalic().run()); }
+            else if (key === 'u') { e.preventDefault(); exec(() => editor.chain().focus().toggleUnderline().run()); }
+            else if (key === 'z') { e.preventDefault(); if (e.shiftKey) exec(() => editor.chain().focus().redo().run()); else exec(() => editor.chain().focus().undo().run()); }
+            else if (key === 'y') { e.preventDefault(); exec(() => editor.chain().focus().redo().run()); }
+            else if (e.shiftKey && key === '8') { e.preventDefault(); exec(() => editor.chain().focus().toggleBulletList().run()); }
+            else if (e.shiftKey && key === '7') { e.preventDefault(); exec(() => editor.chain().focus().toggleOrderedList().run()); }
+        };
+
+        document.addEventListener('keydown', handler as any);
+        return () => document.removeEventListener('keydown', handler as any);
+    }, [editor]);
 
     const handleSubmit = async (e: React.FormEvent, isDraft: boolean = false) => {
         e.preventDefault();
@@ -360,40 +387,40 @@ export default function EditBlogPage() {
                                             <div className="bg-slate-50 border-b border-slate-300 p-2 flex items-center gap-1 flex-wrap">
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().toggleBold().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().toggleBold().run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive("bold") ? "bg-slate-200" : ""}`}
-                                                    title="Bold"
+                                                    title="Bold (Ctrl/Cmd+B)"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">format_bold</span>
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().toggleItalic().run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive("italic") ? "bg-slate-200" : ""}`}
-                                                    title="Italic"
+                                                    title="Italic (Ctrl/Cmd+I)"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">format_italic</span>
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().toggleUnderline().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().toggleUnderline().run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive("underline") ? "bg-slate-200" : ""}`}
-                                                    title="Underline"
+                                                    title="Underline (Ctrl/Cmd+U)"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">format_underlined</span>
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().toggleStrike().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().toggleStrike().run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive("strike") ? "bg-slate-200" : ""}`}
-                                                    title="Strikethrough"
+                                                    title="Strikethrough (Ctrl/Cmd+Shift+S)"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">strikethrough_s</span>
                                                 </button>
                                                 <div className="relative group">
                                                     <button
                                                         type="button"
-                                                        onClick={() => editor.chain().focus().toggleHighlight({ color: '#fef08a' }).run()}
+                                                        onClick={() => exec(() => editor.chain().focus().toggleHighlight({ color: '#fef08a' }).run())}
                                                         className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive("highlight") ? "bg-slate-200" : ""}`}
                                                         title="Highlight"
                                                     >
@@ -402,7 +429,7 @@ export default function EditBlogPage() {
                                                     <div className="hidden group-hover:flex absolute top-full left-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg p-2 gap-1 z-10">
                                                         <button
                                                             type="button"
-                                                            onClick={() => editor.chain().focus().toggleHighlight({ color: '#fef08a' }).run()}
+                                                            onClick={() => exec(() => editor.chain().focus().toggleHighlight({ color: '#fef08a' }).run())}
                                                             className="w-6 h-6 rounded bg-yellow-200 hover:ring-2 ring-slate-400"
                                                             title="Yellow"
                                                         />
@@ -445,9 +472,9 @@ export default function EditBlogPage() {
                                                     onChange={(e) => {
                                                         const level = parseInt(e.target.value);
                                                         if (level === 0) {
-                                                            editor.chain().focus().setParagraph().run();
+                                                            exec(() => editor.chain().focus().setParagraph().run());
                                                         } else {
-                                                            editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run();
+                                                            exec(() => editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run());
                                                         }
                                                     }}
                                                     className="px-2 py-1 border border-slate-300 rounded text-sm hover:bg-slate-100"
@@ -461,23 +488,23 @@ export default function EditBlogPage() {
                                                 <div className="w-px h-6 bg-slate-300 mx-1"></div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().toggleBulletList().run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive("bulletList") ? "bg-slate-200" : ""}`}
-                                                    title="Bullet List"
+                                                    title="Bullet List (Ctrl/Cmd+Shift+8)"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">format_list_bulleted</span>
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().toggleOrderedList().run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive("orderedList") ? "bg-slate-200" : ""}`}
-                                                    title="Numbered List"
+                                                    title="Numbered List (Ctrl/Cmd+Shift+7)"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">format_list_numbered</span>
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().toggleBlockquote().run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive("blockquote") ? "bg-slate-200" : ""}`}
                                                     title="Quote"
                                                 >
@@ -485,7 +512,7 @@ export default function EditBlogPage() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().toggleCodeBlock().run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive("codeBlock") ? "bg-slate-200" : ""}`}
                                                     title="Code Block"
                                                 >
@@ -494,7 +521,7 @@ export default function EditBlogPage() {
                                                 <div className="w-px h-6 bg-slate-300 mx-1"></div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().setTextAlign("left").run()}
+                                                    onClick={() => exec(() => editor.chain().focus().setTextAlign("left").run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive({ textAlign: "left" }) ? "bg-slate-200" : ""}`}
                                                     title="Align Left"
                                                 >
@@ -502,7 +529,7 @@ export default function EditBlogPage() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().setTextAlign("center").run()}
+                                                    onClick={() => exec(() => editor.chain().focus().setTextAlign("center").run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive({ textAlign: "center" }) ? "bg-slate-200" : ""}`}
                                                     title="Align Center"
                                                 >
@@ -510,7 +537,7 @@ export default function EditBlogPage() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().setTextAlign("right").run()}
+                                                    onClick={() => exec(() => editor.chain().focus().setTextAlign("right").run())}
                                                     className={`p-2 hover:bg-slate-200 rounded transition-colors ${editor.isActive({ textAlign: "right" }) ? "bg-slate-200" : ""}`}
                                                     title="Align Right"
                                                 >
@@ -527,7 +554,7 @@ export default function EditBlogPage() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().unsetLink().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().unsetLink().run())}
                                                     disabled={!editor.isActive("link")}
                                                     className="p-2 hover:bg-slate-200 rounded transition-colors disabled:opacity-50"
                                                     title="Remove Link"
@@ -560,7 +587,7 @@ export default function EditBlogPage() {
                                                 <div className="w-px h-6 bg-slate-300 mx-1"></div>
                                                 <input
                                                     type="color"
-                                                    onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+                                                    onChange={(e) => exec(() => editor.chain().focus().setColor(e.target.value).run())}
                                                     value={editor.getAttributes("textStyle").color || "#000000"}
                                                     className="w-8 h-8 border-0 rounded cursor-pointer"
                                                     title="Text Color"
@@ -568,7 +595,7 @@ export default function EditBlogPage() {
                                                 <div className="w-px h-6 bg-slate-300 mx-1"></div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().setHorizontalRule().run())}
                                                     className="p-2 hover:bg-slate-200 rounded transition-colors"
                                                     title="Horizontal Line"
                                                 >
@@ -576,19 +603,19 @@ export default function EditBlogPage() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().undo().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().undo().run())}
                                                     disabled={!editor.can().undo()}
                                                     className="p-2 hover:bg-slate-200 rounded transition-colors disabled:opacity-50"
-                                                    title="Undo"
+                                                    title="Undo (Ctrl/Cmd+Z)"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">undo</span>
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => editor.chain().focus().redo().run()}
+                                                    onClick={() => exec(() => editor.chain().focus().redo().run())}
                                                     disabled={!editor.can().redo()}
                                                     className="p-2 hover:bg-slate-200 rounded transition-colors disabled:opacity-50"
-                                                    title="Redo"
+                                                    title="Redo (Ctrl/Cmd+Y / Shift+Ctrl/Cmd+Z)"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">redo</span>
                                                 </button>
