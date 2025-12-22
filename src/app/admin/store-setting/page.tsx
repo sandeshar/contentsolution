@@ -224,7 +224,7 @@ export default function StoreSettingPage() {
                                             />
                                             <span className="text-slate-700">Remove site name (hide on all screens)</span>
                                         </label>
-                                    </div> 
+                                    </div>
                                 </div>
 
                                 <div>

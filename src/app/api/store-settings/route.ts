@@ -27,7 +27,7 @@ function toDb(payload: any) {
         // Boolean flags stored as tinyint(1)
         hide_site_name: payload.hideSiteName ? 1 : 0,
         hide_site_name_on_mobile: payload.hideSiteNameOnMobile ? 1 : 0,
-    }; 
+    };
 }
 
 // Map DB row to camelCase API shape
@@ -57,7 +57,7 @@ function fromDb(row: any) {
         // Mobile preference: whether to hide the site name on small screens
         hideSiteNameOnMobile: !!row.hide_site_name_on_mobile,
         updatedAt: row.updated_at,
-    }; 
+    };
 }
 
 export async function GET() {
