@@ -499,10 +499,11 @@ body {
         top: 0;
         left: 0;
         height: 100vh;
-        width: 16rem; /* matches w-64 */
+        width: 16rem;
+        /* matches w-64 */
         z-index: 60;
         transform: none;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
 
     body.admin-sidebar-open .admin-main {
