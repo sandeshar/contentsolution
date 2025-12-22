@@ -1,4 +1,5 @@
 import SideBar from "@/components/Sidebar"
+import AdminHeader from "@/components/AdminHeader"
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -51,9 +52,12 @@ export default async function DashboardLayout({
 }) {
 
     return (
-        <div className="min-h-screen flex">
-            <SideBar />
-            <main className="admin-main flex-1 min-w-0">{children}</main>
+        <div className="min-h-screen flex flex-col md:flex-row">
+            <AdminHeader />
+            <div className="flex flex-1 min-w-0">
+                <SideBar />
+                <main className="admin-main flex-1 min-w-0">{children}</main>
+            </div>
         </div>
 
     )

@@ -60,6 +60,12 @@ const NavBar = ({ storeName, storeLogo, store }: NavBarProps) => {
     const [subServices, setSubServices] = useState<Record<string, any[]>>({});
     const [hoveredSubSlug, setHoveredSubSlug] = useState<string | null>(null);
 
+    // Logo load state: if the image fails to load, we show a fallback icon
+    const [logoError, setLogoError] = useState(false);
+
+    // Normalize relative logo URLs to absolute so <img> can load them reliably
+    const logoSrc = storeLogo && typeof window !== 'undefined' && storeLogo.startsWith('/') ? `${window.location.origin}${storeLogo}` : storeLogo;
+
     useEffect(() => {
         let isMounted = true;
 
@@ -162,8 +168,9 @@ const NavBar = ({ storeName, storeLogo, store }: NavBarProps) => {
         <header className="sticky top-0 z-50 flex items-center justify-center border-b border-solid border-muted page-bg backdrop-blur-sm">
             <div className="flex items-center justify-between whitespace-nowrap py-3 w-full max-w-7xl">
                 <a href="/" className="flex items-center gap-4 text-body hover:opacity-90 transition-opacity">
-                    {storeLogo ? (
-                        <img src={storeLogo} alt={storeName} className="h-8 w-auto object-contain rounded" />
+                    {storeLogo && !logoError ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={logoSrc} alt={storeName} className="h-8 w-auto object-contain rounded" onError={() => setLogoError(true)} />
                     ) : (
                         <span className="material-symbols-outlined text-primary-var text-3xl">hub</span>
                     )}
@@ -408,7 +415,7 @@ const NavBar = ({ storeName, storeLogo, store }: NavBarProps) => {
 
             {/* Mobile Menu */}
             {isMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 right-0 bg-background-light/95 backdrop-blur-sm border-b border-slate-200/80 shadow-lg">
+                <div className="md:hidden absolute top-full left-0 right-0 bg-card backdrop-blur-sm border-b border-slate-200/80 shadow-lg">
                     <nav className="flex flex-col px-4 py-4 gap-1">
                         {navLinks.filter((link) => link.is_button === 0 && (link.parent_id == null || link.parent_id === 0)).map((link) => {
                             const children = getChildren(link.id);
