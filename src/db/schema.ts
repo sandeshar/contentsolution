@@ -49,6 +49,10 @@ export const storeSettings = mysqlTable("store_settings", {
     footer_text: varchar("footer_text", { length: 512 }).notNull(),
     // Theme selection for the site (e.g., light, dark, ocean, corporate)
     theme: varchar("theme", { length: 100 }).notNull().default('light'),
+    // Whether to remove the site name entirely (all screens)
+    hide_site_name: int("hide_site_name").default(0).notNull(),
+    // Whether to hide the site name on small screens (mobile)
+    hide_site_name_on_mobile: int("hide_site_name_on_mobile").default(0).notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });
 

@@ -66,6 +66,14 @@ const NavBar = ({ storeName, storeLogo, store }: NavBarProps) => {
     // Normalize relative logo URLs to absolute so <img> can load them reliably
     const logoSrc = storeLogo && typeof window !== 'undefined' && storeLogo.startsWith('/') ? `${window.location.origin}${storeLogo}` : storeLogo;
 
+    // Optional: allow hiding the site name on mobile via a store flag (truthy values supported)
+    const hideSiteNameOnMobile = Boolean(
+        store?.hideSiteNameOnMobile || store?.hide_site_name_on_mobile || store?.hide_site_name_mobile
+    );
+
+    // Optional: remove the site name entirely (hide on all screens)
+    const hideSiteName = Boolean(store?.hideSiteName || store?.hide_site_name);
+
     useEffect(() => {
         let isMounted = true;
 
@@ -165,7 +173,7 @@ const NavBar = ({ storeName, storeLogo, store }: NavBarProps) => {
     };
 
     return (
-        <header className="sticky top-0 z-50 flex items-center justify-center border-b border-solid border-muted page-bg backdrop-blur-sm">
+        <header className="sticky top-0 z-50 flex items-center justify-center border-b border-solid border-muted page-bg backdrop-blur-none md:backdrop-blur-sm">
             <div className="flex items-center justify-between whitespace-nowrap py-3 w-full max-w-7xl">
                 <a href="/" className="flex items-center gap-4 text-body hover:opacity-90 transition-opacity">
                     {storeLogo && !logoError ? (
@@ -174,7 +182,9 @@ const NavBar = ({ storeName, storeLogo, store }: NavBarProps) => {
                     ) : (
                         <span className="material-symbols-outlined text-primary-var text-3xl">hub</span>
                     )}
-                    <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">{storeName}</h2>
+                    {!hideSiteName && (
+                        <h2 className={`text-lg font-bold leading-tight tracking-[-0.015em] ${hideSiteNameOnMobile ? 'hidden sm:inline-block' : ''}`}>{storeName}</h2>
+                    )}
                 </a>
 
                 <div className="hidden md:flex flex-1 justify-end gap-8">
@@ -415,7 +425,7 @@ const NavBar = ({ storeName, storeLogo, store }: NavBarProps) => {
 
             {/* Mobile Menu */}
             {isMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 right-0 bg-card backdrop-blur-sm border-b border-slate-200/80 shadow-lg">
+                <div className="md:hidden absolute top-full left-0 right-0 bg-card backdrop-blur-none border-b border-slate-200/80 shadow-lg">
                     <nav className="flex flex-col px-4 py-4 gap-1">
                         {navLinks.filter((link) => link.is_button === 0 && (link.parent_id == null || link.parent_id === 0)).map((link) => {
                             const children = getChildren(link.id);

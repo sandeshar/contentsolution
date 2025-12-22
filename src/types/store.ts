@@ -23,5 +23,7 @@ export interface StoreSettings {
     }[];
     // Theme identifier (e.g., 'default', 'ocean', 'corporate')
     theme: string;
+    hideSiteName?: boolean;
+    hideSiteNameOnMobile?: boolean;
     updatedAt: string;
-} 
+}  

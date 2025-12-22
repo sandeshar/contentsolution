@@ -175,14 +175,23 @@ const TestimonialSlider: React.FC<TestimonialSliderProps> = ({
                     pointer-events: none;
                 }
 
+                /* Use theme-aware background variable so the gradient doesn't look like a harsh white 'blur' on non-default themes */
                 .mask-gradient::before {
                     left: 0;
-                    background: linear-gradient(to right, white, transparent);
+                    background: linear-gradient(to right, var(--color-background), transparent);
                 }
 
                 .mask-gradient::after {
                     right: 0;
-                    background: linear-gradient(to left, white, transparent);
+                    background: linear-gradient(to left, var(--color-background), transparent);
+                }
+
+                /* On small screens reduce the mask width so it doesn't intrude into the content */
+                @media (max-width: 640px) {
+                    .mask-gradient::before,
+                    .mask-gradient::after {
+                        width: 48px;
+                    }
                 }
             `}</style>
         </section>

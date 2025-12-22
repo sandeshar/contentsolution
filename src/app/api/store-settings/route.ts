@@ -24,7 +24,10 @@ function toDb(payload: any) {
         footer_text: payload.footerText ?? '',
         // Theme is stored as a simple string identifier (e.g., 'default', 'ocean')
         theme: payload.theme ?? 'default',
-    };
+        // Boolean flags stored as tinyint(1)
+        hide_site_name: payload.hideSiteName ? 1 : 0,
+        hide_site_name_on_mobile: payload.hideSiteNameOnMobile ? 1 : 0,
+    }; 
 }
 
 // Map DB row to camelCase API shape
@@ -49,8 +52,12 @@ function fromDb(row: any) {
         footerText: row.footer_text,
         // Theme identifier available to front-end
         theme: row.theme,
+        // Whether to remove the site name entirely (all screens)
+        hideSiteName: !!row.hide_site_name,
+        // Mobile preference: whether to hide the site name on small screens
+        hideSiteNameOnMobile: !!row.hide_site_name_on_mobile,
         updatedAt: row.updated_at,
-    };
+    }; 
 }
 
 export async function GET() {

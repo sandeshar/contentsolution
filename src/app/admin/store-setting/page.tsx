@@ -23,6 +23,8 @@ export default function StoreSettingPage() {
         logo: "",
         favicon: "",
         theme: "default",
+        hideSiteNameOnMobile: false,
+        hideSiteName: false,
     });
 
     // Theme select UI state
@@ -64,6 +66,8 @@ export default function StoreSettingPage() {
                         logo: d.storeLogo || "",
                         favicon: d.favicon || "",
                         theme: d.theme || "default",
+                        hideSiteNameOnMobile: !!d.hideSiteNameOnMobile,
+                        hideSiteName: !!d.hideSiteName,
                     });
                 }
             } catch (e) {
@@ -141,6 +145,8 @@ export default function StoreSettingPage() {
                 metaDescription: formData.metaDescription,
                 metaKeywords: formData.metaKeywords,
                 theme: formData.theme,
+                hideSiteNameOnMobile: !!formData.hideSiteNameOnMobile,
+                hideSiteName: !!formData.hideSiteName,
             };
             const res = await fetch('/api/store-settings', {
                 method: 'PUT',
@@ -197,6 +203,28 @@ export default function StoreSettingPage() {
                                         placeholder="Enter store name"
                                         required
                                     />
+
+                                    <div className="mt-3 flex flex-col gap-2">
+                                        <label className="flex items-center gap-2 text-sm">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.hideSiteNameOnMobile}
+                                                onChange={(e) => setFormData({ ...formData, hideSiteNameOnMobile: e.target.checked })}
+                                                className="h-4 w-4 rounded border-slate-300"
+                                            />
+                                            <span className="text-slate-700">Hide site name on mobile</span>
+                                        </label>
+
+                                        <label className="flex items-center gap-2 text-sm">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.hideSiteName}
+                                                onChange={(e) => setFormData({ ...formData, hideSiteName: e.target.checked })}
+                                                className="h-4 w-4 rounded border-slate-300"
+                                            />
+                                            <span className="text-slate-700">Remove site name (hide on all screens)</span>
+                                        </label>
+                                    </div> 
                                 </div>
 
                                 <div>
