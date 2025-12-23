@@ -538,3 +538,29 @@ body {
         }
     }
 }
+
+/* Medium screens: ensure consistent horizontal padding up to md breakpoint (641px - 1023px) */
+@media (min-width: 641px) and (max-width: 1290px) {
+
+    section,
+    header,
+    footer,
+    [class*="max-w-"],
+    .mx-auto {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Large screens: add slightly larger horizontal padding for >=1024px */
+/* @media (min-width: 1024px) {
+
+    section,
+    header,
+    footer,
+    [class*="max-w-"],
+    .mx-auto {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+} */
