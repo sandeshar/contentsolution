@@ -1,32 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db';
-import { faqPageCTA } from '@/db/faqPageSchema';
+import dbConnect from '@/lib/mongodb';
+import { FAQPageCTA } from '@/models/FAQPage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch CTA section
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const cta = await db.select().from(faqPageCTA).where(eq(faqPageCTA.id, parseInt(id))).limit(1);
+            const cta = await FAQPageCTA.findById(id).lean();
 
-            if (cta.length === 0) {
+            if (!cta) {
                 return NextResponse.json({ error: 'CTA section not found' }, { status: 404 });
             }
 
-            return NextResponse.json(cta[0]);
+            return NextResponse.json(cta);
         }
 
-        const cta = await db.select().from(faqPageCTA).where(eq(faqPageCTA.is_active, 1)).limit(1);
+        const cta = await FAQPageCTA.findOne({ is_active: 1 }).lean();
 
-        if (cta.length === 0) {
-            return NextResponse.json({ error: 'No active CTA section found' }, { status: 404 });
+        if (!cta) {
+            return NextResponse.json({});
         }
 
-        return NextResponse.json(cta[0]);
+        return NextResponse.json(cta);
     } catch (error) {
         console.error('Error fetching CTA section:', error);
         return NextResponse.json({ error: 'Failed to fetch CTA section' }, { status: 500 });
@@ -36,19 +36,26 @@ export async function GET(request: NextRequest) {
 // POST - Create CTA section
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const { title, description, button_text, button_link, is_active = 1 } = body;
+        const { title, description, button_text, button_link, is_activeCode = 1 } = body;
 
         if (!title || !description || !button_text || !button_link) {
             return NextResponse.json({ error: 'Title, description, button_text, and button_link are required' }, { status: 400 });
         }
 
-        const result = await db.insert(faqPageCTA).values({ title, description, button_text, button_link, is_active });
+        const result = await FAQPageCTA.create({ 
+            title, 
+            description, 
+            button_text, 
+            button_link, 
+            is_active: is_activeCode 
+        });
 
-        revalidateTag('faq-cta', 'max');
+        revalidateTag('faq');
 
         return NextResponse.json(
-            { success: true, message: 'CTA section created successfully', id: result[0].insertId },
+            { success: true, message: 'CTA section created successfully', id: result._id },
             { status: 201 }
         );
     } catch (error) {
@@ -60,6 +67,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update CTA section
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, title, description, button_text, button_link, is_active } = body;
 
@@ -74,9 +82,9 @@ export async function PUT(request: NextRequest) {
         if (button_link !== undefined) updateData.button_link = button_link;
         if (is_active !== undefined) updateData.is_active = is_active;
 
-        await db.update(faqPageCTA).set(updateData).where(eq(faqPageCTA.id, id));
+        await FAQPageCTA.findByIdAndUpdate(id, updateData);
 
-        revalidateTag('faq-cta', 'max');
+        revalidateTag('faq');
 
         return NextResponse.json({ success: true, message: 'CTA section updated successfully' });
     } catch (error) {
@@ -88,6 +96,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete CTA section
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -95,9 +104,9 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(faqPageCTA).where(eq(faqPageCTA.id, parseInt(id)));
+        await FAQPageCTA.findByIdAndDelete(id);
 
-        revalidateTag('faq-cta', 'max');
+        revalidateTag('faq');
 
         return NextResponse.json({ success: true, message: 'CTA section deleted successfully' });
     } catch (error) {

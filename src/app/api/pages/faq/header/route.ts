@@ -1,32 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db';
-import { faqPageHeader } from '@/db/faqPageSchema';
+import dbConnect from '@/lib/mongodb';
+import { FAQPageHeader } from '@/models/FAQPage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch header section
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const header = await db.select().from(faqPageHeader).where(eq(faqPageHeader.id, parseInt(id))).limit(1);
+            const header = await FAQPageHeader.findById(id).lean();
 
-            if (header.length === 0) {
+            if (!header) {
                 return NextResponse.json({ error: 'Header section not found' }, { status: 404 });
             }
 
-            return NextResponse.json(header[0]);
+            return NextResponse.json({ ...header, id: header._id });
         }
 
-        const header = await db.select().from(faqPageHeader).where(eq(faqPageHeader.is_active, 1)).limit(1);
+        const header = await FAQPageHeader.findOne({ is_active: 1 }).lean();
 
-        if (header.length === 0) {
+        if (!header) {
             return NextResponse.json({ error: 'No active header section found' }, { status: 404 });
         }
 
-        return NextResponse.json(header[0]);
+        return NextResponse.json({ ...header, id: header._id });
     } catch (error) {
         console.error('Error fetching header section:', error);
         return NextResponse.json({ error: 'Failed to fetch header section' }, { status: 500 });
@@ -36,19 +36,25 @@ export async function GET(request: NextRequest) {
 // POST - Create header section
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const { title, description, search_placeholder, is_active = 1 } = body;
+        const { title, description, search_placeholder, is_activeValue = 1 } = body;
 
         if (!title || !description || !search_placeholder) {
             return NextResponse.json({ error: 'Title, description, and search_placeholder are required' }, { status: 400 });
         }
 
-        const result = await db.insert(faqPageHeader).values({ title, description, search_placeholder, is_active });
+        const result = await FAQPageHeader.create({ 
+            title, 
+            description, 
+            search_placeholder, 
+            is_active: is_activeValue ? 1 : 0 
+        });
 
-        revalidateTag('faq-header', 'max');
+        revalidateTag('faq-header');
 
         return NextResponse.json(
-            { success: true, message: 'Header section created successfully', id: result[0].insertId },
+            { success: true, message: 'Header section created successfully', id: result._id },
             { status: 201 }
         );
     } catch (error) {
@@ -60,6 +66,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update header section
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, title, description, search_placeholder, is_active } = body;
 
@@ -71,11 +78,11 @@ export async function PUT(request: NextRequest) {
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
         if (search_placeholder !== undefined) updateData.search_placeholder = search_placeholder;
-        if (is_active !== undefined) updateData.is_active = is_active;
+        if (is_active !== undefined) updateData.is_active = is_active ? 1 : 0;
 
-        await db.update(faqPageHeader).set(updateData).where(eq(faqPageHeader.id, id));
+        await FAQPageHeader.findByIdAndUpdate(id, updateData);
 
-        revalidateTag('faq-header', 'max');
+        revalidateTag('faq-header');
 
         return NextResponse.json({ success: true, message: 'Header section updated successfully' });
     } catch (error) {
@@ -87,6 +94,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete header section
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -94,9 +102,9 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(faqPageHeader).where(eq(faqPageHeader.id, parseInt(id)));
+        await FAQPageHeader.findByIdAndDelete(id);
 
-        revalidateTag('faq-header', 'max');
+        revalidateTag('faq-header');
 
         return NextResponse.json({ success: true, message: 'Header section deleted successfully' });
     } catch (error) {

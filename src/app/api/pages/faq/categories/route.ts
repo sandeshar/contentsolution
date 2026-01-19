@@ -1,41 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, asc } from 'drizzle-orm';
-import { db } from '@/db';
-import { faqCategories } from '@/db/faqPageSchema';
+import dbConnect from '@/lib/mongodb';
+import { FAQCategory } from '@/models/FAQPage';
 import { revalidateTag } from 'next/cache';
 
-// GET - Fetch categories
-export async function GET(request: NextRequest) {
+// GET - List all categories
+export async function GET() {
     try {
-        const searchParams = request.nextUrl.searchParams;
-        const id = searchParams.get('id');
-        const name = searchParams.get('name');
+        await dbConnect();
+        
+        // Find all categories, sorted by display_order
+        const categories = await FAQCategory.find().sort({ display_order: 1 });
+        
+        // Convert to the format expected by the frontend (with numeric IDs)
+        const formattedCategories = categories.map((cat: any) => ({
+            id: cat._id.toString(),
+            name: cat.name,
+            display_order: cat.display_order,
+            is_active: cat.is_active,
+            createdAt: cat.createdAt,
+            updatedAt: cat.updatedAt
+        }));
 
-        if (id) {
-            const category = await db.select().from(faqCategories).where(eq(faqCategories.id, parseInt(id))).limit(1);
-
-            if (category.length === 0) {
-                return NextResponse.json({ error: 'Category not found' }, { status: 404 });
-            }
-
-            return NextResponse.json(category[0]);
-        }
-
-        if (name) {
-            const category = await db.select().from(faqCategories).where(eq(faqCategories.name, name)).limit(1);
-
-            if (category.length === 0) {
-                return NextResponse.json({ error: 'Category not found' }, { status: 404 });
-            }
-
-            return NextResponse.json(category[0]);
-        }
-
-        const categories = await db.select().from(faqCategories)
-            .where(eq(faqCategories.is_active, 1))
-            .orderBy(asc(faqCategories.display_order));
-
-        return NextResponse.json(categories);
+        return NextResponse.json(formattedCategories);
     } catch (error) {
         console.error('Error fetching categories:', error);
         return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
@@ -45,28 +31,32 @@ export async function GET(request: NextRequest) {
 // POST - Create category
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const { name, display_order, is_active = 1 } = body;
+        const { name, display_order, is_active } = body;
 
-        if (!name || display_order === undefined) {
-            return NextResponse.json({ error: 'Name and display_order are required' }, { status: 400 });
+        if (!name) {
+            return NextResponse.json({ error: 'Name is required' }, { status: 400 });
         }
 
-        const result = await db.insert(faqCategories).values({ name, display_order, is_active });
+        const newCategory = await FAQCategory.create({
+            name,
+            display_order: display_order || 0,
+            is_active: is_active !== undefined ? is_active : 1,
+        });
 
-        revalidateTag('faq-categories', 'max');
+        revalidateTag('faq');
 
         return NextResponse.json(
-            { success: true, message: 'Category created successfully', id: result[0].insertId },
+            { success: true, message: 'Category created successfully', id: newCategory._id.toString() },
             { status: 201 }
         );
     } catch (error: any) {
         console.error('Error creating category:', error);
-
-        if (error.code === 'ER_DUP_ENTRY') {
+        
+        if (error.code === 11000) {
             return NextResponse.json({ error: 'A category with this name already exists' }, { status: 409 });
         }
-
         return NextResponse.json({ error: 'Failed to create category' }, { status: 500 });
     }
 }
@@ -74,6 +64,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update category
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, name, display_order, is_active } = body;
 
@@ -86,18 +77,21 @@ export async function PUT(request: NextRequest) {
         if (display_order !== undefined) updateData.display_order = display_order;
         if (is_active !== undefined) updateData.is_active = is_active;
 
-        await db.update(faqCategories).set(updateData).where(eq(faqCategories.id, id));
+        const updatedCategory = await FAQCategory.findByIdAndUpdate(id, updateData, { new: true });
 
-        revalidateTag('faq-categories', 'max');
+        if (!updatedCategory) {
+            return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+        }
+
+        revalidateTag('faq');
 
         return NextResponse.json({ success: true, message: 'Category updated successfully' });
     } catch (error: any) {
         console.error('Error updating category:', error);
 
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === 11000) {
             return NextResponse.json({ error: 'A category with this name already exists' }, { status: 409 });
         }
-
         return NextResponse.json({ error: 'Failed to update category' }, { status: 500 });
     }
 }
@@ -105,6 +99,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete category
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -112,9 +107,13 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(faqCategories).where(eq(faqCategories.id, parseInt(id)));
+        const result = await FAQCategory.findByIdAndDelete(id);
 
-        revalidateTag('faq-categories', 'max');
+        if (!result) {
+            return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+        }
+
+        revalidateTag('faq');
 
         return NextResponse.json({ success: true, message: 'Category deleted successfully' });
     } catch (error) {

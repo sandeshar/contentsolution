@@ -1,34 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db';
-import { homepageHero } from '@/db/homepageSchema';
+import dbConnect from '@/lib/mongodb';
+import { HomepageHero } from '@/models/Homepage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch hero section
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const hero = await db.select().from(homepageHero).where(eq(homepageHero.id, parseInt(id))).limit(1);
+            const hero = await HomepageHero.findById(id).lean();
 
-            if (hero.length === 0) {
+            if (!hero) {
                 return NextResponse.json({ error: 'Hero section not found' }, { status: 404 });
             }
 
-            return NextResponse.json(hero[0]);
+            return NextResponse.json(hero);
         }
 
         // Get active hero section
-        const hero = await db.select().from(homepageHero).where(eq(homepageHero.is_active, 1)).limit(1);
+        const hero = await HomepageHero.findOne({ is_active: true }).lean();
 
-        if (hero.length === 0) {
+        if (!hero) {
             // Return empty object to allow admin UI to create new entry
             return NextResponse.json({});
         }
 
-        return NextResponse.json(hero[0]);
+        return NextResponse.json(hero);
     } catch (error) {
         console.error('Error fetching hero section:', error);
         return NextResponse.json({ error: 'Failed to fetch hero section' }, { status: 500 });
@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
 // POST - Create hero section
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const {
             title,
@@ -49,19 +50,18 @@ export async function POST(request: NextRequest) {
             badge_text = '',
             highlight_text = '',
             colored_word = '',
-            // Floating UI defaults
-            float_top_enabled = 1,
+            float_top_enabled = true,
             float_top_icon = 'trending_up',
             float_top_title = 'Growth',
             float_top_value = '+240% ROI',
-            float_bottom_enabled = 1,
+            float_bottom_enabled = true,
             float_bottom_icon = 'check_circle',
             float_bottom_title = 'Ranking',
             float_bottom_value = '#1 Result',
             secondary_cta_text = '',
             secondary_cta_link = '',
             rating_text = '',
-            is_active = 1,
+            is_active = true,
         } = body;
 
         if (!title || !subtitle || !cta_text || !cta_link || !background_image) {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const result = await db.insert(homepageHero).values({
+        const hero = await HomepageHero.create({
             title,
             subtitle,
             cta_text,
@@ -95,97 +95,45 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
-        revalidateTag('homepage-hero', 'max');
+        revalidateTag('homepage-hero');
 
-        return NextResponse.json(
-            { success: true, message: 'Hero section created successfully', id: result[0].insertId },
-            { status: 201 }
-        );
+        return NextResponse.json({ success: true, message: 'Hero section created successfully', id: hero._id }, { status: 201 });
     } catch (error) {
         console.error('Error creating hero section:', error);
-        return NextResponse.json({ error: 'Failed to create hero section', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to create hero section' }, { status: 500 });
     }
 }
 
 // PUT - Update hero section
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const {
-            id,
-            title,
-            subtitle,
-            cta_text,
-            cta_link,
-            background_image,
-            hero_image_alt,
-            badge_text,
-            highlight_text,
-            colored_word,
-            float_top_enabled,
-            float_top_icon,
-            float_top_title,
-            float_top_value,
-            float_bottom_enabled,
-            float_bottom_icon,
-            float_bottom_title,
-            float_bottom_value,
-            secondary_cta_text,
-            secondary_cta_link,
-            rating_text,
-            is_active,
-        } = body;
+        const { id, ...updateData } = body;
 
         if (!id) {
-            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+            return NextResponse.json({ error: 'ID is required for update' }, { status: 400 });
         }
 
-        // Ensure numeric id for the DB query
-        const idNum = typeof id === 'string' ? parseInt(id, 10) : id;
-        if (!idNum || isNaN(Number(idNum))) {
-            return NextResponse.json({ error: 'ID must be a number' }, { status: 400 });
+        const hero = await HomepageHero.findByIdAndUpdate(id, updateData, { new: true });
+
+        if (!hero) {
+            return NextResponse.json({ error: 'Hero section not found' }, { status: 404 });
         }
 
-        const updateData: any = {};
-        if (title !== undefined) updateData.title = title;
-        if (subtitle !== undefined) updateData.subtitle = subtitle;
-        if (cta_text !== undefined) updateData.cta_text = cta_text;
-        if (cta_link !== undefined) updateData.cta_link = cta_link;
-        if (background_image !== undefined) updateData.background_image = background_image;
-        if (hero_image_alt !== undefined) updateData.hero_image_alt = hero_image_alt;
-        if (badge_text !== undefined) updateData.badge_text = badge_text;
-        if (highlight_text !== undefined) updateData.highlight_text = highlight_text;
-        if (colored_word !== undefined) updateData.colored_word = colored_word;
-        if (float_top_enabled !== undefined) updateData.float_top_enabled = float_top_enabled;
-        if (float_top_icon !== undefined) updateData.float_top_icon = float_top_icon;
-        if (float_top_title !== undefined) updateData.float_top_title = float_top_title;
-        if (float_top_value !== undefined) updateData.float_top_value = float_top_value;
-        if (float_bottom_enabled !== undefined) updateData.float_bottom_enabled = float_bottom_enabled;
-        if (float_bottom_icon !== undefined) updateData.float_bottom_icon = float_bottom_icon;
-        if (float_bottom_title !== undefined) updateData.float_bottom_title = float_bottom_title;
-        if (float_bottom_value !== undefined) updateData.float_bottom_value = float_bottom_value;
-        if (secondary_cta_text !== undefined) updateData.secondary_cta_text = secondary_cta_text;
-        if (secondary_cta_link !== undefined) updateData.secondary_cta_link = secondary_cta_link;
-        if (rating_text !== undefined) updateData.rating_text = rating_text;
-        if (is_active !== undefined) updateData.is_active = is_active;
+        revalidateTag('homepage-hero');
 
-        // If there's nothing to update, return early to avoid DB errors
-        if (Object.keys(updateData).length === 0) {
-            return NextResponse.json({ success: true, message: 'No changes to update' });
-        }
-
-        await db.update(homepageHero).set(updateData).where(eq(homepageHero.id, Number(idNum)));
-        revalidateTag('homepage-hero', 'max');
-        return NextResponse.json({ success: true, message: 'Hero section updated successfully' });
+        return NextResponse.json({ success: true, message: 'Hero section updated successfully', data: hero });
     } catch (error) {
         console.error('Error updating hero section:', error);
-        return NextResponse.json({ error: 'Failed to update hero section', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to update hero section' }, { status: 500 });
     }
 }
 
 // DELETE - Delete hero section
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -193,11 +141,17 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(homepageHero).where(eq(homepageHero.id, parseInt(id)));
-        revalidateTag("homepage-hero", 'max');
+        const hero = await HomepageHero.findByIdAndDelete(id);
+
+        if (!hero) {
+            return NextResponse.json({ error: 'Hero section not found' }, { status: 404 });
+        }
+
+        revalidateTag('homepage-hero');
+
         return NextResponse.json({ success: true, message: 'Hero section deleted successfully' });
     } catch (error) {
         console.error('Error deleting hero section:', error);
-        return NextResponse.json({ error: 'Failed to delete hero section', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to delete hero section' }, { status: 500 });
     }
 }

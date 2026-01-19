@@ -1,32 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db';
-import { contactPageInfo } from '@/db/contactPageSchema';
+import dbConnect from '@/lib/mongodb';
+import { ContactPageInfo } from '@/models/ContactPage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch info section
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const info = await db.select().from(contactPageInfo).where(eq(contactPageInfo.id, parseInt(id))).limit(1);
+            const info = await ContactPageInfo.findById(id).lean();
 
-            if (info.length === 0) {
+            if (!info) {
                 return NextResponse.json({ error: 'Info section not found' }, { status: 404 });
             }
 
-            return NextResponse.json(info[0]);
+            return NextResponse.json({ ...info, id: info._id });
         }
 
-        const info = await db.select().from(contactPageInfo).where(eq(contactPageInfo.is_active, 1)).limit(1);
+        const info = await ContactPageInfo.findOne({ is_active: 1 }).lean();
 
-        if (info.length === 0) {
+        if (!info) {
             return NextResponse.json({ error: 'No active info section found' }, { status: 404 });
         }
 
-        return NextResponse.json(info[0]);
+        return NextResponse.json({ ...info, id: info._id });
     } catch (error) {
         console.error('Error fetching info section:', error);
         return NextResponse.json({ error: 'Failed to fetch info section' }, { status: 500 });
@@ -36,25 +36,26 @@ export async function GET(request: NextRequest) {
 // POST - Create info section
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const { office_location, phone, email, map_url, is_active = 1 } = body;
+        const { office_location, phone, email, map_url, is_activeValue = 1 } = body;
 
         if (!office_location || !phone || !email || !map_url) {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
         }
 
-        const result = await db.insert(contactPageInfo).values({
+        const result = await ContactPageInfo.create({
             office_location,
             phone,
             email,
             map_url,
-            is_active,
+            is_active: is_activeValue ? 1 : 0,
         });
 
-        revalidateTag('contact-info', 'max');
+        try { revalidateTag('contact-info'); } catch (e) {}
 
         return NextResponse.json(
-            { success: true, message: 'Info section created successfully', id: result[0].insertId },
+            { success: true, message: 'Info section created successfully', id: result._id },
             { status: 201 }
         );
     } catch (error) {
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update info section
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, office_location, phone, email, map_url, is_active } = body;
 
@@ -78,11 +80,11 @@ export async function PUT(request: NextRequest) {
         if (phone !== undefined) updateData.phone = phone;
         if (email !== undefined) updateData.email = email;
         if (map_url !== undefined) updateData.map_url = map_url;
-        if (is_active !== undefined) updateData.is_active = is_active;
+        if (is_active !== undefined) updateData.is_active = is_active ? 1 : 0;
 
-        await db.update(contactPageInfo).set(updateData).where(eq(contactPageInfo.id, id));
+        await ContactPageInfo.findByIdAndUpdate(id, updateData);
 
-        revalidateTag('contact-info', 'max');
+        try { revalidateTag('contact-info'); } catch (e) {}
 
         return NextResponse.json({ success: true, message: 'Info section updated successfully' });
     } catch (error) {
@@ -94,6 +96,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete info section
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -101,9 +104,9 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(contactPageInfo).where(eq(contactPageInfo.id, parseInt(id)));
+        await ContactPageInfo.findByIdAndDelete(id);
 
-        revalidateTag('contact-info', 'max');
+        try { revalidateTag('contact-info'); } catch (e) {}
 
         return NextResponse.json({ success: true, message: 'Info section deleted successfully' });
     } catch (error) {

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, desc, asc, sql } from 'drizzle-orm';
-import { db } from '@/db';
-import { blogPosts } from '@/db/schema';
+import dbConnect from '@/lib/mongodb';
+import BlogPost from '@/models/BlogPost';
+import Status from '@/models/Status';
 import { getUserIdFromToken } from '@/utils/authHelper';
 import { revalidateTag } from 'next/cache';
 
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         // Get user ID from JWT token
         const token = request.cookies.get('admin_auth')?.value;
         if (!token) {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { title, slug, content, tags, thumbnail, metaTitle, metaDescription, status = 'draft' } = body;
+        const { title, slug, content, tags, thumbnail, metaTitle, metaDescription, status = 'Draft' } = body;
 
         // Validate required fields
         if (!title || !slug || !content) {
@@ -35,11 +36,24 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Status mapping: draft = 1, published = 2, in-review = 3
-        const statusId = status === 'published' ? 2 : 1;
+        // Map numeric status to name
+        let resolvedStatus = status;
+        if (typeof status === 'number' || !isNaN(Number(status)) && String(status).length < 3) {
+            const statusMap: Record<number, string> = { 1: 'Draft', 2: 'Published', 3: 'In-Review' };
+            resolvedStatus = statusMap[Number(status)] || 'Draft';
+        }
+
+        // Find status ObjectId
+        const statusDoc = await Status.findOne({ name: new RegExp(`^${resolvedStatus}$`, 'i') });
+        if (!statusDoc) {
+            return NextResponse.json(
+                { error: `Status '${resolvedStatus}' not found` },
+                { status: 400 }
+            );
+        }
 
         // Insert blog post
-        const result = await db.insert(blogPosts).values({
+        const result = await BlogPost.create({
             title,
             slug,
             content,
@@ -48,17 +62,17 @@ export async function POST(request: NextRequest) {
             metaTitle: metaTitle || null,
             metaDescription: metaDescription || null,
             authorId,
-            status: statusId,
+            status: statusDoc._id,
         });
 
         // Revalidate blog post lists and related caches
-        try { revalidateTag('blog-posts', 'max'); } catch (e) { /* ignore */ }
+        try { revalidateTag('blog-posts'); } catch (e) { /* ignore */ }
 
         return NextResponse.json(
             {
                 success: true,
                 message: 'Blog post created successfully',
-                id: result[0].insertId
+                id: result._id
             },
             { status: 201 }
         );
@@ -66,7 +80,7 @@ export async function POST(request: NextRequest) {
         console.error('Error creating blog post:', error);
 
         // Handle duplicate slug error
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === 11000) {
             return NextResponse.json(
                 { error: 'A post with this slug already exists' },
                 { status: 409 }
@@ -82,6 +96,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
         const slug = searchParams.get('slug');
@@ -96,77 +111,130 @@ export async function GET(request: NextRequest) {
         if (id) {
             // Get single post by ID
             console.log('Fetching post by ID:', id);
-            const post = await db.select().from(blogPosts).where(eq(blogPosts.id, parseInt(id))).limit(1);
+            const post = await BlogPost.findById(id).lean();
             console.log('Query result:', post);
 
-            if (post.length === 0) {
+            if (!post) {
                 return NextResponse.json(
                     { error: 'Post not found' },
                     { status: 404 }
                 );
             }
 
-            return NextResponse.json(post[0]);
+            // Map status for single post
+            const [draftStr, publishedStr, inReviewStr] = await Promise.all([
+                Status.findOne({ name: /draft/i }),
+                Status.findOne({ name: /published/i }),
+                Status.findOne({ name: /in-review|review/i }),
+            ]);
+
+            let statusNum = 1;
+            if (post.status) {
+                const sId = post.status.toString();
+                if (publishedStr && sId === publishedStr._id.toString()) statusNum = 2;
+                else if (inReviewStr && sId === inReviewStr._id.toString()) statusNum = 3;
+                else if (draftStr && sId === draftStr._id.toString()) statusNum = 1;
+            }
+
+            return NextResponse.json({ ...post, id: post._id, status: statusNum });
         }
 
         if (slug) {
             // Get single post by slug
-            const post = await db.select().from(blogPosts).where(eq(blogPosts.slug, slug)).limit(1);
+            const post = await BlogPost.findOne({ slug }).lean();
 
-            if (post.length === 0) {
+            if (!post) {
                 return NextResponse.json(
                     { error: 'Post not found' },
                     { status: 404 }
                 );
             }
 
-            return NextResponse.json(post[0]);
+            // Map status for single post
+            const [draftStr, publishedStr, inReviewStr] = await Promise.all([
+                Status.findOne({ name: /draft/i }),
+                Status.findOne({ name: /published/i }),
+                Status.findOne({ name: /in-review|review/i }),
+            ]);
+
+            let statusNum = 1;
+            if (post.status) {
+                const sId = post.status.toString();
+                if (publishedStr && sId === publishedStr._id.toString()) statusNum = 2;
+                else if (inReviewStr && sId === inReviewStr._id.toString()) statusNum = 3;
+                else if (draftStr && sId === draftStr._id.toString()) statusNum = 1;
+            }
+
+            return NextResponse.json({ ...post, id: post._id, status: statusNum });
         }
 
         // Get posts with optional search, category and pagination
         console.log('Fetching all posts via API');
         const sort = searchParams.get('sort') || 'newest';
-        let query: any = db.select().from(blogPosts).where(eq(blogPosts.status, 2)); // default to published
+        const showAll = searchParams.get('all') === 'true'; // Allow fetching all for admin
+        
+        let filter: any = {};
+        
+        if (!showAll) {
+            // Find published status ID
+            const publishedStatus = await Status.findOne({ name: /published/i });
+            if (publishedStatus) {
+                filter.status = publishedStatus._id;
+            }
+        }
 
         if (search) {
-            // search across title, content, tags
-            const { or, like } = await import('drizzle-orm');
-            query = query.where(
-                or(
-                    like(blogPosts.title, `%${search}%`),
-                    like(blogPosts.content, `%${search}%`),
-                    like(blogPosts.tags, `%${search}%`)
-                )!
-            ) as any;
+            filter.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { content: { $regex: search, $options: 'i' } },
+                { tags: { $regex: search, $options: 'i' } }
+            ];
         }
 
         if (category) {
-            const { like } = await import('drizzle-orm');
-            query = query.where(like(blogPosts.tags, `%${category}%`)) as any;
+            filter.tags = { $regex: category, $options: 'i' };
         }
 
-        if (sort === 'oldest') query = query.orderBy(asc(blogPosts.createdAt)) as any;
-        else query = query.orderBy(desc(blogPosts.createdAt)) as any;
+        let query = BlogPost.find(filter);
+
+        if (sort === 'oldest') {
+            query = query.sort({ createdAt: 1 });
+        } else {
+            query = query.sort({ createdAt: -1 });
+        }
 
         // total count
-        const countResult = await db.select({ count: sql<number>`count(*)` }).from(blogPosts).where(eq(blogPosts.status, 2));
-        const total = Number(countResult[0]?.count || 0);
+        const total = await BlogPost.countDocuments(filter);
 
-        // pagination
-        let posts: any[];
-        if (limit && !isNaN(parseInt(limit))) {
-            const l = parseInt(limit);
-            const o = offset && !isNaN(parseInt(offset)) ? parseInt(offset) : 0;
-            posts = await query.limit(l).offset(o);
-            if (meta === 'true') {
-                return NextResponse.json({ posts, total });
-            }
-            return NextResponse.json(posts);
-        }
-
-        posts = await query;
+        const posts = await query.lean();
         console.log('Found posts:', posts.length);
-        return NextResponse.json(posts);
+
+        // Map status ObjectId to status number for UI
+        const [draftStr, publishedStr, inReviewStr] = await Promise.all([
+            Status.findOne({ name: /draft/i }),
+            Status.findOne({ name: /published/i }),
+            Status.findOne({ name: /in-review|review/i }),
+        ]);
+
+        const mappedPosts = posts.map((post: any) => {
+            let statusNum = 1; // Default to draft
+            if (post.status) {
+                const sId = post.status.toString();
+                if (publishedStr && sId === publishedStr._id.toString()) statusNum = 2;
+                else if (inReviewStr && sId === inReviewStr._id.toString()) statusNum = 3;
+                else if (draftStr && sId === draftStr._id.toString()) statusNum = 1;
+            }
+            return {
+                ...post,
+                id: post._id,
+                status: statusNum
+            };
+        });
+
+        if (meta === 'true') {
+            return NextResponse.json({ posts: mappedPosts, total });
+        }
+        return NextResponse.json(mappedPosts);
     } catch (error: any) {
         console.error('Error fetching blog posts:', error);
         console.error('Error details:', error.message, error.stack);
@@ -179,6 +247,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         // Get user ID from JWT token
         const token = request.cookies.get('admin_auth')?.value;
         if (!token) {
@@ -197,23 +266,18 @@ export async function PUT(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { slug, title, newSlug, content, tags, thumbnail, metaTitle, metaDescription, status = 'draft' } = body;
+        const { id, slug, title, newSlug, content, tags, thumbnail, metaTitle, metaDescription, status = 'Draft' } = body;
 
         // Validate required fields
-        if (!slug) {
+        if (!id && !slug) {
             return NextResponse.json(
-                { error: 'Slug is required' },
+                { error: 'ID or Slug is required' },
                 { status: 400 }
             );
         }
 
-        // Status mapping: draft = 1, published = 2, in-review = 3
-        const statusId = status === 'published' ? 2 : status === 'in-review' ? 3 : 1;
-
         // Build update object dynamically
-        const updateData: any = {
-            updatedAt: new Date(),
-        };
+        const updateData: any = {};
 
         if (title) updateData.title = title;
         if (newSlug) updateData.slug = newSlug;
@@ -222,16 +286,37 @@ export async function PUT(request: NextRequest) {
         if (thumbnail !== undefined) updateData.thumbnail = thumbnail || null;
         if (metaTitle !== undefined) updateData.metaTitle = metaTitle || null;
         if (metaDescription !== undefined) updateData.metaDescription = metaDescription || null;
-        if (status) updateData.status = statusId;
+        
+        if (status) {
+            let resolvedStatus = status;
+            if (typeof status === 'number' || !isNaN(Number(status)) && String(status).length < 3) {
+                const statusMap: Record<number, string> = { 1: 'Draft', 2: 'Published', 3: 'In-Review' };
+                resolvedStatus = statusMap[Number(status)] || 'Draft';
+            }
+            const statusDoc = await Status.findOne({ name: new RegExp(`^${resolvedStatus}$`, 'i') });
+            if (statusDoc) {
+                updateData.status = statusDoc._id;
+            }
+        }
 
         // Update blog post
-        await db.update(blogPosts)
-            .set(updateData)
-            .where(eq(blogPosts.slug, slug));
+        let updatedPost;
+        if (id) {
+            updatedPost = await BlogPost.findByIdAndUpdate(id, updateData, { new: true });
+        } else {
+            updatedPost = await BlogPost.findOneAndUpdate({ slug }, updateData, { new: true });
+        }
 
-        try { revalidateTag('blog-posts', 'max'); } catch (e) { /* ignore */ }
-        try { if (newSlug) revalidateTag(`blog-post-${newSlug}`, 'max'); } catch (e) { /* ignore */ }
-        try { revalidateTag(`blog-post-${slug}`, 'max'); } catch (e) { /* ignore */ }
+        if (!updatedPost) {
+            return NextResponse.json(
+                { error: 'Blog post not found' },
+                { status: 404 }
+            );
+        }
+
+        try { revalidateTag('blog-posts'); } catch (e) { /* ignore */ }
+        if (newSlug) try { revalidateTag(`blog-post-${newSlug}`); } catch (e) { /* ignore */ }
+        if (slug) try { revalidateTag(`blog-post-${slug}`); } catch (e) { /* ignore */ }
 
         return NextResponse.json(
             {
@@ -244,7 +329,7 @@ export async function PUT(request: NextRequest) {
         console.error('Error updating blog post:', error);
 
         // Handle duplicate slug error
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === 11000) {
             return NextResponse.json(
                 { error: 'A post with this slug already exists' },
                 { status: 409 }
@@ -260,6 +345,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         // Get user ID from JWT token
         const token = request.cookies.get('admin_auth')?.value;
         if (!token) {
@@ -288,9 +374,9 @@ export async function DELETE(request: NextRequest) {
         }
 
         // Delete blog post
-        await db.delete(blogPosts).where(eq(blogPosts.id, parseInt(id)));
+        await BlogPost.findByIdAndDelete(id);
 
-        try { revalidateTag('blog-posts', 'max'); } catch (e) { /* ignore */ }
+        try { revalidateTag('blog-posts'); } catch (e) { /* ignore */ }
 
         return NextResponse.json(
             {

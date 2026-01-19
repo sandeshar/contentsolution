@@ -1,12 +1,13 @@
-import { db } from "@/db";
-import { blogPageHero } from "@/db/blogPageSchema";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import dbConnect from "@/lib/mongodb";
+import { BlogPageHero } from "@/models/Pages";
 
 export async function GET() {
     try {
-        const hero = await db.select().from(blogPageHero).limit(1);
+        await dbConnect();
+        const hero = await BlogPageHero.findOne({ is_active: 1 }).lean();
 
-        if (!hero.length) {
+        if (!hero) {
             return NextResponse.json({
                 title: "The Content Solution Blog",
                 subtitle: "Expert insights, trends, and strategies in content marketing for Nepali businesses.",
@@ -14,9 +15,53 @@ export async function GET() {
             });
         }
 
-        return NextResponse.json(hero[0]);
+        return NextResponse.json({ ...hero, id: hero._id });
     } catch (error) {
         console.error("Error fetching blog page hero:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        await dbConnect();
+        const body = await request.json();
+        const { title, subtitle, background_image, is_active } = body;
+
+        const result = await BlogPageHero.create({
+            title,
+            subtitle,
+            background_image,
+            is_active: is_active !== undefined ? (is_active ? 1 : 0) : 1
+        });
+
+        return NextResponse.json({ success: true, id: result._id });
+    } catch (error) {
+        console.error("Error creating blog page hero:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+export async function PUT(request: NextRequest) {
+    try {
+        await dbConnect();
+        const body = await request.json();
+        const { id, title, subtitle, background_image, is_active } = body;
+
+        if (!id) {
+            const first = await BlogPageHero.findOne();
+            if (first) {
+                await BlogPageHero.findByIdAndUpdate(first._id, { title, subtitle, background_image, is_active: is_active ? 1 : 0 });
+                return NextResponse.json({ success: true });
+            }
+            const res = await BlogPageHero.create({ title, subtitle, background_image, is_active: is_active ? 1 : 0 });
+            return NextResponse.json({ success: true, id: res._id });
+        }
+
+        await BlogPageHero.findByIdAndUpdate(id, { title, subtitle, background_image, is_active: is_active ? 1 : 0 });
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("Error updating blog page hero:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

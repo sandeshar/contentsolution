@@ -1,33 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db';
-import { homepageTrustSection } from '@/db/homepageSchema';
+import dbConnect from '@/lib/mongodb';
+import { HomepageTrustSection } from '@/models/Homepage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch trust section
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const section = await db.select().from(homepageTrustSection).where(eq(homepageTrustSection.id, parseInt(id))).limit(1);
+            const section = await HomepageTrustSection.findById(id).lean();
 
-            if (section.length === 0) {
+            if (!section) {
                 return NextResponse.json({ error: 'Trust section not found' }, { status: 404 });
             }
 
-            return NextResponse.json(section[0]);
+            return NextResponse.json(section);
         }
 
-        const section = await db.select().from(homepageTrustSection).where(eq(homepageTrustSection.is_active, 1)).limit(1);
+        const section = await HomepageTrustSection.findOne({ is_active: true }).lean();
 
-        if (section.length === 0) {
+        if (!section) {
             // Return empty object to allow admin UI to create new entry
             return NextResponse.json({});
         }
 
-        return NextResponse.json(section[0]);
+        return NextResponse.json(section);
     } catch (error) {
         console.error('Error fetching trust section:', error);
         return NextResponse.json({ error: 'Failed to fetch trust section' }, { status: 500 });
@@ -37,17 +37,18 @@ export async function GET(request: NextRequest) {
 // POST - Create trust section
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const { heading, is_active = 1 } = body;
+        const { heading, is_active = true } = body;
 
         if (!heading) {
             return NextResponse.json({ error: 'Heading is required' }, { status: 400 });
         }
 
-        const result = await db.insert(homepageTrustSection).values({ heading, is_active });
-        revalidateTag('homepage-trust-section', 'max');
+        const section = await HomepageTrustSection.create({ heading, is_active });
+        revalidateTag('homepage-trust-section');
         return NextResponse.json(
-            { success: true, message: 'Trust section created successfully', id: result[0].insertId },
+            { success: true, message: 'Trust section created successfully', id: section._id },
             { status: 201 }
         );
     } catch (error) {
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update trust section
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, heading, is_active } = body;
 
@@ -66,14 +68,14 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        const updateData: any = {};
-        if (heading !== undefined) updateData.heading = heading;
-        if (is_active !== undefined) updateData.is_active = is_active;
+        const section = await HomepageTrustSection.findByIdAndUpdate(id, { heading, is_active }, { new: true });
 
-        await db.update(homepageTrustSection).set(updateData).where(eq(homepageTrustSection.id, id));
-        revalidateTag('homepage-trust-section', 'max');
+        if (!section) {
+            return NextResponse.json({ error: 'Trust section not found' }, { status: 404 });
+        }
 
-        return NextResponse.json({ success: true, message: 'Trust section updated successfully' });
+        revalidateTag('homepage-trust-section');
+        return NextResponse.json({ success: true, message: 'Trust section updated successfully', data: section });
     } catch (error) {
         console.error('Error updating trust section:', error);
         return NextResponse.json({ error: 'Failed to update trust section' }, { status: 500 });
@@ -83,6 +85,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete trust section
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -90,9 +93,13 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(homepageTrustSection).where(eq(homepageTrustSection.id, parseInt(id)));
-        revalidateTag('homepage-trust-section', 'max');
+        const section = await HomepageTrustSection.findByIdAndDelete(id);
 
+        if (!section) {
+            return NextResponse.json({ error: 'Trust section not found' }, { status: 404 });
+        }
+
+        revalidateTag('homepage-trust-section');
         return NextResponse.json({ success: true, message: 'Trust section deleted successfully' });
     } catch (error) {
         console.error('Error deleting trust section:', error);

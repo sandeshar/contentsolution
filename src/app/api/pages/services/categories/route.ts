@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { serviceCategories } from "@/db/serviceCategoriesSchema";
-import { eq } from "drizzle-orm";
+import dbConnect from "@/lib/mongodb";
+import { ServiceCategory } from "@/models/Services";
 
 export async function GET() {
     try {
-        const categories = await db.select().from(serviceCategories);
-        return NextResponse.json(categories);
+        await dbConnect();
+        const categories = await ServiceCategory.find().sort({ display_order: 1 }).lean();
+        return NextResponse.json(categories.map((c: any) => ({ ...c, id: c._id })));
     } catch (error) {
         console.error("Error fetching service categories:", error);
         return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
@@ -15,6 +15,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { name, slug, description, icon } = body;
 
@@ -22,14 +23,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Name and slug are required" }, { status: 400 });
         }
 
-        const result = await db.insert(serviceCategories).values({
+        const result = await ServiceCategory.create({
             name,
             slug,
             description: description || null,
             icon: icon || null,
         });
 
-        return NextResponse.json({ id: result[0].insertId, message: "Category created successfully" });
+        return NextResponse.json({ id: result._id, message: "Category created successfully" });
     } catch (error) {
         console.error("Error creating category:", error);
         return NextResponse.json({ error: "Failed to create category" }, { status: 500 });
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, name, slug, description, icon } = body;
 
@@ -45,15 +47,12 @@ export async function PUT(request: Request) {
             return NextResponse.json({ error: "ID is required" }, { status: 400 });
         }
 
-        await db.update(serviceCategories)
-            .set({
-                name,
-                slug,
-                description: description || null,
-                icon: icon || null,
-                updatedAt: new Date(),
-            })
-            .where(eq(serviceCategories.id, id));
+        await ServiceCategory.findByIdAndUpdate(id, {
+            name,
+            slug,
+            description: description || null,
+            icon: icon || null,
+        });
 
         return NextResponse.json({ message: "Category updated successfully" });
     } catch (error) {
@@ -64,6 +63,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id } = body;
 
@@ -71,7 +71,7 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: "ID is required" }, { status: 400 });
         }
 
-        await db.delete(serviceCategories).where(eq(serviceCategories.id, id));
+        await ServiceCategory.findByIdAndDelete(id);
         return NextResponse.json({ message: "Category deleted successfully" });
     } catch (error) {
         console.error("Error deleting category:", error);

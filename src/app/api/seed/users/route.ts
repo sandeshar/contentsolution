@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
-import { users } from '@/db/schema';
+import dbConnect from "@/lib/mongodb";
+import User from "@/models/User";
 import { hashPassword } from '@/utils/authHelper';
 
 export async function POST() {
     try {
-        // Only seed a Super Admin if no users exist (avoid foreign key issues)
-        const existing = await db.select().from(users);
-        if (!existing || existing.length === 0) {
-            await db.insert(users).values({
+        await dbConnect();
+
+        // Only seed a Super Admin if no users exist
+        const count = await User.countDocuments();
+        if (count === 0) {
+            await User.create({
                 name: 'Super Admin',
                 email: 'admin@contentsolution.np',
                 password: await hashPassword('password123'),

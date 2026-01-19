@@ -1,27 +1,29 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
-import { status } from '@/db/schema';
+import dbConnect from "@/lib/mongodb";
+import Status from "@/models/Status";
 
 export async function POST() {
     try {
-        // Delete existing status entries
-        await db.delete(status);
+        await dbConnect();
 
-        // Insert status values
-        await db.insert(status).values([
-            { id: 1, name: 'Draft' },
-            { id: 2, name: 'Published' },
-            { id: 3, name: 'In Review' },
+        // Delete existing status entries
+        await Status.deleteMany({});
+
+        // Insert status values (use lowercase to match other lookups)
+        await Status.insertMany([
+            { name: 'draft' },
+            { name: 'published' },
+            { name: 'in-review' },
         ]);
 
         return NextResponse.json({
             success: true,
-            message: 'Status table seeded successfully'
+            message: 'Status collection seeded successfully'
         });
     } catch (error) {
         console.error('Error seeding status:', error);
         return NextResponse.json(
-            { error: 'Failed to seed status table' },
+            { error: 'Failed to seed status collection' },
             { status: 500 }
         );
     }

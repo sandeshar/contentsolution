@@ -1,29 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, asc } from 'drizzle-orm';
-import { db } from '@/db';
-import { homepageTrustLogos } from '@/db/homepageSchema';
+import dbConnect from '@/lib/mongodb';
+import { HomepageTrustLogo } from '@/models/Homepage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch trust logos
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const logo = await db.select().from(homepageTrustLogos).where(eq(homepageTrustLogos.id, parseInt(id))).limit(1);
+            const logo = await HomepageTrustLogo.findById(id).lean();
 
-            if (logo.length === 0) {
+            if (!logo) {
                 return NextResponse.json({ error: 'Logo not found' }, { status: 404 });
             }
 
-            return NextResponse.json(logo[0]);
+            return NextResponse.json(logo);
         }
 
         // Get all active logos ordered by display_order
-        const logos = await db.select().from(homepageTrustLogos)
-            .where(eq(homepageTrustLogos.is_active, 1))
-            .orderBy(asc(homepageTrustLogos.display_order));
+        const logos = await HomepageTrustLogo.find({ is_active: true }).sort({ display_order: 1 }).lean();
 
         return NextResponse.json(logos);
     } catch (error) {
@@ -35,27 +33,18 @@ export async function GET(request: NextRequest) {
 // POST - Create trust logo
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const { alt_text, logo_url, dark_invert = 0, display_order, is_active = 1 } = body;
+        const { alt_text, logo_url, dark_invert = false, display_order = 0, is_active = true } = body;
 
-        if (!alt_text || !logo_url || display_order === undefined) {
-            return NextResponse.json(
-                { error: 'alt_text, logo_url, and display_order are required' },
-                { status: 400 }
-            );
+        if (!alt_text || !logo_url) {
+            return NextResponse.json({ error: 'Alt text and logo URL are required' }, { status: 400 });
         }
 
-        const result = await db.insert(homepageTrustLogos).values({
-            alt_text,
-            logo_url,
-            dark_invert,
-            display_order,
-            is_active,
-        });
-        revalidateTag('homepage-trust-logos', 'max');
-
+        const logo = await HomepageTrustLogo.create({ alt_text, logo_url, dark_invert, display_order, is_active });
+        revalidateTag('homepage-trust-logos');
         return NextResponse.json(
-            { success: true, message: 'Trust logo created successfully', id: result[0].insertId },
+            { success: true, message: 'Trust logo created successfully', id: logo._id },
             { status: 201 }
         );
     } catch (error) {
@@ -67,24 +56,22 @@ export async function POST(request: NextRequest) {
 // PUT - Update trust logo
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const { id, alt_text, logo_url, dark_invert, display_order, is_active } = body;
+        const { id, ...updateData } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        const updateData: any = {};
-        if (alt_text !== undefined) updateData.alt_text = alt_text;
-        if (logo_url !== undefined) updateData.logo_url = logo_url;
-        if (dark_invert !== undefined) updateData.dark_invert = dark_invert;
-        if (display_order !== undefined) updateData.display_order = display_order;
-        if (is_active !== undefined) updateData.is_active = is_active;
+        const logo = await HomepageTrustLogo.findByIdAndUpdate(id, updateData, { new: true });
 
-        await db.update(homepageTrustLogos).set(updateData).where(eq(homepageTrustLogos.id, id));
-        revalidateTag('homepage-trust-logos', 'max');
+        if (!logo) {
+            return NextResponse.json({ error: 'Trust logo not found' }, { status: 404 });
+        }
 
-        return NextResponse.json({ success: true, message: 'Trust logo updated successfully' });
+        revalidateTag('homepage-trust-logos');
+        return NextResponse.json({ success: true, message: 'Trust logo updated successfully', data: logo });
     } catch (error) {
         console.error('Error updating trust logo:', error);
         return NextResponse.json({ error: 'Failed to update trust logo' }, { status: 500 });
@@ -94,6 +81,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete trust logo
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -101,9 +89,13 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(homepageTrustLogos).where(eq(homepageTrustLogos.id, parseInt(id)));
-        revalidateTag('homepage-trust-logos', 'max');
+        const logo = await HomepageTrustLogo.findByIdAndDelete(id);
 
+        if (!logo) {
+            return NextResponse.json({ error: 'Trust logo not found' }, { status: 404 });
+        }
+
+        revalidateTag('homepage-trust-logos');
         return NextResponse.json({ success: true, message: 'Trust logo deleted successfully' });
     } catch (error) {
         console.error('Error deleting trust logo:', error);

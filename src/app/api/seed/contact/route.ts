@@ -1,20 +1,22 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import dbConnect from "@/lib/mongodb";
 import {
-    contactPageHero,
-    contactPageInfo,
-    contactPageFormConfig
-} from '@/db/contactPageSchema';
+    ContactPageHero,
+    ContactPageInfo,
+    ContactPageFormConfig
+} from '@/models/ContactPage';
 
 export async function POST() {
     try {
+        await dbConnect();
+
         // Clear existing data
-        await db.delete(contactPageHero);
-        await db.delete(contactPageInfo);
-        await db.delete(contactPageFormConfig);
+        await ContactPageHero.deleteMany({});
+        await ContactPageInfo.deleteMany({});
+        await ContactPageFormConfig.deleteMany({});
 
         // Seed Hero Section
-        await db.insert(contactPageHero).values({
+        await ContactPageHero.create({
             tagline: 'CONTACT US',
             title: "Let's Start a Conversation",
             description: "We're here to help you with your content needs. Reach out to us, and we'll get back to you as soon as possible.",
@@ -22,7 +24,7 @@ export async function POST() {
         });
 
         // Seed Contact Info
-        await db.insert(contactPageInfo).values({
+        await ContactPageInfo.create({
             office_location: 'Kathmandu, Nepal',
             phone: '+977 9876543210',
             email: 'hello@contentsolution.np',
@@ -31,7 +33,7 @@ export async function POST() {
         });
 
         // Seed Form Configuration
-        await db.insert(contactPageFormConfig).values({
+        await ContactPageFormConfig.create({
             name_placeholder: 'Your Name',
             email_placeholder: 'Your Email',
             phone_placeholder: 'Phone (optional)',

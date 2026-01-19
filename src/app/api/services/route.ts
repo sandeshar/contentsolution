@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, desc } from 'drizzle-orm';
-import { db } from '@/db';
-import { servicePosts } from '@/db/servicePostsSchema';
-import { reviewTestimonialServices } from '@/db/reviewTestimonialServicesSchema';
-import { reviewTestimonials } from '@/db/reviewSchema';
-import { getUserIdFromToken, returnRole } from '@/utils/authHelper';
+import dbConnect from '@/lib/mongodb';
+import { ServicePost, ServiceCategory, ServiceSubcategory } from '@/models/Services';
+import Status from '@/models/Status';
+import { getUserIdFromToken } from '@/utils/authHelper';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch service posts
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
         const slug = searchParams.get('slug');
@@ -20,64 +19,123 @@ export async function GET(request: NextRequest) {
         const status = searchParams.get('status');
 
         if (id) {
-            const post = await db.select().from(servicePosts).where(eq(servicePosts.id, parseInt(id))).limit(1);
+            const post = await ServicePost.findById(id).lean() as any;
 
-            if (post.length === 0) {
+            if (!post) {
                 return NextResponse.json({ error: 'Service post not found' }, { status: 404 });
             }
 
-            return NextResponse.json(post[0]);
+            // Map statusId ObjectId to statusId number for UI
+            const [draftStr, publishedStr, inReviewStr] = await Promise.all([
+                Status.findOne({ name: /draft/i }),
+                Status.findOne({ name: /published/i }),
+                Status.findOne({ name: /in-review|review/i }),
+            ]);
+
+            let statusNum = 1;
+            if (post.statusId) {
+                const sId = post.statusId.toString();
+                if (publishedStr && sId === publishedStr._id.toString()) statusNum = 2;
+                else if (inReviewStr && sId === inReviewStr._id.toString()) statusNum = 3;
+                else if (draftStr && sId === draftStr._id.toString()) statusNum = 1;
+            }
+
+            return NextResponse.json({
+                ...post,
+                id: post._id,
+                statusId: statusNum
+            });
         }
 
         if (slug) {
-            const post = await db.select().from(servicePosts).where(eq(servicePosts.slug, slug)).limit(1);
+            const post = await ServicePost.findOne({ slug }).lean() as any;
 
-            if (post.length === 0) {
+            if (!post) {
                 return NextResponse.json({ error: 'Service post not found' }, { status: 404 });
             }
 
-            return NextResponse.json(post[0]);
+            // Map statusId ObjectId to statusId number for UI
+            const [draftStr, publishedStr, inReviewStr] = await Promise.all([
+                Status.findOne({ name: /draft/i }),
+                Status.findOne({ name: /published/i }),
+                Status.findOne({ name: /in-review|review/i }),
+            ]);
+
+            let statusNum = 1;
+            if (post.statusId) {
+                const sId = post.statusId.toString();
+                if (publishedStr && sId === publishedStr._id.toString()) statusNum = 2;
+                else if (inReviewStr && sId === inReviewStr._id.toString()) statusNum = 3;
+                else if (draftStr && sId === draftStr._id.toString()) statusNum = 1;
+            }
+
+            return NextResponse.json({
+                ...post,
+                id: post._id,
+                statusId: statusNum
+            });
         }
 
-        let query = db.select().from(servicePosts);
+        let filter: any = {};
 
         if (featured === '1' || featured === 'true') {
-            query = query.where(eq(servicePosts.featured, 1)) as any;
+            filter.featured = 1;
         }
 
         if (status) {
-            query = query.where(eq(servicePosts.statusId, parseInt(status))) as any;
+            filter.statusId = status; // MongoDB ID as string
         }
 
         // Filter by category slug or id
         if (category) {
-            const catId = parseInt(category);
-            if (!isNaN(catId)) {
-                query = query.where(eq(servicePosts.category_id, catId)) as any;
+            if (category.match(/^[0-9a-fA-F]{24}$/)) {
+                filter.category_id = category;
             } else {
-                // If category is a slug, find id by slug
-                const { serviceCategories } = await import('@/db/serviceCategoriesSchema');
-                const catRow = await db.select().from(serviceCategories).where(eq(serviceCategories.slug, category)).limit(1);
-                if (catRow.length) query = query.where(eq(servicePosts.category_id, catRow[0].id)) as any;
+                const catRow = await ServiceCategory.findOne({ slug: category }).lean() as any;
+                if (catRow) filter.category_id = catRow._id;
             }
         }
 
         // Filter by subcategory slug or id
         if (subcategory) {
-            const subId = parseInt(subcategory);
-            if (!isNaN(subId)) {
-                query = query.where(eq(servicePosts.subcategory_id, subId)) as any;
+            if (subcategory.match(/^[0-9a-fA-F]{24}$/)) {
+                filter.subcategory_id = subcategory;
             } else {
-                const { serviceSubcategories } = await import('@/db/serviceCategoriesSchema');
-                const subRow = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.slug, subcategory)).limit(1);
-                if (subRow.length) query = query.where(eq(servicePosts.subcategory_id, subRow[0].id)) as any;
+                const subRow = await ServiceSubcategory.findOne({ slug: subcategory }).lean() as any;
+                if (subRow) filter.subcategory_id = subRow._id;
             }
         }
 
-        const ordered = query.orderBy(desc(servicePosts.createdAt));
-        const posts = limit && !isNaN(parseInt(limit)) ? await ordered.limit(parseInt(limit)) : await ordered;
+        let query = ServicePost.find(filter).sort({ createdAt: -1 });
+        if (limit && !isNaN(parseInt(limit))) {
+            query = query.limit(parseInt(limit));
+        }
+        
+        const posts = await query.lean();
 
-        return NextResponse.json(posts);
+        // Map statusId ObjectId to statusId number for UI
+        const [draftStr, publishedStr, inReviewStr] = await Promise.all([
+            Status.findOne({ name: /draft/i }),
+            Status.findOne({ name: /published/i }),
+            Status.findOne({ name: /in-review|review/i }),
+        ]);
+
+        const mappedPosts = posts.map((post: any) => {
+            let statusNum = 1; // Default to draft
+            if (post.statusId) {
+                const sId = post.statusId.toString();
+                if (publishedStr && sId === publishedStr._id.toString()) statusNum = 2;
+                else if (inReviewStr && sId === inReviewStr._id.toString()) statusNum = 3;
+                else if (draftStr && sId === draftStr._id.toString()) statusNum = 1;
+            }
+            return {
+                ...post,
+                id: post._id, // Add id for frontend
+                statusId: statusNum
+            };
+        });
+
+        return NextResponse.json(mappedPosts);
     } catch (error) {
         console.error('Error fetching service posts:', error);
         return NextResponse.json({ error: 'Failed to fetch service posts' }, { status: 500 });
@@ -87,6 +145,7 @@ export async function GET(request: NextRequest) {
 // POST - Create service post
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         // Get user ID from JWT token
         const token = request.cookies.get('admin_auth')?.value;
         if (!token) {
@@ -111,7 +170,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Required fields: slug, title, excerpt, content, statusId' }, { status: 400 });
         }
 
-        const result = await db.insert(servicePosts).values({
+        // Map numeric statusId back to ObjectId
+        let resolvedStatusId = statusId;
+        if (typeof statusId === 'number' || !statusId.toString().match(/^[0-9a-fA-F]{24}$/)) {
+            const statusMap: Record<number, string> = { 1: 'Draft', 2: 'Published', 3: 'In-Review' };
+            const statusName = statusMap[Number(statusId)] || 'Draft';
+            const statusDoc = await Status.findOne({ name: new RegExp(`^${statusName}$`, 'i') });
+            if (statusDoc) resolvedStatusId = statusDoc._id;
+        }
+
+        const result = await ServicePost.create({
             slug,
             title,
             excerpt,
@@ -126,28 +194,23 @@ export async function POST(request: NextRequest) {
             price_label: price_label || null,
             price_description: price_description || null,
             authorId,
-            statusId,
+            statusId: resolvedStatusId,
             meta_title: metaTitle || null,
             meta_description: metaDescription || null,
         });
 
-        try { revalidateTag('services', 'max'); } catch (e) { /* ignore */ }
+        revalidateTag('services');
 
         return NextResponse.json(
-            { success: true, message: 'Service post created successfully', id: result[0].insertId },
+            { success: true, message: 'Service post created successfully', id: result._id },
             { status: 201 }
         );
     } catch (error: any) {
         console.error('Error creating service post:', error);
 
         // Handle duplicate slug error
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === 11000) {
             return NextResponse.json({ error: 'A service with this slug already exists. Please use a different slug.' }, { status: 409 });
-        }
-
-        // Handle foreign key constraint error
-        if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.code === 'ER_NO_REFERENCED_ROW') {
-            return NextResponse.json({ error: 'Invalid user ID or status ID' }, { status: 400 });
         }
 
         return NextResponse.json({ error: 'Failed to create service post' }, { status: 500 });
@@ -157,6 +220,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update service post
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, slug, title, excerpt, content, thumbnail, icon, featured, statusId, metaTitle, metaDescription, category_id, subcategory_id, price, price_type, price_label, price_description } = body;
 
@@ -178,14 +242,23 @@ export async function PUT(request: NextRequest) {
         if (price_type !== undefined) updateData.price_type = price_type;
         if (price_label !== undefined) updateData.price_label = price_label;
         if (price_description !== undefined) updateData.price_description = price_description;
-        if (statusId !== undefined) updateData.statusId = statusId;
-        if (metaTitle !== undefined) updateData.metaTitle = metaTitle;
-        if (metaDescription !== undefined) updateData.metaDescription = metaDescription;
+        if (statusId !== undefined) {
+            let resolvedStatusId = statusId;
+            if (typeof statusId === 'number' || !statusId.toString().match(/^[0-9a-fA-F]{24}$/)) {
+                const statusMap: Record<number, string> = { 1: 'Draft', 2: 'Published', 3: 'In-Review' };
+                const statusName = statusMap[Number(statusId)] || 'Draft';
+                const statusDoc = await Status.findOne({ name: new RegExp(`^${statusName}$`, 'i') });
+                if (statusDoc) resolvedStatusId = statusDoc._id;
+            }
+            updateData.statusId = resolvedStatusId;
+        }
+        if (metaTitle !== undefined) updateData.meta_title = metaTitle;
+        if (metaDescription !== undefined) updateData.meta_description = metaDescription;
 
-        await db.update(servicePosts).set(updateData).where(eq(servicePosts.id, id));
+        await ServicePost.findByIdAndUpdate(id, updateData);
 
-        try { revalidateTag('services', 'max'); } catch (e) { /* ignore */ }
-        try { revalidateTag(`service-${id}`, 'max'); } catch (e) { /* ignore */ }
+        revalidateTag('services');
+        revalidateTag(`service-${id}`);
 
         return NextResponse.json({ success: true, message: 'Service post updated successfully' });
     } catch (error) {
@@ -197,6 +270,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete service post
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         // Require authentication for delete operations
         const token = request.cookies.get('admin_auth')?.value;
         if (!token) {
@@ -206,8 +280,7 @@ export async function DELETE(request: NextRequest) {
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 });
         }
-        const role = returnRole(token);
-        // optionally check role (superadmin required for some endpoints); allow deletion for any valid role here
+        
         const searchParams = request.nextUrl.searchParams;
         let id = searchParams.get('id');
         let slug = searchParams.get('slug');
@@ -228,13 +301,13 @@ export async function DELETE(request: NextRequest) {
         }
 
         // Resolve slug to id if necessary
-        let postId = id ? parseInt(id) : null;
+        let postId = id;
         if (!postId && slug) {
-            const postRow = await db.select().from(servicePosts).where(eq(servicePosts.slug, slug)).limit(1);
-            if (!postRow || postRow.length === 0) {
+            const postRow = await ServicePost.findOne({ slug }).lean() as any;
+            if (!postRow) {
                 return NextResponse.json({ error: 'Service post not found' }, { status: 404 });
             }
-            postId = postRow[0].id;
+            postId = postRow._id;
         }
 
         if (!postId) {
@@ -242,31 +315,28 @@ export async function DELETE(request: NextRequest) {
         }
 
         // Check existence
-        const existing = await db.select().from(servicePosts).where(eq(servicePosts.id, postId)).limit(1);
-        if (!existing || existing.length === 0) {
+        const existing = await ServicePost.findById(postId);
+        if (!existing) {
             return NextResponse.json({ error: 'Service post not found' }, { status: 404 });
         }
 
-        // Attempts to delete dependent rows first to avoid FK issues (be defensive)
+        // Attempts to delete dependent rows first to avoid issues
         try {
-            await db.delete(reviewTestimonialServices).where(eq(reviewTestimonialServices.serviceId, postId as number));
-        } catch (err) {
-            // ignore
-        }
-        try {
-            await db.delete(reviewTestimonials).where(eq(reviewTestimonials.service, postId as number));
+            const { ReviewTestimonialService, ReviewTestimonial } = await import('@/models/Review');
+            await ReviewTestimonialService.deleteMany({ serviceId: postId });
+            await ReviewTestimonial.deleteMany({ service: postId });
         } catch (err) {
             // ignore
         }
 
         try {
-            await db.delete(servicePosts).where(eq(servicePosts.id, postId as number));
+            await ServicePost.findByIdAndDelete(postId);
         } catch (err: any) {
             console.error('Deletion failed:', err);
             return NextResponse.json({ error: 'Failed to delete service post', details: err.message || String(err) }, { status: 500 });
         }
 
-        try { revalidateTag('services', 'max'); } catch (e) { /* ignore */ }
+        revalidateTag('services');
 
         return NextResponse.json({ success: true, message: 'Service post deleted successfully' });
     } catch (error) {

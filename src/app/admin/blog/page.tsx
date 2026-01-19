@@ -18,11 +18,12 @@ export default function BlogPage() {
 
     const fetchPosts = async () => {
         try {
-            const response = await fetch('/api/blog');
+            const response = await fetch('/api/blog?all=true');
             const data = await response.json();
-            setPosts(data);
+            setPosts(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching posts:', error);
+            setPosts([]);
         } finally {
             setLoading(false);
         }

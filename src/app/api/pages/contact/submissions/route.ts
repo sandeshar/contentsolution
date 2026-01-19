@@ -1,39 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, desc } from 'drizzle-orm';
-import { db } from '@/db';
-import { contactFormSubmissions } from '@/db/contactPageSchema';
-import { storeSettings } from '@/db/schema';
+import dbConnect from '@/lib/mongodb';
+import { ContactFormSubmission } from '@/models/ContactPage';
+import { StoreSettings } from '@/models/StoreSettings';
 import { sendMail } from '@/utils/mailer';
 
 // GET - Fetch form submissions
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
         const status = searchParams.get('status');
 
         if (id) {
-            const submission = await db.select().from(contactFormSubmissions).where(eq(contactFormSubmissions.id, parseInt(id))).limit(1);
+            const submission = await ContactFormSubmission.findById(id).lean();
 
-            if (submission.length === 0) {
+            if (!submission) {
                 return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
             }
 
-            return NextResponse.json(submission[0]);
+            return NextResponse.json({ ...submission, id: submission._id });
         }
 
-        let submissions;
-
+        let filter: any = {};
         if (status) {
-            submissions = await db.select().from(contactFormSubmissions)
-                .where(eq(contactFormSubmissions.status, status))
-                .orderBy(desc(contactFormSubmissions.createdAt));
-        } else {
-            submissions = await db.select().from(contactFormSubmissions)
-                .orderBy(desc(contactFormSubmissions.createdAt));
+            filter.status = status;
         }
 
-        return NextResponse.json(submissions);
+        const submissions = await ContactFormSubmission.find(filter)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return NextResponse.json(submissions.map((s: any) => ({ ...s, id: s._id })));
     } catch (error) {
         console.error('Error fetching submissions:', error);
         return NextResponse.json({ error: 'Failed to fetch submissions' }, { status: 500 });
@@ -43,6 +41,7 @@ export async function GET(request: NextRequest) {
 // POST - Create form submission
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { name, email, phone, subject, service, message, status = 'new' } = body;
 
@@ -50,7 +49,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Name, email, and message are required' }, { status: 400 });
         }
 
-        const result = await db.insert(contactFormSubmissions).values({
+        const result = await ContactFormSubmission.create({
             name,
             email,
             phone: phone || null,
@@ -63,8 +62,8 @@ export async function POST(request: NextRequest) {
         // Send notification emails (non-blocking): admin + submitter
         (async () => {
             try {
-                const rows = await db.select().from(storeSettings).limit(1);
-                const adminEmail = rows.length ? rows[0].contact_email : (process.env.ADMIN_EMAIL || 'admin@contentsolution.np');
+                const settings = await StoreSettings.findOne().lean();
+                const adminEmail = settings ? (settings as any).contact_email : (process.env.ADMIN_EMAIL || 'admin@contentsolution.np');
 
                 const adminSubject = `New contact form submission from ${name}`;
                 const adminHtml = `<p><strong>Name:</strong> ${name}</p>
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
         })();
 
         return NextResponse.json(
-            { success: true, message: 'Submission created successfully', id: result[0].insertId },
+            { success: true, message: 'Submission created successfully', id: result._id },
             { status: 201 }
         );
     } catch (error) {
@@ -103,6 +102,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update form submission (mainly for status updates)
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, status, phone } = body;
 
@@ -114,7 +114,7 @@ export async function PUT(request: NextRequest) {
         if (status !== undefined) updateData.status = status;
         if (phone !== undefined) updateData.phone = phone;
 
-        await db.update(contactFormSubmissions).set(updateData).where(eq(contactFormSubmissions.id, id));
+        await ContactFormSubmission.findByIdAndUpdate(id, updateData);
 
         return NextResponse.json({ success: true, message: 'Submission updated successfully' });
     } catch (error) {
@@ -126,6 +126,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete form submission
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -133,7 +134,7 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(contactFormSubmissions).where(eq(contactFormSubmissions.id, parseInt(id)));
+        await ContactFormSubmission.findByIdAndDelete(id);
 
         return NextResponse.json({ success: true, message: 'Submission deleted successfully' });
     } catch (error) {

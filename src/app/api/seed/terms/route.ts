@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import dbConnect from "@/lib/mongodb";
 import {
-    termsPageHeader,
-    termsPageSections
-} from '@/db/termsPageSchema';
+    TermsPageHeader,
+    TermsPageSection
+} from '@/models/Pages';
 
 export async function POST() {
     try {
+        await dbConnect();
+
         // Clear existing data
-        await db.delete(termsPageHeader);
-        await db.delete(termsPageSections);
+        await TermsPageHeader.deleteMany({});
+        await TermsPageSection.deleteMany({});
 
         // Seed Header
-        await db.insert(termsPageHeader).values({
+        await TermsPageHeader.create({
             title: 'Terms & Conditions',
             last_updated: 'October 26, 2023',
             is_active: 1,
@@ -71,9 +73,7 @@ export async function POST() {
             },
         ];
 
-        for (const section of sections) {
-            await db.insert(termsPageSections).values(section);
-        }
+        await TermsPageSection.insertMany(sections);
 
         return NextResponse.json(
             {

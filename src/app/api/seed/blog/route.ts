@@ -1,53 +1,54 @@
-import { db } from "@/db";
-import { blogPageHero, blogPageCTA } from "@/db/blogPageSchema";
-import { blogPosts, users, status } from "@/db/schema";
 import { NextResponse } from "next/server";
+import dbConnect from "@/lib/mongodb";
+import { BlogPageHero, BlogPageCTA } from "@/models/Pages";
+import BlogPost from "@/models/BlogPost";
+import User from "@/models/User";
+import Status from "@/models/Status";
 
 export async function POST() {
     try {
+        await dbConnect();
+
         // Clear existing data
-        await db.delete(blogPageHero);
-        await db.delete(blogPageCTA);
-        await db.delete(blogPosts);
+        await BlogPageHero.deleteMany({});
+        await BlogPageCTA.deleteMany({});
+        await BlogPost.deleteMany({});
 
         // Seed Hero
-        await db.insert(blogPageHero).values({
+        await BlogPageHero.create({
             title: "The Content Solution Blog",
             subtitle: "Expert insights, trends, and strategies in content marketing for Nepali businesses.",
             background_image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBP7wRSP6PNVQerc44qHCLRoYYd7gD0XXulRDkuPttKz8c2wm7R80QfOir0XcMWFKjBGgyJ5pcMWrIKbPt6SCgNWruICSXdJlao0ovxqmc5rLvSBMdY5X6oZLjHPx9qPTGkgNMIYnTzo9hXeQxzkwUbhDDc7WVvEd49h17mKa6w8QfB2EIEDD7W8XIG5RncWJ-n5n8nCSqHu4E6zkNP0BsMHsoIQz9Vpi8C5qNBL4Po-ca4mAAVTciZ-3q8TREYwunoIejOppPSO_k"
         });
 
         // Seed CTA
-        await db.insert(blogPageCTA).values({
+        await BlogPageCTA.create({
             title: "Stay Ahead of the Curve",
             description: "Get the latest content marketing tips delivered to your inbox.",
             button_text: "Subscribe"
         });
 
         // Ensure users and statuses exist so this seeder can run independently
-        const existingUsers = await db.select().from(users).limit(1);
-        if (!existingUsers || existingUsers.length === 0) {
+        let firstUser = await User.findOne();
+        if (!firstUser) {
             const { hashPassword } = await import('@/utils/authHelper');
-            await db.insert(users).values({
+            firstUser = await User.create({
                 name: 'Super Admin',
                 email: 'admin@contentsolution.np',
                 password: await hashPassword('password123'),
                 role: 'superadmin',
             });
         }
-        const existingStatuses = await db.select().from(status).limit(1);
-        if (!existingStatuses || existingStatuses.length === 0) {
-            await db.insert(status).values([
+        
+        let publishedStatus = await Status.findOne({ name: /published/i });
+        if (!publishedStatus) {
+            await Status.insertMany([
                 { name: 'draft' },
                 { name: 'published' },
                 { name: 'in-review' },
             ]);
+            publishedStatus = await Status.findOne({ name: /published/i });
         }
-
-        // Create a set of realistic, long blog posts
-        const [firstUser] = await db.select().from(users).limit(1);
-        const statusRows = await db.select().from(status);
-        const publishedStatus = statusRows.find((s: any) => (s.name || '').toLowerCase() === 'published') || statusRows[0];
 
         if (firstUser && publishedStatus) {
             const generateLongContent = (title: string, paragraphs = 20) => {
@@ -71,8 +72,8 @@ export async function POST() {
                     thumbnail: 'https://images.unsplash.com/photo-1528426776029-6f72c03bd0d7?auto=format&fit=crop&w=1400&q=80',
                     metaTitle: 'Content Marketing Strategy for Nepali Businesses',
                     metaDescription: 'Learn how to craft a content strategy that works in Nepal with audience research, pillar pages, and execution tips.',
-                    authorId: firstUser.id,
-                    status: publishedStatus.id,
+                    authorId: firstUser._id,
+                    status: publishedStatus._id,
                 },
                 {
                     slug: 'long-form-seo-best-practices',
@@ -82,8 +83,8 @@ export async function POST() {
                     thumbnail: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=1400&q=80',
                     metaTitle: 'Long-Form SEO Best Practices',
                     metaDescription: 'A guide to creating long-form content that ranks and converts.',
-                    authorId: firstUser.id,
-                    status: publishedStatus.id,
+                    authorId: firstUser._id,
+                    status: publishedStatus._id,
                 },
                 {
                     slug: 'case-study-pillar-page-growth',
@@ -96,8 +97,8 @@ export async function POST() {
                     thumbnail: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80',
                     metaTitle: 'Pillar Page Case Study',
                     metaDescription: 'Learn how consolidating content into pillar pages can grow organic traffic and rankings.',
-                    authorId: firstUser.id,
-                    status: publishedStatus.id,
+                    authorId: firstUser._id,
+                    status: publishedStatus._id,
                 },
             ];
 
@@ -123,9 +124,7 @@ export async function POST() {
                 }
             }
 
-            for (const p of posts) {
-                await db.insert(blogPosts).values(p as any);
-            }
+            await BlogPost.insertMany(posts);
         }
 
         return NextResponse.json({ message: "Blog page seeded successfully" });

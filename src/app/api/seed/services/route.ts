@@ -1,37 +1,37 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import dbConnect from "@/lib/mongodb";
 import {
-    servicesPageHero,
-    servicesPageDetails,
-    servicesPageProcessSection,
-    servicesPageProcessSteps,
-    servicesPageCTA,
-} from '@/db/servicesPageSchema';
-import { servicePosts } from '@/db/servicePostsSchema';
-import { serviceCategories, serviceSubcategories } from '@/db/serviceCategoriesSchema';
-import { reviewTestimonials } from '@/db/reviewSchema';
-import { status, users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+    ServicePageHero,
+    ServicePageDetail,
+    ServicePageProcessSection,
+    ServicePageProcessStep,
+    ServicePageCTA,
+    ServicePost,
+    ServiceCategory,
+    ServiceSubcategory,
+} from '@/models/Services';
+import { ReviewTestimonial } from '@/models/Review';
+import Status from "@/models/Status";
+import User from "@/models/User";
 
 export async function POST() {
     try {
-        const [firstUser] = await db.select().from(users).limit(1);
-        const statusRows = await db.select().from(status);
-        const publishedStatus = statusRows.find((s: any) => (s.name || '').toLowerCase() === 'published') || statusRows[0];
+        await dbConnect();
 
-        // Cleanup (ignore errors if tables don't exist)
+        const firstUser = await User.findOne();
+        const publishedStatus = await Status.findOne({ name: /published/i }) || await Status.findOne();
+
+        // Cleanup
         try {
-            await db.delete(reviewTestimonials);
-        } catch (e) { }
-        try {
-            await db.delete(servicePosts);
-            await db.delete(serviceSubcategories);
-            await db.delete(serviceCategories);
-            await db.delete(servicesPageHero);
-            await db.delete(servicesPageDetails);
-            await db.delete(servicesPageProcessSection);
-            await db.delete(servicesPageProcessSteps);
-            await db.delete(servicesPageCTA);
+            await ReviewTestimonial.deleteMany({});
+            await ServicePost.deleteMany({});
+            await ServiceSubcategory.deleteMany({});
+            await ServiceCategory.deleteMany({});
+            await ServicePageHero.deleteMany({});
+            await ServicePageDetail.deleteMany({});
+            await ServicePageProcessSection.deleteMany({});
+            await ServicePageProcessStep.deleteMany({});
+            await ServicePageCTA.deleteMany({});
         } catch (e) {
             // ignore
         }
@@ -49,7 +49,7 @@ export async function POST() {
             return out;
         };
 
-        await db.insert(servicesPageHero).values({
+        await ServicePageHero.create({
             tagline: 'OUR SERVICES',
             title: 'Strategic Content That Converts',
             description: "We don't just write words; we craft experiences. Elevate your brand with data-driven content strategies designed to captivate your audience and drive meaningful growth.",
@@ -71,7 +71,7 @@ export async function POST() {
         });
 
         const categorySlug = 'content-services';
-        await db.insert(serviceCategories).values({
+        const category = await ServiceCategory.create({
             name: 'Content Services',
             slug: categorySlug,
             description: 'Strategic writing, SEO, and social storytelling crafted for measurable growth.',
@@ -82,8 +82,6 @@ export async function POST() {
             meta_title: 'Content Services',
             meta_description: 'Explore SEO content, social media, website copy, and blog writing services.',
         });
-
-        const [category] = await db.select().from(serviceCategories).where(eq(serviceCategories.slug, categorySlug)).limit(1);
 
         const serviceData = [
             {
@@ -113,32 +111,15 @@ export async function POST() {
                 image: 'https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e?auto=format&fit=crop&w=1400&q=80',
                 image_alt: 'Copywriter drafting website copy next to design mockups',
             },
-            {
-                key: 'social',
-                icon: 'thumb_up',
-                title: 'Social Media Content',
-                description: 'Platform-ready posts and short-form video hooks.',
-                bullets: ['Content calendars', 'Short video hooks', 'Design kits'],
-                image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1400&q=80',
-            },
-            {
-                key: 'copy',
-                icon: 'language',
-                title: 'Website Copywriting',
-                description: 'Conversion-focused messaging and microcopy.',
-                bullets: ['Value prop', 'Landing pages', 'Microcopy'],
-                image: 'https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e?auto=format&fit=crop&w=1400&q=80',
-            },
         ];
 
-        const subcategoryMap: Record<string, number> = {};
+        const subcategoryMap: Record<string, any> = {};
 
         for (const [index, s] of serviceData.entries()) {
-            // Avoid duplicate slug insertion by checking for existing subcategory
-            const [existingSub] = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.slug, s.key)).limit(1);
-            if (!existingSub) {
-                await db.insert(serviceSubcategories).values({
-                    category_id: category?.id as number,
+            let subcat = await ServiceSubcategory.findOne({ slug: s.key });
+            if (!subcat) {
+                subcat = await ServiceSubcategory.create({
+                    category_id: category._id,
                     name: s.title,
                     slug: s.key,
                     description: s.description,
@@ -149,80 +130,68 @@ export async function POST() {
                     meta_title: s.title,
                     meta_description: s.description,
                 });
-                const [subcat] = await db.select().from(serviceSubcategories).where(eq(serviceSubcategories.slug, s.key)).limit(1);
-                if (subcat?.id) subcategoryMap[s.key] = subcat.id as number;
-            } else {
-                subcategoryMap[s.key] = existingSub.id as number;
             }
+            subcategoryMap[s.key] = subcat._id;
         }
 
         for (const [index, s] of serviceData.entries()) {
-            const [existingDetail] = await db.select().from(servicesPageDetails).where(eq(servicesPageDetails.key, s.key)).limit(1);
-            if (!existingDetail) {
-                await db.insert(servicesPageDetails).values({
-                    key: s.key,
-                    icon: s.icon,
-                    title: s.title,
-                    description: s.description,
-                    bullets: JSON.stringify(s.bullets),
-                    image: s.image,
-                    image_alt: s.image_alt || '',
-                    display_order: index + 1,
-                    is_active: 1,
-                });
+            await ServicePageDetail.create({
+                key: s.key,
+                icon: s.icon,
+                title: s.title,
+                description: s.description,
+                bullets: JSON.stringify(s.bullets),
+                image: s.image,
+                image_alt: s.image_alt || '',
+                display_order: index + 1,
+                is_active: 1,
+            });
 
-                const variantContent = generateLongContent(s.title, 4);
-                const [existingPost] = await db.select().from(servicePosts).where(eq(servicePosts.slug, `${s.key}-guide`)).limit(1);
-                if (!existingPost) {
-                    await db.insert(servicePosts).values({
-                        slug: `${s.key}-guide`,
-                        title: `${s.title} — guide`,
-                        excerpt: s.description,
-                        content: variantContent,
-                        thumbnail: s.image,
-                        icon: s.icon,
-                        featured: index === 0 ? 1 : 0,
-                        category_id: category?.id,
-                        subcategory_id: subcategoryMap[s.key],
-                        price: '499.00',
-                        price_type: 'fixed',
-                        price_label: 'Starting at',
-                        price_description: 'Pricing varies by scope and deliverables.',
-                        currency: 'USD',
-                        authorId: firstUser.id,
-                        statusId: publishedStatus.id,
-                        meta_title: `${s.title} — guide`,
-                        meta_description: `Professional ${s.title.toLowerCase()} services`,
-                    });
-                }
+            const variantContent = generateLongContent(s.title, 4);
+            await ServicePost.create({
+                slug: `${s.key}-guide`,
+                title: `${s.title} — guide`,
+                excerpt: s.description,
+                content: variantContent,
+                thumbnail: s.image,
+                icon: s.icon,
+                featured: index === 0 ? 1 : 0,
+                category_id: category._id,
+                subcategory_id: subcategoryMap[s.key],
+                price: 499.00,
+                price_type: 'fixed',
+                price_label: 'Starting at',
+                price_description: 'Pricing varies by scope and deliverables.',
+                currency: 'USD',
+                authorId: firstUser._id,
+                statusId: publishedStatus._id,
+                meta_title: `${s.title} — guide`,
+                meta_description: `Professional ${s.title.toLowerCase()} services`,
+            });
 
-                const [existingBase] = await db.select().from(servicePosts).where(eq(servicePosts.slug, s.key)).limit(1);
-                if (!existingBase) {
-                    await db.insert(servicePosts).values({
-                        slug: s.key,
-                        title: s.title,
-                        excerpt: s.description,
-                        content: generateLongContent(s.title, 6),
-                        thumbnail: s.image,
-                        icon: s.icon,
-                        featured: index === 0 ? 1 : 0,
-                        category_id: category?.id,
-                        subcategory_id: subcategoryMap[s.key],
-                        price: '499.00',
-                        price_type: 'fixed',
-                        price_label: 'Starting at',
-                        price_description: 'Pricing varies by scope and deliverables.',
-                        currency: 'USD',
-                        authorId: firstUser.id,
-                        statusId: publishedStatus.id,
-                        meta_title: s.title,
-                        meta_description: `Professional ${s.title.toLowerCase()} services`,
-                    });
-                }
-            }
+            await ServicePost.create({
+                slug: s.key,
+                title: s.title,
+                excerpt: s.description,
+                content: generateLongContent(s.title, 6),
+                thumbnail: s.image,
+                icon: s.icon,
+                featured: index === 0 ? 1 : 0,
+                category_id: category._id,
+                subcategory_id: subcategoryMap[s.key],
+                price: 499.00,
+                price_type: 'fixed',
+                price_label: 'Starting at',
+                price_description: 'Pricing varies by scope and deliverables.',
+                currency: 'USD',
+                authorId: firstUser._id,
+                statusId: publishedStatus._id,
+                meta_title: s.title,
+                meta_description: `Professional ${s.title.toLowerCase()} services`,
+            });
         }
 
-        await db.insert(servicesPageProcessSection).values({
+        await ServicePageProcessSection.create({
             title: 'Our Process',
             description: 'We follow a proven, collaborative process to deliver high-quality content.',
             is_active: 1,
@@ -235,13 +204,13 @@ export async function POST() {
         ];
 
         for (const step of processSteps) {
-            await db.insert(servicesPageProcessSteps).values({
+            await ServicePageProcessStep.create({
                 ...step,
                 is_active: 1,
             });
         }
 
-        await db.insert(servicesPageCTA).values({
+        await ServicePageCTA.create({
             title: 'Ready to Elevate Your Content?',
             description: "Let's discuss how we can help you achieve your goals.",
             button_text: 'Get a Quote',

@@ -1,30 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, asc } from 'drizzle-orm';
-import { db } from '@/db';
-import { aboutPageStats } from '@/db/aboutPageSchema';
+import dbConnect from '@/lib/mongodb';
+import { AboutPageStat } from '@/models/AboutPage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch stats
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const stat = await db.select().from(aboutPageStats).where(eq(aboutPageStats.id, parseInt(id))).limit(1);
+            const stat = await AboutPageStat.findById(id).lean();
 
-            if (stat.length === 0) {
+            if (!stat) {
                 return NextResponse.json({ error: 'Stat not found' }, { status: 404 });
             }
 
-            return NextResponse.json(stat[0]);
+            return NextResponse.json({ ...stat, id: stat._id });
         }
 
-        const stats = await db.select().from(aboutPageStats)
-            .where(eq(aboutPageStats.is_active, 1))
-            .orderBy(asc(aboutPageStats.display_order));
+        const stats = await AboutPageStat.find({ is_active: 1 })
+            .sort({ display_order: 1 })
+            .lean();
 
-        return NextResponse.json(stats);
+        return NextResponse.json(stats.map((s: any) => ({ ...s, id: s._id })));
     } catch (error) {
         console.error('Error fetching stats:', error);
         return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
@@ -34,19 +34,25 @@ export async function GET(request: NextRequest) {
 // POST - Create stat
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const { label, value, display_order, is_active = 1 } = body;
+        const { label, value, display_order, is_activeValue = 1 } = body;
 
         if (!label || !value || display_order === undefined) {
             return NextResponse.json({ error: 'Label, value, and display_order are required' }, { status: 400 });
         }
 
-        const result = await db.insert(aboutPageStats).values({ label, value, display_order, is_active });
+        const result = await AboutPageStat.create({ 
+            label, 
+            value, 
+            display_order, 
+            is_active: is_activeValue ? 1 : 0 
+        });
 
-        revalidateTag('about-stats', 'max');
+        try { revalidateTag('about-stats'); } catch (e) {}
 
         return NextResponse.json(
-            { success: true, message: 'Stat created successfully', id: result[0].insertId },
+            { success: true, message: 'Stat created successfully', id: result._id },
             { status: 201 }
         );
     } catch (error) {
@@ -58,6 +64,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update stat
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, label, value, display_order, is_active } = body;
 
@@ -69,11 +76,11 @@ export async function PUT(request: NextRequest) {
         if (label !== undefined) updateData.label = label;
         if (value !== undefined) updateData.value = value;
         if (display_order !== undefined) updateData.display_order = display_order;
-        if (is_active !== undefined) updateData.is_active = is_active;
+        if (is_active !== undefined) updateData.is_active = is_active ? 1 : 0;
 
-        await db.update(aboutPageStats).set(updateData).where(eq(aboutPageStats.id, id));
+        await AboutPageStat.findByIdAndUpdate(id, updateData);
 
-        revalidateTag('about-stats', 'max');
+        try { revalidateTag('about-stats'); } catch (e) {}
 
         return NextResponse.json({ success: true, message: 'Stat updated successfully' });
     } catch (error) {
@@ -85,6 +92,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete stat
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -92,9 +100,9 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(aboutPageStats).where(eq(aboutPageStats.id, parseInt(id)));
+        await AboutPageStat.findByIdAndDelete(id);
 
-        revalidateTag('about-stats', 'max');
+        try { revalidateTag('about-stats'); } catch (e) {}
 
         return NextResponse.json({ success: true, message: 'Stat deleted successfully' });
     } catch (error) {

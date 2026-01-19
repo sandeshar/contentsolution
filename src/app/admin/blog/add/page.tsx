@@ -110,7 +110,7 @@ function AddBlogPage() {
         if (!editor) return;
         const handler = (e: KeyboardEvent) => {
             // Ensure editor is focused and mounted before running shortcuts
-            // if (!editor.isFocused || !editor.isFocused()) return;
+            if (!editor.isFocused) return;
             const mod = e.ctrlKey || e.metaKey;
             if (!mod) return;
             const key = e.key.toLowerCase();

@@ -1,30 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, asc } from 'drizzle-orm';
-import { db } from '@/db';
-import { aboutPageTeamMembers } from '@/db/aboutPageSchema';
+import dbConnect from '@/lib/mongodb';
+import { AboutPageTeamMember } from '@/models/AboutPage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch team members
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const member = await db.select().from(aboutPageTeamMembers).where(eq(aboutPageTeamMembers.id, parseInt(id))).limit(1);
+            const member = await AboutPageTeamMember.findById(id).lean();
 
-            if (member.length === 0) {
+            if (!member) {
                 return NextResponse.json({ error: 'Team member not found' }, { status: 404 });
             }
 
-            return NextResponse.json(member[0]);
+            return NextResponse.json({ ...member, id: member._id });
         }
 
-        const members = await db.select().from(aboutPageTeamMembers)
-            .where(eq(aboutPageTeamMembers.is_active, 1))
-            .orderBy(asc(aboutPageTeamMembers.display_order));
+        const members = await AboutPageTeamMember.find({ is_active: 1 })
+            .sort({ display_order: 1 })
+            .lean();
 
-        return NextResponse.json(members);
+        return NextResponse.json(members.map((m: any) => ({ ...m, id: m._id })));
     } catch (error) {
         console.error('Error fetching team members:', error);
         return NextResponse.json({ error: 'Failed to fetch team members' }, { status: 500 });
@@ -34,8 +34,9 @@ export async function GET(request: NextRequest) {
 // POST - Create team member
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
-        const { name, role, description, image, image_alt, display_order, is_active = 1 } = body;
+        const { name, role, description, image, image_alt, display_order, is_activeValue = 1 } = body;
 
         if (!name || !role || !description || !image || !image_alt || display_order === undefined) {
             return NextResponse.json(
@@ -44,20 +45,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const result = await db.insert(aboutPageTeamMembers).values({
+        const result = await AboutPageTeamMember.create({
             name,
             role,
             description,
             image,
             image_alt,
             display_order,
-            is_active,
+            is_active: is_activeValue ? 1 : 0,
         });
 
-        revalidateTag('about-team-members', 'max');
+        try { revalidateTag('about-team-members'); } catch (e) {}
 
         return NextResponse.json(
-            { success: true, message: 'Team member created successfully', id: result[0].insertId },
+            { success: true, message: 'Team member created successfully', id: result._id },
             { status: 201 }
         );
     } catch (error) {
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update team member
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, name, role, description, image, image_alt, display_order, is_active } = body;
 
@@ -83,11 +85,11 @@ export async function PUT(request: NextRequest) {
         if (image !== undefined) updateData.image = image;
         if (image_alt !== undefined) updateData.image_alt = image_alt;
         if (display_order !== undefined) updateData.display_order = display_order;
-        if (is_active !== undefined) updateData.is_active = is_active;
+        if (is_active !== undefined) updateData.is_active = is_active ? 1 : 0;
 
-        await db.update(aboutPageTeamMembers).set(updateData).where(eq(aboutPageTeamMembers.id, id));
+        await AboutPageTeamMember.findByIdAndUpdate(id, updateData);
 
-        revalidateTag('about-team-members', 'max');
+        try { revalidateTag('about-team-members'); } catch (e) {}
 
         return NextResponse.json({ success: true, message: 'Team member updated successfully' });
     } catch (error) {
@@ -99,6 +101,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete team member
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -106,9 +109,9 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(aboutPageTeamMembers).where(eq(aboutPageTeamMembers.id, parseInt(id)));
+        await AboutPageTeamMember.findByIdAndDelete(id);
 
-        revalidateTag('about-team-members', 'max');
+        try { revalidateTag('about-team-members'); } catch (e) {}
 
         return NextResponse.json({ success: true, message: 'Team member deleted successfully' });
     } catch (error) {

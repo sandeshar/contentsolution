@@ -1,26 +1,28 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import dbConnect from "@/lib/mongodb";
 import {
-    homepageHero,
-    homepageTrustSection,
-    homepageTrustLogos,
-    homepageExpertiseSection,
-    homepageExpertiseItems,
-    homepageContactSection
-} from '@/db/homepageSchema';
+    HomepageHero,
+    HomepageTrustSection,
+    HomepageTrustLogo,
+    HomepageExpertiseSection,
+    HomepageExpertiseItem,
+    HomepageContactSection
+} from '@/models/Homepage';
 
 export async function POST() {
     try {
+        await dbConnect();
+
         // Clear existing data
-        await db.delete(homepageHero);
-        await db.delete(homepageTrustSection);
-        await db.delete(homepageTrustLogos);
-        await db.delete(homepageExpertiseSection);
-        await db.delete(homepageExpertiseItems);
-        await db.delete(homepageContactSection);
+        await HomepageHero.deleteMany({});
+        await HomepageTrustSection.deleteMany({});
+        await HomepageTrustLogo.deleteMany({});
+        await HomepageExpertiseSection.deleteMany({});
+        await HomepageExpertiseItem.deleteMany({});
+        await HomepageContactSection.deleteMany({});
 
         // Seed Hero Section
-        await db.insert(homepageHero).values({
+        await HomepageHero.create({
             title: 'Drive Real Business Growth Through Powerful Content',
             subtitle: 'We craft content strategies that captivate your audience, boost your rankings, and convert readers into loyal customers.',
             cta_text: 'Schedule a Free Consultation',
@@ -45,7 +47,7 @@ export async function POST() {
         });
 
         // Seed Trust Section
-        await db.insert(homepageTrustSection).values({
+        await HomepageTrustSection.create({
             heading: 'TRUSTED BY INDUSTRY LEADERS',
             is_active: 1,
         });
@@ -96,12 +98,10 @@ export async function POST() {
             },
         ];
 
-        for (const logo of trustLogos) {
-            await db.insert(homepageTrustLogos).values(logo);
-        }
+        await HomepageTrustLogo.insertMany(trustLogos);
 
         // Seed Expertise Section
-        await db.insert(homepageExpertiseSection).values({
+        await HomepageExpertiseSection.create({
             title: 'Our Expertise',
             description: 'From strategy to execution, we provide end-to-end content solutions designed to meet your business objectives.',
             is_active: 1,
@@ -139,12 +139,10 @@ export async function POST() {
             },
         ];
 
-        for (const item of expertiseItems) {
-            await db.insert(homepageExpertiseItems).values(item);
-        }
+        await HomepageExpertiseItem.insertMany(expertiseItems);
 
         // Seed Contact Section
-        await db.insert(homepageContactSection).values({
+        await HomepageContactSection.create({
             title: 'Ready to Grow Your Business?',
             description: "Let's talk about how our content solutions can help you achieve your goals. Fill out the form, and we'll get back to you within 24 hours.",
             name_placeholder: 'Your Name',

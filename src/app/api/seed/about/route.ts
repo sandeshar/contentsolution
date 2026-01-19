@@ -1,33 +1,35 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import dbConnect from "@/lib/mongodb";
 import {
-    aboutPageHero,
-    aboutPageJourney,
-    aboutPageStats,
-    aboutPageFeatures,
-    aboutPagePhilosophy,
-    aboutPagePrinciples,
-    aboutPageTeamSection,
-    aboutPageTeamMembers,
-    aboutPageCTA
-} from '@/db/aboutPageSchema';
+    AboutPageHero,
+    AboutPageJourney,
+    AboutPageStat,
+    AboutPageFeature,
+    AboutPagePhilosophy,
+    AboutPagePrinciple,
+    AboutPageTeamSection,
+    AboutPageTeamMember,
+    AboutPageCTA
+} from '@/models/AboutPage';
 
 export async function POST() {
     try {
+        await dbConnect();
+
         // Clear existing data
-        await db.delete(aboutPageHero);
-        await db.delete(aboutPageJourney);
-        await db.delete(aboutPageStats);
-        await db.delete(aboutPageFeatures);
-        await db.delete(aboutPagePhilosophy);
-        await db.delete(aboutPagePrinciples);
-        await db.delete(aboutPageTeamMembers);
-        await db.delete(aboutPageTeamSection);
-        await db.delete(aboutPageCTA);
+        await AboutPageHero.deleteMany({});
+        await AboutPageJourney.deleteMany({});
+        await AboutPageStat.deleteMany({});
+        await AboutPageFeature.deleteMany({});
+        await AboutPagePhilosophy.deleteMany({});
+        await AboutPagePrinciple.deleteMany({});
+        await AboutPageTeamMember.deleteMany({});
+        await AboutPageTeamSection.deleteMany({});
+        await AboutPageCTA.deleteMany({});
 
         // Seed Hero Section
         try {
-            await db.insert(aboutPageHero).values({
+            await AboutPageHero.create({
                 title: "We Don't Just Write. We Build Worlds with Words.",
                 description: "Welcome to Content Solution Nepal. We're a team of storytellers, strategists, and digital artisans dedicated to crafting narratives that resonate, engage, and drive growth. Your brand has a story. Let's tell it together.",
                 button1_text: 'Meet the Team',
@@ -55,7 +57,7 @@ export async function POST() {
         }
 
         // Seed Journey Section
-        await db.insert(aboutPageJourney).values({
+        await AboutPageJourney.create({
             title: 'Our Story',
             paragraph1: 'Content Solution Nepal was born from a simple belief: that every business, big or small, deserves a voice that truly represents who they are and what they stand for. We started as a small team of writers who were tired of seeing generic, cookie-cutter content flooding the digital world.',
             paragraph2: 'We envisioned something better—content that tells stories, sparks emotions, and builds genuine connections. Today, we work with businesses across industries to create content strategies that not only attract attention but also inspire action and loyalty.',
@@ -72,9 +74,7 @@ export async function POST() {
             { label: 'Years of Experience', value: '8', display_order: 4, is_active: 1 },
         ];
 
-        for (const stat of stats) {
-            await db.insert(aboutPageStats).values(stat);
-        }
+        await AboutPageStat.insertMany(stats);
 
         // Seed Features
         const features = [
@@ -84,12 +84,10 @@ export async function POST() {
             { title: 'Full-Service', description: 'From strategy to execution, we handle every aspect of your content journey.', display_order: 4, is_active: 1 },
         ];
 
-        for (const feature of features) {
-            await db.insert(aboutPageFeatures).values(feature);
-        }
+        await AboutPageFeature.insertMany(features);
 
         // Seed Philosophy Section
-        await db.insert(aboutPagePhilosophy).values({
+        await AboutPagePhilosophy.create({
             title: 'Our Philosophy',
             description: 'We approach content creation with a blend of art and science. Our philosophy is built on three core principles that guide every piece of content we produce.',
             is_active: 1,
@@ -102,12 +100,10 @@ export async function POST() {
             { title: 'Continuous Improvement', description: 'The digital landscape is always evolving, and so are we. We stay ahead of trends and continuously refine our strategies to deliver the best results.', display_order: 3, is_active: 1 },
         ];
 
-        for (const principle of principles) {
-            await db.insert(aboutPagePrinciples).values(principle);
-        }
+        await AboutPagePrinciple.insertMany(principles);
 
         // Seed Team Section
-        await db.insert(aboutPageTeamSection).values({
+        await AboutPageTeamSection.create({
             title: 'Meet Our Team',
             description: 'Behind every great piece of content is a passionate team of creatives, strategists, and storytellers. Get to know the people who make it all happen.',
             is_active: 1,
@@ -153,12 +149,10 @@ export async function POST() {
             },
         ];
 
-        for (const member of teamMembers) {
-            await db.insert(aboutPageTeamMembers).values(member);
-        }
+        await AboutPageTeamMember.insertMany(teamMembers);
 
         // Seed CTA Section
-        await db.insert(aboutPageCTA).values({
+        await AboutPageCTA.create({
             title: 'Ready to Work Together?',
             description: "Let's create content that makes an impact. Get in touch with us today.",
             primary_button_text: 'Get Started',

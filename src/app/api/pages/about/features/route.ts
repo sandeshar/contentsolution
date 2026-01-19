@@ -1,28 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, asc } from 'drizzle-orm';
-import { db } from '@/db';
-import { aboutPageFeatures } from '@/db/aboutPageSchema';
+import dbConnect from '@/lib/mongodb';
+import { AboutPageFeature } from '@/models/AboutPage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch features
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const feature = await db.select().from(aboutPageFeatures).where(eq(aboutPageFeatures.id, parseInt(id))).limit(1);
+            const feature = await AboutPageFeature.findById(id).lean();
 
-            if (feature.length === 0) {
+            if (!feature) {
                 return NextResponse.json({ error: 'Feature not found' }, { status: 404 });
             }
 
-            return NextResponse.json(feature[0]);
+            return NextResponse.json(feature);
         }
 
-        const features = await db.select().from(aboutPageFeatures)
-            .where(eq(aboutPageFeatures.is_active, 1))
-            .orderBy(asc(aboutPageFeatures.display_order));
+        const features = await AboutPageFeature.find({ is_active: 1 })
+            .sort({ display_order: 1 })
+            .lean();
 
         return NextResponse.json(features);
     } catch (error) {
@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
 // POST - Create feature
 export async function POST(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { title, description, display_order, is_active = 1 } = body;
 
@@ -41,10 +42,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Title, description, and display_order are required' }, { status: 400 });
         }
 
-        const result = await db.insert(aboutPageFeatures).values({ title, description, display_order, is_active });
-        revalidateTag('about-features', 'max');
+        const result = await AboutPageFeature.create({ title, description, display_order, is_active });
+        revalidateTag('about-features');
         return NextResponse.json(
-            { success: true, message: 'Feature created successfully', id: result[0].insertId },
+            { success: true, message: 'Feature created successfully', id: result._id },
             { status: 201 }
         );
     } catch (error) {
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update feature
 export async function PUT(request: NextRequest) {
     try {
+        await dbConnect();
         const body = await request.json();
         const { id, title, description, display_order, is_active } = body;
 
@@ -69,9 +71,9 @@ export async function PUT(request: NextRequest) {
         if (display_order !== undefined) updateData.display_order = display_order;
         if (is_active !== undefined) updateData.is_active = is_active;
 
-        await db.update(aboutPageFeatures).set(updateData).where(eq(aboutPageFeatures.id, id));
+        await AboutPageFeature.findByIdAndUpdate(id, updateData);
 
-        revalidateTag('about-features', 'max');
+        revalidateTag('about-features');
 
         return NextResponse.json({ success: true, message: 'Feature updated successfully' });
     } catch (error) {
@@ -83,6 +85,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete feature
 export async function DELETE(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
@@ -90,9 +93,9 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(aboutPageFeatures).where(eq(aboutPageFeatures.id, parseInt(id)));
+        await AboutPageFeature.findByIdAndDelete(id);
 
-        revalidateTag('about-features', 'max');
+        revalidateTag('about-features');
 
         return NextResponse.json({ success: true, message: 'Feature deleted successfully' });
     } catch (error) {

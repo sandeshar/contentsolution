@@ -1,32 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db';
-import { aboutPageCTA } from '@/db/aboutPageSchema';
+import dbConnect from '@/lib/mongodb';
+import { AboutPageCTA } from '@/models/AboutPage';
 import { revalidateTag } from 'next/cache';
 
 // GET - Fetch CTA section
 export async function GET(request: NextRequest) {
     try {
+        await dbConnect();
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const cta = await db.select().from(aboutPageCTA).where(eq(aboutPageCTA.id, parseInt(id))).limit(1);
+            const cta = await AboutPageCTA.findById(id).lean();
 
-            if (cta.length === 0) {
+            if (!cta) {
                 return NextResponse.json({ error: 'CTA section not found' }, { status: 404 });
             }
 
-            return NextResponse.json(cta[0]);
+            return NextResponse.json(cta);
         }
 
-        const cta = await db.select().from(aboutPageCTA).where(eq(aboutPageCTA.is_active, 1)).limit(1);
+        const cta = await AboutPageCTA.findOne({ is_active: 1 }).lean();
 
-        if (cta.length === 0) {
+        if (!cta) {
             return NextResponse.json({ error: 'No active CTA section found' }, { status: 404 });
         }
 
-        return NextResponse.json(cta[0]);
+        return NextResponse.json(cta);
     } catch (error) {
         console.error('Error fetching CTA section:', error);
         return NextResponse.json({ error: 'Failed to fetch CTA section' }, { status: 500 });
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 // POST - Create CTA section
 export async function POST(request: NextRequest) {
     try {
-
+        await dbConnect();
         const body = await request.json();
         const { title, description, primary_button_text, primary_button_link, secondary_button_text, secondary_button_link, is_active = 1 } = body;
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
         }
 
-        const result = await db.insert(aboutPageCTA).values({
+        const result = await AboutPageCTA.create({
             title,
             description,
             primary_button_text,
@@ -54,10 +54,10 @@ export async function POST(request: NextRequest) {
             is_active,
         });
 
-        revalidateTag('about-cta', 'max');
+        revalidateTag('about-cta');
 
         return NextResponse.json(
-            { success: true, message: 'CTA section created successfully', id: result[0].insertId },
+            { success: true, message: 'CTA section created successfully', id: result._id },
             { status: 201 }
         );
     } catch (error) {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update CTA section
 export async function PUT(request: NextRequest) {
     try {
-
+        await dbConnect();
         const body = await request.json();
         const { id, title, description, primary_button_text, primary_button_link, secondary_button_text, secondary_button_link, is_active } = body;
 
@@ -86,9 +86,9 @@ export async function PUT(request: NextRequest) {
         if (secondary_button_link !== undefined) updateData.secondary_button_link = secondary_button_link;
         if (is_active !== undefined) updateData.is_active = is_active;
 
-        await db.update(aboutPageCTA).set(updateData).where(eq(aboutPageCTA.id, id));
+        await AboutPageCTA.findByIdAndUpdate(id, updateData);
 
-        revalidateTag('about-cta', 'max');
+        revalidateTag('about-cta');
 
         return NextResponse.json({ success: true, message: 'CTA section updated successfully' });
     } catch (error) {
@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.delete(aboutPageCTA).where(eq(aboutPageCTA.id, parseInt(id)));
+        await AboutPageCTA.findByIdAndDelete(id);
 
         revalidateTag('about-cta', 'max');
 
