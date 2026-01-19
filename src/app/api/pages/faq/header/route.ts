@@ -44,11 +44,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Title, description, and search_placeholder are required' }, { status: 400 });
         }
 
-        const result = await FAQPageHeader.create({ 
-            title, 
-            description, 
-            search_placeholder, 
-            is_active: is_activeValue ? 1 : 0 
+        const result = await FAQPageHeader.create({
+            title,
+            description,
+            search_placeholder,
+            is_active: is_activeValue ? 1 : 0
         });
 
         revalidateTag('faq-header');

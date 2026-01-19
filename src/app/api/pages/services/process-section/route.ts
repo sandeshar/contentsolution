@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Title and description are required' }, { status: 400 });
         }
 
-        const result = await ServicePageProcessSection.create({ 
-            title, 
-            description, 
-            is_active: is_activeCode 
+        const result = await ServicePageProcessSection.create({
+            title,
+            description,
+            is_active: is_activeCode
         });
 
         revalidateTag('services');

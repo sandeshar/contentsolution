@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         }
 
         const result = await AboutPagePhilosophy.create({ title, description, is_active: is_active ? 1 : 0 });
-        try { revalidateTag('about-philosophy'); } catch (e) {}
+        try { revalidateTag('about-philosophy'); } catch (e) { }
         return NextResponse.json(
             { success: true, message: 'Philosophy section created successfully', id: result._id },
             { status: 201 }
@@ -74,7 +74,7 @@ export async function PUT(request: NextRequest) {
 
         await AboutPagePhilosophy.findByIdAndUpdate(id, updateData);
 
-        try { revalidateTag('about-philosophy'); } catch (e) {}
+        try { revalidateTag('about-philosophy'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Philosophy section updated successfully' });
     } catch (error) {
@@ -96,7 +96,7 @@ export async function DELETE(request: NextRequest) {
 
         await AboutPagePhilosophy.findByIdAndDelete(id);
 
-        try { revalidateTag('about-philosophy'); } catch (e) {}
+        try { revalidateTag('about-philosophy'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Philosophy section deleted successfully' });
     } catch (error) {

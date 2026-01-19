@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Title and last_updated are required' }, { status: 400 });
         }
 
-        const result = await TermsPageHeader.create({ 
-            title, 
-            last_updated, 
-            is_active: is_activeCode 
+        const result = await TermsPageHeader.create({
+            title,
+            last_updated,
+            is_active: is_activeCode
         });
 
         revalidateTag('terms');

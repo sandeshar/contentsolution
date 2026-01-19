@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
             is_active: is_activeValue ? 1 : 0,
         });
 
-        try { revalidateTag('about-team-members'); } catch (e) {}
+        try { revalidateTag('about-team-members'); } catch (e) { }
 
         return NextResponse.json(
             { success: true, message: 'Team member created successfully', id: result._id },
@@ -89,7 +89,7 @@ export async function PUT(request: NextRequest) {
 
         await AboutPageTeamMember.findByIdAndUpdate(id, updateData);
 
-        try { revalidateTag('about-team-members'); } catch (e) {}
+        try { revalidateTag('about-team-members'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Team member updated successfully' });
     } catch (error) {
@@ -111,7 +111,7 @@ export async function DELETE(request: NextRequest) {
 
         await AboutPageTeamMember.findByIdAndDelete(id);
 
-        try { revalidateTag('about-team-members'); } catch (e) {}
+        try { revalidateTag('about-team-members'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Team member deleted successfully' });
     } catch (error) {

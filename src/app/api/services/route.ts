@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
         if (limit && !isNaN(parseInt(limit))) {
             query = query.limit(parseInt(limit));
         }
-        
+
         const posts = await query.lean();
 
         // Map statusId ObjectId to statusId number for UI
@@ -280,7 +280,7 @@ export async function DELETE(request: NextRequest) {
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized - invalid token' }, { status: 401 });
         }
-        
+
         const searchParams = request.nextUrl.searchParams;
         let id = searchParams.get('id');
         let slug = searchParams.get('slug');

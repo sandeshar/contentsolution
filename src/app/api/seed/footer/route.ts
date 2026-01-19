@@ -34,20 +34,20 @@ export async function POST() {
         ];
 
         for (const [sIdx, sec] of defaultSections.entries()) {
-            const section = await FooterSection.create({ 
-                store_id: store._id, 
-                title: sec.title || "", 
-                order: sIdx 
+            const section = await FooterSection.create({
+                store_id: store._id,
+                title: sec.title || "",
+                order: sIdx
             });
 
             if (sec.links && sec.links.length) {
                 for (const [lIdx, link] of sec.links.entries()) {
-                    await FooterLink.create({ 
-                        section_id: section._id, 
-                        label: link.label, 
-                        href: link.href, 
-                        is_external: 0, 
-                        order: lIdx 
+                    await FooterLink.create({
+                        section_id: section._id,
+                        label: link.label,
+                        href: link.href,
+                        is_external: 0,
+                        order: lIdx
                     });
                 }
             }

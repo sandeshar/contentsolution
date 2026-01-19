@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
             is_active: is_activeValue ? 1 : 0,
         });
 
-        try { revalidateTag('contact-form-config'); } catch (e) {}
+        try { revalidateTag('contact-form-config'); } catch (e) { }
 
         return NextResponse.json(
             { success: true, message: 'Form config created successfully', id: result._id },
@@ -92,7 +92,7 @@ export async function PUT(request: NextRequest) {
 
         await ContactPageFormConfig.findByIdAndUpdate(id, updateData);
 
-        try { revalidateTag('contact-form-config'); } catch (e) {}
+        try { revalidateTag('contact-form-config'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Form config updated successfully' });
     } catch (error) {
@@ -114,7 +114,7 @@ export async function DELETE(request: NextRequest) {
 
         await ContactPageFormConfig.findByIdAndDelete(id);
 
-        try { revalidateTag('contact-form-config'); } catch (e) {}
+        try { revalidateTag('contact-form-config'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Form config deleted successfully' });
     } catch (error) {

@@ -13,17 +13,17 @@ export async function GET() {
         const sections: any[] = [];
         for (const s of secs) {
             const links = await FooterLink.find({ section_id: s._id }).sort({ order: 1 }).lean();
-            sections.push({ 
-                id: s._id, 
-                title: s.title, 
-                order: s.order, 
-                links: links.map((l: any) => ({ 
-                    id: l._id, 
-                    label: l.label, 
-                    href: l.href, 
-                    isExternal: !!l.is_external, 
-                    order: l.order 
-                })) 
+            sections.push({
+                id: s._id,
+                title: s.title,
+                order: s.order,
+                links: links.map((l: any) => ({
+                    id: l._id,
+                    label: l.label,
+                    href: l.href,
+                    isExternal: !!l.is_external,
+                    order: l.order
+                }))
             });
         }
         return NextResponse.json({ success: true, data: sections });
@@ -52,20 +52,20 @@ export async function PUT(request: Request) {
 
         // Insert new
         for (const [sIdx, sec] of (sections || []).entries()) {
-            const newSec = await FooterSection.create({ 
-                store_id: storeRow._id, 
-                title: sec.title || '', 
-                order: sec.order ?? sIdx 
+            const newSec = await FooterSection.create({
+                store_id: storeRow._id,
+                title: sec.title || '',
+                order: sec.order ?? sIdx
             });
-            
+
             if (sec.links && Array.isArray(sec.links)) {
                 for (const [lIdx, ln] of sec.links.entries()) {
-                    await FooterLink.create({ 
-                        section_id: newSec._id, 
-                        label: ln.label || '', 
-                        href: ln.href || '#', 
-                        is_external: ln.isExternal ? 1 : 0, 
-                        order: ln.order ?? lIdx 
+                    await FooterLink.create({
+                        section_id: newSec._id,
+                        label: ln.label || '',
+                        href: ln.href || '#',
+                        is_external: ln.isExternal ? 1 : 0,
+                        order: ln.order ?? lIdx
                     });
                 }
             }
@@ -76,17 +76,17 @@ export async function PUT(request: Request) {
         const sectionsRes: any[] = [];
         for (const s of secs) {
             const links = await FooterLink.find({ section_id: s._id }).sort({ order: 1 }).lean();
-            sectionsRes.push({ 
-                id: s._id, 
-                title: s.title, 
-                order: s.order, 
-                links: links.map((l: any) => ({ 
-                    id: l._id, 
-                    label: l.label, 
-                    href: l.href, 
-                    isExternal: !!l.is_external, 
-                    order: l.order 
-                })) 
+            sectionsRes.push({
+                id: s._id,
+                title: s.title,
+                order: s.order,
+                links: links.map((l: any) => ({
+                    id: l._id,
+                    label: l.label,
+                    href: l.href,
+                    isExternal: !!l.is_external,
+                    order: l.order
+                }))
             });
         }
 
@@ -106,20 +106,20 @@ export async function POST(request: Request) {
         const storeRow = await StoreSettings.findOne({});
         if (!storeRow) return NextResponse.json({ success: false, error: 'No store settings found' }, { status: 400 });
 
-        const newSec = await FooterSection.create({ 
-            store_id: storeRow._id, 
-            title: title || '', 
-            order: order ?? 0 
+        const newSec = await FooterSection.create({
+            store_id: storeRow._id,
+            title: title || '',
+            order: order ?? 0
         });
 
         if (links && Array.isArray(links)) {
             for (const [lIdx, ln] of links.entries()) {
-                await FooterLink.create({ 
-                    section_id: newSec._id, 
-                    label: ln.label || '', 
-                    href: ln.href || '#', 
-                    is_external: ln.isExternal ? 1 : 0, 
-                    order: ln.order ?? lIdx 
+                await FooterLink.create({
+                    section_id: newSec._id,
+                    label: ln.label || '',
+                    href: ln.href || '#',
+                    is_external: ln.isExternal ? 1 : 0,
+                    order: ln.order ?? lIdx
                 });
             }
         }

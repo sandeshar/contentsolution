@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
             }
             return NextResponse.json({ ...user, id: user._id });
         }
-        
+
         const allUsers = await User.find().lean();
         return NextResponse.json(allUsers.map((u: any) => ({ ...u, id: u._id })));
     } catch (error) {
@@ -30,10 +30,10 @@ export async function POST(request: NextRequest) {
         if (!name || !email || !password || !role) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
-        
+
         const hashedPassword = await hashPassword(password);
         const newUser = await User.create({ name, email, password: hashedPassword, role });
-        
+
         return NextResponse.json({ success: true, id: newUser._id });
     } catch (error) {
         if ((error as any).code === 11000) {
@@ -51,12 +51,12 @@ export async function PUT(request: NextRequest) {
         if (!id || !name || !email || !role) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
-        
+
         const updateData: any = { name, email, role };
         if (password && password.trim() !== '') {
             updateData.password = await hashPassword(password);
         }
-        
+
         await User.findByIdAndUpdate(id, updateData);
         return NextResponse.json({ message: 'User updated successfully' });
     } catch (error) {
@@ -72,7 +72,7 @@ export async function DELETE(request: NextRequest) {
         if (!id) {
             return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
         }
-        
+
         await User.findByIdAndDelete(id);
         return NextResponse.json({ message: 'User deleted successfully' });
     } catch (error) {

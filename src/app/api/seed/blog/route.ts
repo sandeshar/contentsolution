@@ -39,7 +39,7 @@ export async function POST() {
                 role: 'superadmin',
             });
         }
-        
+
         let publishedStatus = await Status.findOne({ name: /published/i });
         if (!publishedStatus) {
             await Status.insertMany([

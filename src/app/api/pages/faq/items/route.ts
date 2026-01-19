@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
                 is_active: 1,
                 category_id: category_id
             })
-            .sort({ display_order: 1 })
-            .lean();
+                .sort({ display_order: 1 })
+                .lean();
         } else {
             items = await FAQItem.find({ is_active: 1 })
                 .sort({ display_order: 1 })

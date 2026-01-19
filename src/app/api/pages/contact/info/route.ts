@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
             is_active: is_activeValue ? 1 : 0,
         });
 
-        try { revalidateTag('contact-info'); } catch (e) {}
+        try { revalidateTag('contact-info'); } catch (e) { }
 
         return NextResponse.json(
             { success: true, message: 'Info section created successfully', id: result._id },
@@ -84,7 +84,7 @@ export async function PUT(request: NextRequest) {
 
         await ContactPageInfo.findByIdAndUpdate(id, updateData);
 
-        try { revalidateTag('contact-info'); } catch (e) {}
+        try { revalidateTag('contact-info'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Info section updated successfully' });
     } catch (error) {
@@ -106,7 +106,7 @@ export async function DELETE(request: NextRequest) {
 
         await ContactPageInfo.findByIdAndDelete(id);
 
-        try { revalidateTag('contact-info'); } catch (e) {}
+        try { revalidateTag('contact-info'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Info section deleted successfully' });
     } catch (error) {

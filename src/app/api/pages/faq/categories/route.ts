@@ -7,10 +7,10 @@ import { revalidateTag } from 'next/cache';
 export async function GET() {
     try {
         await dbConnect();
-        
+
         // Find all categories, sorted by display_order
         const categories = await FAQCategory.find().sort({ display_order: 1 });
-        
+
         // Convert to the format expected by the frontend (with numeric IDs)
         const formattedCategories = categories.map((cat: any) => ({
             id: cat._id.toString(),
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         );
     } catch (error: any) {
         console.error('Error creating category:', error);
-        
+
         if (error.code === 11000) {
             return NextResponse.json({ error: 'A category with this name already exists' }, { status: 409 });
         }

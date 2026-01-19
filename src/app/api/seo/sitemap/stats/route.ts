@@ -8,7 +8,7 @@ export async function GET() {
     try {
         await dbConnect();
         const publishedStatus = await Status.findOne({ name: /published/i });
-        const posts = publishedStatus 
+        const posts = publishedStatus
             ? await BlogPost.find({ status: publishedStatus._id }).lean()
             : [];
         const pageCount = getFrontendPageCount();

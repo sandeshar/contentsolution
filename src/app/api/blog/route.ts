@@ -172,9 +172,9 @@ export async function GET(request: NextRequest) {
         console.log('Fetching all posts via API');
         const sort = searchParams.get('sort') || 'newest';
         const showAll = searchParams.get('all') === 'true'; // Allow fetching all for admin
-        
+
         let filter: any = {};
-        
+
         if (!showAll) {
             // Find published status ID
             const publishedStatus = await Status.findOne({ name: /published/i });
@@ -286,7 +286,7 @@ export async function PUT(request: NextRequest) {
         if (thumbnail !== undefined) updateData.thumbnail = thumbnail || null;
         if (metaTitle !== undefined) updateData.metaTitle = metaTitle || null;
         if (metaDescription !== undefined) updateData.metaDescription = metaDescription || null;
-        
+
         if (status) {
             let resolvedStatus = status;
             if (typeof status === 'number' || !isNaN(Number(status)) && String(status).length < 3) {

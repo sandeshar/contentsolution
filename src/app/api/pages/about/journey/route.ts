@@ -83,7 +83,7 @@ export async function PUT(request: NextRequest) {
         if (is_active !== undefined) updateData.is_active = is_active ? 1 : 0;
 
         await AboutPageJourney.findByIdAndUpdate(id, updateData);
-        try { revalidateTag('about-journey'); } catch (e) {}
+        try { revalidateTag('about-journey'); } catch (e) { }
         return NextResponse.json({ success: true, message: 'Journey section updated successfully' });
     } catch (error) {
         console.error('Error updating journey section:', error);

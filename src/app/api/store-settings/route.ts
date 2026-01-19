@@ -111,10 +111,10 @@ export async function PUT(request: NextRequest) {
 
             // Insert new sections and links
             for (const [sIdx, sec] of body.footerSections.entries()) {
-                const newSec = await FooterSection.create({ 
-                    store_id: id, 
-                    title: sec.title || '', 
-                    order: sec.order ?? sIdx 
+                const newSec = await FooterSection.create({
+                    store_id: id,
+                    title: sec.title || '',
+                    order: sec.order ?? sIdx
                 });
                 const newSecId = newSec._id;
                 if (sec.links && Array.isArray(sec.links)) {
@@ -133,7 +133,7 @@ export async function PUT(request: NextRequest) {
 
         const updated = await StoreSettings.findById(id).lean();
         try { revalidateTag('store-settings'); } catch (e) { /* ignore */ }
-        
+
         // Re-fetch footer sections so response includes them
         const data = fromDb(updated);
         if (data) {
@@ -141,17 +141,17 @@ export async function PUT(request: NextRequest) {
             const sections: any[] = [];
             for (const s of secs) {
                 const links = await FooterLink.find({ section_id: s._id }).sort({ order: 1 }).lean();
-                sections.push({ 
-                    id: s._id, 
-                    title: s.title, 
-                    order: s.order, 
-                    links: links.map((l: any) => ({ 
-                        id: l._id, 
-                        label: l.label, 
-                        href: l.href, 
-                        isExternal: !!l.is_external, 
-                        order: l.order 
-                    })) 
+                sections.push({
+                    id: s._id,
+                    title: s.title,
+                    order: s.order,
+                    links: links.map((l: any) => ({
+                        id: l._id,
+                        label: l.label,
+                        href: l.href,
+                        isExternal: !!l.is_external,
+                        order: l.order
+                    }))
                 });
             }
             (data as any).footerSections = sections;

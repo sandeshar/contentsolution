@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
         const result = await AboutPageTeamSection.create({ title, description, is_active: is_active ? 1 : 0 });
 
-        try { revalidateTag('about-team-section'); } catch (e) {}
+        try { revalidateTag('about-team-section'); } catch (e) { }
 
         return NextResponse.json(
             { success: true, message: 'Team section created successfully', id: result._id },
@@ -76,7 +76,7 @@ export async function PUT(request: NextRequest) {
 
         await AboutPageTeamSection.findByIdAndUpdate(id, updateData);
 
-        try { revalidateTag('about-team-section'); } catch (e) {}
+        try { revalidateTag('about-team-section'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Team section updated successfully' });
     } catch (error) {
@@ -98,7 +98,7 @@ export async function DELETE(request: NextRequest) {
 
         await AboutPageTeamSection.findByIdAndDelete(id);
 
-        try { revalidateTag('about-team-section'); } catch (e) {}
+        try { revalidateTag('about-team-section'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Team section deleted successfully' });
     } catch (error) {

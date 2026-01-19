@@ -44,11 +44,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Title, description, button_text, and button_link are required' }, { status: 400 });
         }
 
-        const result = await ServicePageCTA.create({ 
-            title, 
-            description, 
-            button_text, 
-            button_link, 
+        const result = await ServicePageCTA.create({
+            title,
+            description,
+            button_text,
+            button_link,
             is_active
         });
 

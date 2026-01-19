@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         if (service && service !== '0') {
             const mappings = await ReviewTestimonialService.find({ serviceId: service }).lean();
             const testimonialIds = mappings.map((m: any) => m.testimonialId);
-            
+
             const testimonials = await ReviewTestimonial.find({ _id: { $in: testimonialIds } })
                 .sort({ date: -1 })
                 .limit(limitValue || 10)
@@ -128,7 +128,7 @@ export async function DELETE(request: NextRequest) {
         await dbConnect();
         const token = request.cookies.get('admin_auth')?.value;
         const id = request.nextUrl.searchParams.get('id');
-        
+
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -159,9 +159,9 @@ async function attachServiceIds(testimonials: any[]) {
         map.set(testimonialId, arr);
     });
 
-    return testimonials.map((t) => ({ 
-        ...t, 
+    return testimonials.map((t) => ({
+        ...t,
         id: t._id,
-        serviceIds: map.get(t._id.toString()) ?? [] 
+        serviceIds: map.get(t._id.toString()) ?? []
     }));
 }

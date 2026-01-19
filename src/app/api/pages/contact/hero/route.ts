@@ -44,14 +44,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Tagline, title, and description are required' }, { status: 400 });
         }
 
-        const result = await ContactPageHero.create({ 
-            tagline, 
-            title, 
-            description, 
-            is_active: is_activeValue ? 1 : 0 
+        const result = await ContactPageHero.create({
+            tagline,
+            title,
+            description,
+            is_active: is_activeValue ? 1 : 0
         });
 
-        try { revalidateTag('contact-hero'); } catch (e) {}
+        try { revalidateTag('contact-hero'); } catch (e) { }
 
         return NextResponse.json(
             { success: true, message: 'Hero section created successfully', id: result._id },
@@ -82,7 +82,7 @@ export async function PUT(request: NextRequest) {
 
         await ContactPageHero.findByIdAndUpdate(id, updateData);
 
-        try { revalidateTag('contact-hero'); } catch (e) {}
+        try { revalidateTag('contact-hero'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Hero section updated successfully' });
     } catch (error) {
@@ -104,7 +104,7 @@ export async function DELETE(request: NextRequest) {
 
         await ContactPageHero.findByIdAndDelete(id);
 
-        try { revalidateTag('contact-hero'); } catch (e) {}
+        try { revalidateTag('contact-hero'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Hero section deleted successfully' });
     } catch (error) {

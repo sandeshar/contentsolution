@@ -7,15 +7,15 @@ import { getFrontendPageCount } from '@/utils/frontendPages';
 export async function POST() {
     try {
         await dbConnect();
-        
+
         // Find published status ID
         const publishedStatus = await Status.findOne({ name: /published/i });
-        
+
         // Get published blog posts
-        const posts = publishedStatus 
+        const posts = publishedStatus
             ? await BlogPost.find({ status: publishedStatus._id }).lean()
             : [];
-        
+
         const pageCount = getFrontendPageCount();
 
         const stats = {

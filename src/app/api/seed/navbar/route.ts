@@ -47,9 +47,9 @@ export async function POST(request: Request) {
             const subs = await ServiceSubcategory.find({ category_id: cat._id });
             const catHasSub = subs.length > 0;
 
-            let existingChild = await NavbarItem.findOne({ 
-                href: `/services?category=${cat.slug}`, 
-                parent_id: servicesId 
+            let existingChild = await NavbarItem.findOne({
+                href: `/services?category=${cat.slug}`,
+                parent_id: servicesId
             });
 
             let catNavId = null;
@@ -76,9 +76,9 @@ export async function POST(request: Request) {
             if (catHasSub && catNavId) {
                 for (let si = 0; si < subs.length; si++) {
                     const sub = subs[si];
-                    let existingSub = await NavbarItem.findOne({ 
-                        href: `/services?category=${cat.slug}&subcategory=${sub.slug}`, 
-                        parent_id: catNavId 
+                    let existingSub = await NavbarItem.findOne({
+                        href: `/services?category=${cat.slug}&subcategory=${sub.slug}`,
+                        parent_id: catNavId
                     });
                     if (!existingSub) {
                         await NavbarItem.create({

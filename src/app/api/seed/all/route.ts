@@ -3,26 +3,26 @@ import dbConnect from '@/lib/mongodb';
 import Status from '@/models/Status';
 import User from '@/models/User';
 import { HomepageHero as Homepage, HomepageTrustLogo, HomepageExpertiseItem } from '@/models/Homepage';
-import { 
-    AboutPageHero as AboutHero, 
-    AboutPageJourney as AboutJourney, 
-    AboutPageStat as AboutStat, 
-    AboutPageFeature as AboutFeature, 
-    AboutPagePhilosophy as AboutPhilosophy, 
-    AboutPagePrinciple as AboutPrinciple, 
-    AboutPageTeamSection as AboutTeamSection, 
-    AboutPageTeamMember as AboutTeamMember, 
-    AboutPageCTA as AboutCTA 
+import {
+    AboutPageHero as AboutHero,
+    AboutPageJourney as AboutJourney,
+    AboutPageStat as AboutStat,
+    AboutPageFeature as AboutFeature,
+    AboutPagePhilosophy as AboutPhilosophy,
+    AboutPagePrinciple as AboutPrinciple,
+    AboutPageTeamSection as AboutTeamSection,
+    AboutPageTeamMember as AboutTeamMember,
+    AboutPageCTA as AboutCTA
 } from '@/models/AboutPage';
-import { 
-    ServiceCategory, 
-    ServiceSubcategory, 
-    ServicePost, 
-    ServicePageHero as ServicesPageHero, 
-    ServicePageDetail as ServicesPageDetail, 
-    ServicePageProcessSection as ServicesPageProcessSection, 
-    ServicePageProcessStep as ServicesPageProcessStep, 
-    ServicePageCTA as ServicesPageCTA 
+import {
+    ServiceCategory,
+    ServiceSubcategory,
+    ServicePost,
+    ServicePageHero as ServicesPageHero,
+    ServicePageDetail as ServicesPageDetail,
+    ServicePageProcessSection as ServicesPageProcessSection,
+    ServicePageProcessStep as ServicesPageProcessStep,
+    ServicePageCTA as ServicesPageCTA
 } from '@/models/Services';
 import { ContactPageHero as ContactPage, ContactPageInfo as ContactInfo, ContactPageFormConfig as ContactFormConfig } from '@/models/ContactPage';
 import { TermsPageHeader as Term, TermsPageSection as TermSection, BlogPageHero, BlogPageCTA } from '@/models/Pages';
@@ -35,7 +35,7 @@ import NavbarItem from '@/models/Navbar';
 export async function POST() {
     try {
         await dbConnect();
-        
+
         const results: Record<string, { success: boolean; message: string }> = {
             status: { success: false, message: '' },
             users: { success: false, message: '' },
@@ -207,18 +207,18 @@ export async function POST() {
             ]);
 
             await AboutTeamMember.insertMany([
-                { 
-                    name: 'Sarah Johnson', 
-                    role: 'Content Strategist', 
+                {
+                    name: 'Sarah Johnson',
+                    role: 'Content Strategist',
                     description: 'Expert in strategic content planning.',
                     image: 'https://via.placeholder.com/300',
                     image_alt: 'Sarah Johnson',
                     display_order: 1,
                     is_active: 1
                 },
-                { 
-                    name: 'Michael Chen', 
-                    role: 'Senior Writer', 
+                {
+                    name: 'Michael Chen',
+                    role: 'Senior Writer',
                     description: 'Passionate about storytelling.',
                     image: 'https://via.placeholder.com/300',
                     image_alt: 'Michael Chen',
@@ -395,7 +395,7 @@ export async function POST() {
         // 12. Seed Navbar
         try {
             await NavbarItem.deleteMany({});
-            
+
             const defaultItems = [
                 { label: 'Home', href: '/', order: 0, is_active: 1 },
                 { label: 'Services', href: '/services', order: 1, is_dropdown: 1, is_active: 1 },
@@ -409,7 +409,7 @@ export async function POST() {
 
             for (const item of defaultItems) {
                 const created = await NavbarItem.create(item);
-                
+
                 // If it's services, add categories
                 if (item.href === '/services') {
                     const categories = await ServiceCategory.find().limit(5);
@@ -437,7 +437,7 @@ export async function POST() {
             if (store) {
                 const sec1 = await FooterSection.create({ store_id: store._id, title: 'Solutions', order: 1 });
                 await FooterLink.create({ section_id: sec1._id, label: 'Content Strategy', href: '/services', order: 1, is_active: 1 });
-                
+
                 const sec2 = await FooterSection.create({ store_id: store._id, title: 'Company', order: 2 });
                 await FooterLink.create({ section_id: sec2._id, label: 'About Us', href: '/about', order: 1, is_active: 1 });
                 await FooterLink.create({ section_id: sec2._id, label: 'Contact', href: '/contact', order: 2, is_active: 1 });

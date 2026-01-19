@@ -42,14 +42,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Title, description, and display_order are required' }, { status: 400 });
         }
 
-        const result = await AboutPagePrinciple.create({ 
-            title, 
-            description, 
-            display_order, 
-            is_active: is_activeValue ? 1 : 0 
+        const result = await AboutPagePrinciple.create({
+            title,
+            description,
+            display_order,
+            is_active: is_activeValue ? 1 : 0
         });
 
-        try { revalidateTag('about-principles'); } catch (e) {}
+        try { revalidateTag('about-principles'); } catch (e) { }
 
         return NextResponse.json(
             { success: true, message: 'Principle created successfully', id: result._id },
@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest) {
 
         await AboutPagePrinciple.findByIdAndUpdate(id, updateData);
 
-        try { revalidateTag('about-principles'); } catch (e) {}
+        try { revalidateTag('about-principles'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Principle updated successfully' });
     } catch (error) {
@@ -102,7 +102,7 @@ export async function DELETE(request: NextRequest) {
 
         await AboutPagePrinciple.findByIdAndDelete(id);
 
-        try { revalidateTag('about-principles'); } catch (e) {}
+        try { revalidateTag('about-principles'); } catch (e) { }
 
         return NextResponse.json({ success: true, message: 'Principle deleted successfully' });
     } catch (error) {
